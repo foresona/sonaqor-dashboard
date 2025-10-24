@@ -1,0 +1,1986 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
+import {
+  Webhook,
+  Plus,
+  Trash2,
+  Edit2,
+  Copy,
+  Check,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Filter,
+} from 'lucide-react'
+import DashboardLayout from '@/components/DashboardLayout'
+
+interface WebhookConfig {
+  id: string
+  name: string
+  url: string
+  events: string[]
+  status: 'active' | 'inactive' | 'error'
+  created: string
+  lastTriggered: string
+  successRate: number
+  totalCalls: number
+}
+
+export default function WebhooksPage() {
+  const [copied, setCopied] = useState<string | null>(null)
+  const [expandedDelivery, setExpandedDelivery] = useState<number | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'failed'>('all')
+
+  const webhooks: WebhookConfig[] = [
+    {
+      id: '1',
+      name: 'Production Webhook',
+      url: 'https://api.yourapp.com/webhooks/sonaqor',
+      events: ['forecast.generated', 'persona.matched', 'anomaly.detected'],
+      status: 'active',
+      created: '2025-09-15',
+      lastTriggered: '2 minutes ago',
+      successRate: 99.5,
+      totalCalls: 12453,
+    },
+    {
+      id: '2',
+      name: 'Staging Webhook',
+      url: 'https://staging.yourapp.com/webhooks/sonaqor',
+      events: ['forecast.generated', 'fscores.calculated'],
+      status: 'active',
+      created: '2025-10-01',
+      lastTriggered: '1 hour ago',
+      successRate: 98.2,
+      totalCalls: 3421,
+    },
+    {
+      id: '3',
+      name: 'Analytics Webhook',
+      url: 'https://analytics.yourapp.com/webhooks/events',
+      events: ['*'],
+      status: 'error',
+      created: '2025-08-20',
+      lastTriggered: '3 days ago',
+      successRate: 76.5,
+      totalCalls: 8932,
+    },
+  ]
+
+  const availableEvents = [
+    { name: 'forecast.generated', desc: 'Triggered when a persona forecast is generated' },
+    { name: 'persona.matched', desc: 'Triggered when a persona match is found' },
+    { name: 'fscores.calculated', desc: 'Triggered when F_scores are calculated' },
+    { name: 'anomaly.detected', desc: 'Triggered when behavioral anomaly is detected' },
+    { name: 'transaction.processed', desc: 'Triggered when transaction data is processed' },
+  ]
+
+  const recentDeliveries = [
+    {
+      event: 'forecast.generated',
+      status: 'success',
+      timestamp: '2025-10-24 14:32:15',
+      duration: '245ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'forecast.generated',
+        timestamp: '2025-10-24T14:32:15.234Z',
+        data: {
+          user_id: 'usr_1234567890',
+          forecast_id: 'fct_abc123def456',
+          persona_type: 'impulsive_spender',
+          confidence_score: 0.87,
+          predicted_behavior: {
+            spending_pattern: 'high_frequency',
+            risk_level: 'medium',
+            next_purchase_window: '3-5 days',
+          },
+          f_scores: {
+            financial_stability: 0.72,
+            spending_consistency: 0.65,
+            debt_management: 0.81,
+          },
+        },
+      },
+      response: {
+        status: 200,
+        body: { received: true, processed: true },
+      },
+    },
+    {
+      event: 'persona.matched',
+      status: 'success',
+      timestamp: '2025-10-24 14:30:42',
+      duration: '189ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'persona.matched',
+        timestamp: '2025-10-24T14:30:42.123Z',
+        data: {
+          user_id: 'usr_9876543210',
+          match_id: 'mtch_xyz789ghi012',
+          persona: 'conservative_saver',
+          match_score: 0.92,
+          characteristics: {
+            saving_rate: 'high',
+            investment_preference: 'low_risk',
+            spending_discipline: 'high',
+          },
+          recommendations: ['Fixed deposit accounts', 'Government bonds', 'Savings goals tracker'],
+        },
+      },
+      response: {
+        status: 200,
+        body: { received: true },
+      },
+    },
+    {
+      event: 'anomaly.detected',
+      status: 'failed',
+      timestamp: '2025-10-24 14:28:18',
+      duration: '5.2s',
+      webhook: 'Analytics Webhook',
+      statusCode: 500,
+      payload: {
+        event: 'anomaly.detected',
+        timestamp: '2025-10-24T14:28:18.987Z',
+        data: {
+          user_id: 'usr_5555666777',
+          anomaly_id: 'anom_unusual_001',
+          type: 'unusual_spending_pattern',
+          severity: 'high',
+          details: {
+            transaction_amount: 25000,
+            average_transaction: 1500,
+            deviation_percentage: 1567,
+            location: 'Lagos, Nigeria',
+            merchant_category: 'Electronics',
+          },
+          risk_indicators: [
+            'Amount 15x higher than average',
+            'First-time merchant',
+            'Unusual time of transaction',
+          ],
+        },
+      },
+      response: {
+        status: 500,
+        body: { error: 'Internal server error', message: 'Database connection timeout' },
+      },
+    },
+    {
+      event: 'fscores.calculated',
+      status: 'success',
+      timestamp: '2025-10-24 14:25:33',
+      duration: '312ms',
+      webhook: 'Staging Webhook',
+      statusCode: 201,
+      payload: {
+        event: 'fscores.calculated',
+        timestamp: '2025-10-24T14:25:33.456Z',
+        data: {
+          user_id: 'usr_1112223334',
+          calculation_id: 'calc_fscore_999',
+          scores: {
+            financial_stability: 0.78,
+            spending_consistency: 0.85,
+            debt_management: 0.72,
+            savings_rate: 0.91,
+            overall_score: 0.815,
+          },
+          trend: 'improving',
+          previous_score: 0.76,
+        },
+      },
+      response: {
+        status: 201,
+        body: { received: true, stored: true },
+      },
+    },
+    {
+      event: 'forecast.generated',
+      status: 'success',
+      timestamp: '2025-10-24 14:22:10',
+      duration: '298ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'forecast.generated',
+        timestamp: '2025-10-24T14:22:10.567Z',
+        data: {
+          user_id: 'usr_2223334445',
+          forecast_id: 'fct_xyz456abc789',
+          persona_type: 'budget_conscious',
+          confidence_score: 0.91,
+        },
+      },
+      response: { status: 200, body: { received: true, processed: true } },
+    },
+    {
+      event: 'transaction.processed',
+      status: 'success',
+      timestamp: '2025-10-24 14:20:55',
+      duration: '156ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'transaction.processed',
+        timestamp: '2025-10-24T14:20:55.234Z',
+        data: {
+          transaction_id: 'txn_abc123xyz',
+          amount: 15000,
+          currency: 'NGN',
+          status: 'completed',
+        },
+      },
+      response: { status: 200, body: { received: true } },
+    },
+    {
+      event: 'persona.matched',
+      status: 'success',
+      timestamp: '2025-10-24 14:18:30',
+      duration: '210ms',
+      webhook: 'Staging Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'persona.matched',
+        timestamp: '2025-10-24T14:18:30.890Z',
+        data: {
+          user_id: 'usr_6667778889',
+          match_id: 'mtch_def456ghi789',
+          persona: 'savvy_investor',
+          match_score: 0.88,
+        },
+      },
+      response: { status: 200, body: { received: true } },
+    },
+    {
+      event: 'anomaly.detected',
+      status: 'failed',
+      timestamp: '2025-10-24 14:15:42',
+      duration: '4.8s',
+      webhook: 'Analytics Webhook',
+      statusCode: 503,
+      payload: {
+        event: 'anomaly.detected',
+        timestamp: '2025-10-24T14:15:42.123Z',
+        data: {
+          user_id: 'usr_9990001112',
+          anomaly_id: 'anom_suspicious_002',
+          type: 'rapid_transactions',
+          severity: 'critical',
+        },
+      },
+      response: { status: 503, body: { error: 'Service unavailable' } },
+    },
+    {
+      event: 'fscores.calculated',
+      status: 'success',
+      timestamp: '2025-10-24 14:12:18',
+      duration: '278ms',
+      webhook: 'Staging Webhook',
+      statusCode: 201,
+      payload: {
+        event: 'fscores.calculated',
+        timestamp: '2025-10-24T14:12:18.456Z',
+        data: {
+          user_id: 'usr_3334445556',
+          calculation_id: 'calc_fscore_888',
+          scores: { overall_score: 0.742 },
+        },
+      },
+      response: { status: 201, body: { received: true, stored: true } },
+    },
+    {
+      event: 'forecast.generated',
+      status: 'success',
+      timestamp: '2025-10-24 14:08:45',
+      duration: '325ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'forecast.generated',
+        timestamp: '2025-10-24T14:08:45.789Z',
+        data: {
+          user_id: 'usr_4445556667',
+          forecast_id: 'fct_mno789pqr012',
+          persona_type: 'risk_taker',
+          confidence_score: 0.79,
+        },
+      },
+      response: { status: 200, body: { received: true, processed: true } },
+    },
+    {
+      event: 'transaction.processed',
+      status: 'success',
+      timestamp: '2025-10-24 14:05:22',
+      duration: '142ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'transaction.processed',
+        timestamp: '2025-10-24T14:05:22.345Z',
+        data: {
+          transaction_id: 'txn_def456uvw',
+          amount: 8500,
+          currency: 'NGN',
+          status: 'completed',
+        },
+      },
+      response: { status: 200, body: { received: true } },
+    },
+    {
+      event: 'persona.matched',
+      status: 'failed',
+      timestamp: '2025-10-24 14:02:10',
+      duration: '6.1s',
+      webhook: 'Analytics Webhook',
+      statusCode: 500,
+      payload: {
+        event: 'persona.matched',
+        timestamp: '2025-10-24T14:02:10.567Z',
+        data: { user_id: 'usr_7778889990', match_id: 'mtch_invalid' },
+      },
+      response: { status: 500, body: { error: 'Database error' } },
+    },
+    {
+      event: 'fscores.calculated',
+      status: 'success',
+      timestamp: '2025-10-24 13:58:33',
+      duration: '289ms',
+      webhook: 'Staging Webhook',
+      statusCode: 201,
+      payload: {
+        event: 'fscores.calculated',
+        timestamp: '2025-10-24T13:58:33.890Z',
+        data: {
+          user_id: 'usr_8889990001',
+          calculation_id: 'calc_fscore_777',
+          scores: { overall_score: 0.856 },
+        },
+      },
+      response: { status: 201, body: { received: true, stored: true } },
+    },
+    {
+      event: 'anomaly.detected',
+      status: 'success',
+      timestamp: '2025-10-24 13:55:17',
+      duration: '412ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'anomaly.detected',
+        timestamp: '2025-10-24T13:55:17.234Z',
+        data: {
+          user_id: 'usr_9991112223',
+          anomaly_id: 'anom_location_003',
+          type: 'unusual_location',
+          severity: 'medium',
+        },
+      },
+      response: { status: 200, body: { received: true, flagged: true } },
+    },
+    {
+      event: 'forecast.generated',
+      status: 'success',
+      timestamp: '2025-10-24 13:50:42',
+      duration: '267ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'forecast.generated',
+        timestamp: '2025-10-24T13:50:42.123Z',
+        data: {
+          user_id: 'usr_0001112223',
+          forecast_id: 'fct_stu345vwx678',
+          persona_type: 'balanced_spender',
+          confidence_score: 0.84,
+        },
+      },
+      response: { status: 200, body: { received: true, processed: true } },
+    },
+    {
+      event: 'transaction.processed',
+      status: 'success',
+      timestamp: '2025-10-24 13:45:28',
+      duration: '178ms',
+      webhook: 'Staging Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'transaction.processed',
+        timestamp: '2025-10-24T13:45:28.456Z',
+        data: {
+          transaction_id: 'txn_ghi789jkl',
+          amount: 22000,
+          currency: 'NGN',
+          status: 'completed',
+        },
+      },
+      response: { status: 200, body: { received: true } },
+    },
+    {
+      event: 'persona.matched',
+      status: 'success',
+      timestamp: '2025-10-24 13:40:15',
+      duration: '195ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'persona.matched',
+        timestamp: '2025-10-24T13:40:15.789Z',
+        data: {
+          user_id: 'usr_1112223334',
+          match_id: 'mtch_jkl012mno345',
+          persona: 'frequent_shopper',
+          match_score: 0.93,
+        },
+      },
+      response: { status: 200, body: { received: true } },
+    },
+    {
+      event: 'fscores.calculated',
+      status: 'failed',
+      timestamp: '2025-10-24 13:35:50',
+      duration: '5.5s',
+      webhook: 'Analytics Webhook',
+      statusCode: 504,
+      payload: {
+        event: 'fscores.calculated',
+        timestamp: '2025-10-24T13:35:50.234Z',
+        data: { user_id: 'usr_2223334445', calculation_id: 'calc_fscore_666' },
+      },
+      response: { status: 504, body: { error: 'Gateway timeout' } },
+    },
+    {
+      event: 'anomaly.detected',
+      status: 'success',
+      timestamp: '2025-10-24 13:30:22',
+      duration: '388ms',
+      webhook: 'Production Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'anomaly.detected',
+        timestamp: '2025-10-24T13:30:22.567Z',
+        data: {
+          user_id: 'usr_3334445556',
+          anomaly_id: 'anom_velocity_004',
+          type: 'high_velocity',
+          severity: 'low',
+        },
+      },
+      response: { status: 200, body: { received: true, flagged: false } },
+    },
+    {
+      event: 'forecast.generated',
+      status: 'success',
+      timestamp: '2025-10-24 13:25:08',
+      duration: '301ms',
+      webhook: 'Staging Webhook',
+      statusCode: 200,
+      payload: {
+        event: 'forecast.generated',
+        timestamp: '2025-10-24T13:25:08.890Z',
+        data: {
+          user_id: 'usr_4445556667',
+          forecast_id: 'fct_yza901bcd234',
+          persona_type: 'cautious_saver',
+          confidence_score: 0.89,
+        },
+      },
+      response: { status: 200, body: { received: true, processed: true } },
+    },
+  ]
+
+  // NOTE: This component is designed to handle hundreds or thousands of webhook deliveries
+  // Features include:
+  // - Search by event name or webhook name
+  // - Filter by status (all/success/failed)
+  // - Pagination with configurable page size (10, 25, 50, 100 items per page)
+  // - Expandable payload viewer for each delivery
+  // - Copy to clipboard for request/response payloads
+
+  // Filter and paginate deliveries
+  const filteredDeliveries = useMemo(() => {
+    let filtered = recentDeliveries
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((d) => d.status === statusFilter)
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (d) =>
+          d.event.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          d.webhook.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    }
+
+    return filtered
+  }, [statusFilter, searchQuery])
+
+  const totalPages = Math.ceil(filteredDeliveries.length / pageSize)
+  const paginatedDeliveries = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    return filteredDeliveries.slice(startIndex, startIndex + pageSize)
+  }, [filteredDeliveries, currentPage, pageSize])
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(id)
+    setTimeout(() => setCopied(null), 2000)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return { bg: 'rgba(16, 185, 129, 0.2)', border: 'rgba(16, 185, 129, 0.3)', text: '#10b981' }
+      case 'inactive':
+        return {
+          bg: 'rgba(156, 163, 175, 0.2)',
+          border: 'rgba(156, 163, 175, 0.3)',
+          text: '#9ca3af',
+        }
+      case 'error':
+        return { bg: 'rgba(239, 68, 68, 0.2)', border: 'rgba(239, 68, 68, 0.3)', text: '#ef4444' }
+      default:
+        return {
+          bg: 'rgba(156, 163, 175, 0.2)',
+          border: 'rgba(156, 163, 175, 0.3)',
+          text: '#9ca3af',
+        }
+    }
+  }
+
+  return (
+    <DashboardLayout>
+      {/* Page Header */}
+      <div
+        style={{
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(10px)',
+        }}
+      >
+        <div
+          style={{
+            padding: '32px 40px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div>
+            <h1
+              style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}
+            >
+              Webhooks
+            </h1>
+            <p style={{ fontSize: '16px', color: '#9ca3af' }}>
+              Configure webhooks to receive real-time event notifications
+            </p>
+          </div>
+          <button
+            style={{
+              padding: '12px 24px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              border: 'none',
+              color: 'white',
+              fontWeight: '600',
+              fontSize: '15px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'transform 0.2s ease',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            <Plus style={{ width: '20px', height: '20px' }} />
+            Create Webhook
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: '40px' }}>
+        {/* Stats */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px',
+            marginBottom: '32px',
+          }}
+        >
+          {[
+            {
+              label: 'Total Webhooks',
+              value: '3',
+              icon: Webhook,
+              gradient: { start: '#3b82f6', end: '#8b5cf6' },
+            },
+            {
+              label: 'Active',
+              value: '2',
+              icon: CheckCircle,
+              gradient: { start: '#10b981', end: '#059669' },
+            },
+            {
+              label: 'Success Rate',
+              value: '94.7%',
+              icon: Zap,
+              gradient: { start: '#a855f7', end: '#ec4899' },
+            },
+            {
+              label: 'Total Deliveries',
+              value: '24.8K',
+              icon: Clock,
+              gradient: { start: '#f59e0b', end: '#ef4444' },
+            },
+          ].map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '20px',
+                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+              }}
+            >
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}
+              >
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    background: `linear-gradient(135deg, ${stat.gradient.start} 0%, ${stat.gradient.end} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <stat.icon style={{ width: '20px', height: '20px', color: 'white' }} />
+                </div>
+              </div>
+              <div
+                style={{
+                  fontSize: '28px',
+                  fontWeight: 'bold',
+                  color: 'white',
+                  marginBottom: '4px',
+                }}
+              >
+                {stat.value}
+              </div>
+              <div style={{ fontSize: '13px', color: '#9ca3af' }}>{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Webhooks List */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          style={{ marginBottom: '32px' }}
+        >
+          <h2
+            style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '20px' }}
+          >
+            Configured Webhooks
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {webhooks.map((webhook, index) => {
+              const statusColor = getStatusColor(webhook.status)
+
+              return (
+                <motion.div
+                  key={webhook.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    padding: '24px',
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '20px',
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          marginBottom: '12px',
+                        }}
+                      >
+                        <h3 style={{ fontSize: '20px', fontWeight: '600', color: 'white' }}>
+                          {webhook.name}
+                        </h3>
+                        <span
+                          style={{
+                            padding: '4px 12px',
+                            borderRadius: '20px',
+                            background: statusColor.bg,
+                            border: `1px solid ${statusColor.border}`,
+                            color: statusColor.text,
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {webhook.status}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px 16px',
+                          borderRadius: '10px',
+                          background: 'rgba(0, 0, 0, 0.3)',
+                          marginBottom: '16px',
+                        }}
+                      >
+                        <code
+                          style={{
+                            flex: 1,
+                            fontSize: '14px',
+                            color: '#3b82f6',
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          {webhook.url}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(webhook.url, webhook.id)}
+                          style={{
+                            padding: '6px',
+                            borderRadius: '6px',
+                            background:
+                              copied === webhook.id
+                                ? 'rgba(16, 185, 129, 0.2)'
+                                : 'rgba(255, 255, 255, 0.05)',
+                            border: 'none',
+                            color: copied === webhook.id ? '#10b981' : '#9ca3af',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {copied === webhook.id ? (
+                            <Check style={{ width: '16px', height: '16px' }} />
+                          ) : (
+                            <Copy style={{ width: '16px', height: '16px' }} />
+                          )}
+                        </button>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: '8px',
+                          marginBottom: '16px',
+                        }}
+                      >
+                        {webhook.events.map((event, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              background: 'rgba(59, 130, 246, 0.1)',
+                              border: '1px solid rgba(59, 130, 246, 0.2)',
+                              color: '#3b82f6',
+                              fontSize: '13px',
+                              fontFamily: 'monospace',
+                            }}
+                          >
+                            {event}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        style={{
+                          padding: '10px',
+                          borderRadius: '10px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: '#9ca3af',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Edit2 style={{ width: '18px', height: '18px' }} />
+                      </button>
+                      <button
+                        style={{
+                          padding: '10px',
+                          borderRadius: '10px',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Trash2 style={{ width: '18px', height: '18px' }} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                      gap: '16px',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
+                        Created
+                      </div>
+                      <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
+                        {webhook.created}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
+                        Last Triggered
+                      </div>
+                      <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
+                        {webhook.lastTriggered}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
+                        Success Rate
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '14px',
+                          color: webhook.successRate > 95 ? '#10b981' : '#f59e0b',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {webhook.successRate}%
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
+                        Total Calls
+                      </div>
+                      <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
+                        {webhook.totalCalls.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        </motion.div>
+
+        {/* Two Column Layout */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+            gap: '24px',
+          }}
+        >
+          {/* Recent Deliveries */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '32px',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+            }}
+          >
+            {/* Header Section - Fixed */}
+            <div style={{ flexShrink: 0, marginBottom: '20px' }}>
+              <h2
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: 'white',
+                  marginBottom: '16px',
+                }}
+              >
+                Recent Deliveries
+              </h2>
+
+              {/* Search and Filters */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                {/* Search Bar */}
+                <div style={{ position: 'relative', flex: '0 0 300px' }}>
+                  <Search
+                    style={{
+                      position: 'absolute',
+                      left: '14px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '16px',
+                      height: '16px',
+                      color: '#9ca3af',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search by event or webhook..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value)
+                      setCurrentPage(1)
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '11px 14px 11px 40px',
+                      borderRadius: '10px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)')}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)')}
+                  />
+                </div>
+
+                {/* Status Filter Buttons */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {[
+                    { key: 'all', label: 'All' },
+                    { key: 'success', label: 'Success' },
+                    { key: 'failed', label: 'Failed' },
+                  ].map((filter) => (
+                    <button
+                      key={filter.key}
+                      onClick={() => {
+                        setStatusFilter(filter.key as any)
+                        setCurrentPage(1)
+                      }}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        background:
+                          statusFilter === filter.key
+                            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        border:
+                          statusFilter === filter.key
+                            ? '1px solid rgba(16, 185, 129, 0.4)'
+                            : '1px solid rgba(255, 255, 255, 0.1)',
+                        color: statusFilter === filter.key ? '#10b981' : '#9ca3af',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (statusFilter !== filter.key) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (statusFilter !== filter.key) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                        }
+                      }}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Results Count */}
+              <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px' }}>
+                Showing {paginatedDeliveries.length} of {filteredDeliveries.length} deliveries
+              </div>
+            </div>
+
+            {/* Deliveries List - Scrollable */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                flex: '1 1 auto',
+                minHeight: 0,
+                overflowY: 'auto',
+                paddingRight: '4px',
+              }}
+            >
+              {paginatedDeliveries.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    padding: '48px 24px',
+                    textAlign: 'center',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                >
+                  <AlertCircle
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      color: '#6b7280',
+                      margin: '0 auto 16px',
+                      opacity: 0.5,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      color: '#9ca3af',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    No deliveries found
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                    {searchQuery || statusFilter !== 'all'
+                      ? 'Try adjusting your filters or search query'
+                      : 'Webhook deliveries will appear here'}
+                  </div>
+                </motion.div>
+              ) : (
+                paginatedDeliveries.map((delivery, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    style={{
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      overflow: 'hidden',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
+                    }}
+                  >
+                    {/* Clickable Header */}
+                    <div
+                      onClick={() => setExpandedDelivery(expandedDelivery === i ? null : i)}
+                      style={{
+                        padding: '16px 18px',
+                        cursor: 'pointer',
+                        transition: 'background 0.15s ease',
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)')
+                      }
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          marginBottom: '10px',
+                        }}
+                      >
+                        <div
+                          style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}
+                        >
+                          <span
+                            style={{
+                              fontSize: '14px',
+                              color: 'white',
+                              fontWeight: '600',
+                              fontFamily: 'monospace',
+                            }}
+                          >
+                            {delivery.event}
+                          </span>
+                          <span
+                            style={{
+                              padding: '4px 10px',
+                              borderRadius: '6px',
+                              background:
+                                delivery.status === 'success'
+                                  ? 'rgba(16, 185, 129, 0.15)'
+                                  : 'rgba(239, 68, 68, 0.15)',
+                              border:
+                                delivery.status === 'success'
+                                  ? '1px solid rgba(16, 185, 129, 0.3)'
+                                  : '1px solid rgba(239, 68, 68, 0.3)',
+                              color: delivery.status === 'success' ? '#10b981' : '#ef4444',
+                              fontSize: '11px',
+                              fontWeight: '700',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                            }}
+                          >
+                            {delivery.statusCode}
+                          </span>
+                        </div>
+                        {expandedDelivery === i ? (
+                          <ChevronUp
+                            style={{
+                              width: '18px',
+                              height: '18px',
+                              color: '#9ca3af',
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <ChevronDown
+                            style={{
+                              width: '18px',
+                              height: '18px',
+                              color: '#9ca3af',
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '13px',
+                          color: '#9ca3af',
+                          marginBottom: '6px',
+                          fontWeight: '500',
+                        }}
+                      >
+                        {delivery.webhook}
+                      </div>
+                      <div
+                        style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#6b7280' }}
+                      >
+                        <span>{delivery.timestamp}</span>
+                        <span style={{ opacity: 0.5 }}>•</span>
+                        <span>{delivery.duration}</span>
+                      </div>
+                    </div>{' '}
+                    {/* Expanded Payload View */}
+                    {expandedDelivery === i && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        style={{
+                          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                          padding: '16px',
+                          background: 'rgba(0, 0, 0, 0.2)',
+                        }}
+                      >
+                        <div style={{ marginBottom: '16px' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginBottom: '8px',
+                            }}
+                          >
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#9ca3af' }}>
+                              Request Payload
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                copyToClipboard(
+                                  JSON.stringify(delivery.payload, null, 2),
+                                  `delivery-${i}`,
+                                )
+                              }}
+                              style={{
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                background:
+                                  copied === `delivery-${i}`
+                                    ? 'rgba(16, 185, 129, 0.2)'
+                                    : 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                color: copied === `delivery-${i}` ? '#10b981' : '#9ca3af',
+                                cursor: 'pointer',
+                                fontSize: '11px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                            >
+                              {copied === `delivery-${i}` ? (
+                                <>
+                                  <Check style={{ width: '12px', height: '12px' }} />
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy style={{ width: '12px', height: '12px' }} />
+                                  Copy
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <pre
+                            style={{
+                              padding: '12px',
+                              borderRadius: '8px',
+                              background: 'rgba(0, 0, 0, 0.4)',
+                              border: '1px solid rgba(255, 255, 255, 0.05)',
+                              overflowX: 'auto',
+                              fontSize: '11px',
+                              lineHeight: '1.5',
+                              color: '#e5e7eb',
+                              fontFamily: 'monospace',
+                              maxHeight: '300px',
+                              overflowY: 'auto',
+                            }}
+                          >
+                            {JSON.stringify(delivery.payload, null, 2)}
+                          </pre>
+                        </div>
+
+                        <div>
+                          <div
+                            style={{
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              color: '#9ca3af',
+                              marginBottom: '8px',
+                            }}
+                          >
+                            Response
+                          </div>
+                          <pre
+                            style={{
+                              padding: '12px',
+                              borderRadius: '8px',
+                              background: 'rgba(0, 0, 0, 0.4)',
+                              border: '1px solid rgba(255, 255, 255, 0.05)',
+                              overflowX: 'auto',
+                              fontSize: '11px',
+                              lineHeight: '1.5',
+                              color: '#e5e7eb',
+                              fontFamily: 'monospace',
+                            }}
+                          >
+                            {JSON.stringify(delivery.response, null, 2)}
+                          </pre>
+                        </div>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                ))
+              )}
+            </div>
+
+            {/* Pagination Controls - Fixed at bottom */}
+            {totalPages > 1 && (
+              <div
+                style={{
+                  flexShrink: 0,
+                  marginTop: '20px',
+                  paddingTop: '20px',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', color: '#9ca3af' }}>Rows per page:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '6px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      outline: 'none',
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '13px', color: '#9ca3af' }}>
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        background:
+                          currentPage === 1
+                            ? 'rgba(255, 255, 255, 0.02)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: currentPage === 1 ? '#4b5563' : '#9ca3af',
+                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <ChevronLeft style={{ width: '16px', height: '16px' }} />
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        background:
+                          currentPage === totalPages
+                            ? 'rgba(255, 255, 255, 0.02)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: currentPage === totalPages ? '#4b5563' : '#9ca3af',
+                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <ChevronRight style={{ width: '16px', height: '16px' }} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Available Events */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '32px',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+            }}
+          >
+            <h2
+              style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: 'white',
+                marginBottom: '24px',
+                flexShrink: 0,
+              }}
+            >
+              Available Events
+            </h2>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+                flex: '1 1 auto',
+                minHeight: 0,
+                overflowY: 'auto',
+                paddingRight: '4px',
+              }}
+            >
+              {availableEvents.map((event, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '10px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      color: '#3b82f6',
+                      fontWeight: '600',
+                      fontFamily: 'monospace',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    {event.name}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#9ca3af' }}>{event.desc}</div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Webhook Payload Examples */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          style={{
+            marginTop: '32px',
+            background:
+              'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '32px',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+          }}
+        >
+          <h2
+            style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}
+          >
+            Webhook Payload Examples
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Forecast Generated Payload */}
+            <div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '12px',
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      background: 'rgba(59, 130, 246, 0.2)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      color: '#3b82f6',
+                      fontSize: '13px',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    forecast.generated
+                  </span>
+                </h3>
+                <button
+                  onClick={() =>
+                    copyToClipboard(
+                      JSON.stringify(
+                        {
+                          event: 'forecast.generated',
+                          timestamp: '2025-10-24T14:32:15.234Z',
+                          data: {
+                            user_id: 'usr_1234567890',
+                            forecast_id: 'fct_abc123def456',
+                            persona_type: 'impulsive_spender',
+                            confidence_score: 0.87,
+                            predicted_behavior: {
+                              spending_pattern: 'high_frequency',
+                              risk_level: 'medium',
+                              next_purchase_window: '3-5 days',
+                            },
+                            f_scores: {
+                              financial_stability: 0.72,
+                              spending_consistency: 0.65,
+                              debt_management: 0.81,
+                            },
+                          },
+                        },
+                        null,
+                        2,
+                      ),
+                      'forecast',
+                    )
+                  }
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    background:
+                      copied === 'forecast'
+                        ? 'rgba(16, 185, 129, 0.2)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: copied === 'forecast' ? '#10b981' : '#9ca3af',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  {copied === 'forecast' ? (
+                    <>
+                      <Check style={{ width: '14px', height: '14px' }} />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy style={{ width: '14px', height: '14px' }} />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
+              <pre
+                style={{
+                  padding: '20px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  overflowX: 'auto',
+                  fontSize: '13px',
+                  lineHeight: '1.6',
+                  color: '#e5e7eb',
+                  fontFamily: 'monospace',
+                }}
+              >
+                {JSON.stringify(
+                  {
+                    event: 'forecast.generated',
+                    timestamp: '2025-10-24T14:32:15.234Z',
+                    data: {
+                      user_id: 'usr_1234567890',
+                      forecast_id: 'fct_abc123def456',
+                      persona_type: 'impulsive_spender',
+                      confidence_score: 0.87,
+                      predicted_behavior: {
+                        spending_pattern: 'high_frequency',
+                        risk_level: 'medium',
+                        next_purchase_window: '3-5 days',
+                      },
+                      f_scores: {
+                        financial_stability: 0.72,
+                        spending_consistency: 0.65,
+                        debt_management: 0.81,
+                      },
+                    },
+                  },
+                  null,
+                  2,
+                )}
+              </pre>
+            </div>
+
+            {/* Persona Matched Payload */}
+            <div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '12px',
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      background: 'rgba(59, 130, 246, 0.2)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      color: '#3b82f6',
+                      fontSize: '13px',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    persona.matched
+                  </span>
+                </h3>
+                <button
+                  onClick={() =>
+                    copyToClipboard(
+                      JSON.stringify(
+                        {
+                          event: 'persona.matched',
+                          timestamp: '2025-10-24T14:30:42.123Z',
+                          data: {
+                            user_id: 'usr_9876543210',
+                            match_id: 'mtch_xyz789ghi012',
+                            persona: 'conservative_saver',
+                            match_score: 0.92,
+                            characteristics: {
+                              saving_rate: 'high',
+                              investment_preference: 'low_risk',
+                              spending_discipline: 'high',
+                            },
+                            recommendations: [
+                              'Fixed deposit accounts',
+                              'Government bonds',
+                              'Savings goals tracker',
+                            ],
+                          },
+                        },
+                        null,
+                        2,
+                      ),
+                      'persona',
+                    )
+                  }
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    background:
+                      copied === 'persona'
+                        ? 'rgba(16, 185, 129, 0.2)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: copied === 'persona' ? '#10b981' : '#9ca3af',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  {copied === 'persona' ? (
+                    <>
+                      <Check style={{ width: '14px', height: '14px' }} />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy style={{ width: '14px', height: '14px' }} />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
+              <pre
+                style={{
+                  padding: '20px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  overflowX: 'auto',
+                  fontSize: '13px',
+                  lineHeight: '1.6',
+                  color: '#e5e7eb',
+                  fontFamily: 'monospace',
+                }}
+              >
+                {JSON.stringify(
+                  {
+                    event: 'persona.matched',
+                    timestamp: '2025-10-24T14:30:42.123Z',
+                    data: {
+                      user_id: 'usr_9876543210',
+                      match_id: 'mtch_xyz789ghi012',
+                      persona: 'conservative_saver',
+                      match_score: 0.92,
+                      characteristics: {
+                        saving_rate: 'high',
+                        investment_preference: 'low_risk',
+                        spending_discipline: 'high',
+                      },
+                      recommendations: [
+                        'Fixed deposit accounts',
+                        'Government bonds',
+                        'Savings goals tracker',
+                      ],
+                    },
+                  },
+                  null,
+                  2,
+                )}
+              </pre>
+            </div>
+
+            {/* Anomaly Detected Payload */}
+            <div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '12px',
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      background: 'rgba(239, 68, 68, 0.2)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      color: '#ef4444',
+                      fontSize: '13px',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    anomaly.detected
+                  </span>
+                </h3>
+                <button
+                  onClick={() =>
+                    copyToClipboard(
+                      JSON.stringify(
+                        {
+                          event: 'anomaly.detected',
+                          timestamp: '2025-10-24T14:28:18.987Z',
+                          data: {
+                            user_id: 'usr_5555666777',
+                            anomaly_id: 'anom_unusual_001',
+                            type: 'unusual_spending_pattern',
+                            severity: 'high',
+                            details: {
+                              transaction_amount: 25000,
+                              average_transaction: 1500,
+                              deviation_percentage: 1567,
+                              location: 'Lagos, Nigeria',
+                              merchant_category: 'Electronics',
+                            },
+                            risk_indicators: [
+                              'Amount 15x higher than average',
+                              'First-time merchant',
+                              'Unusual time of transaction',
+                            ],
+                          },
+                        },
+                        null,
+                        2,
+                      ),
+                      'anomaly',
+                    )
+                  }
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    background:
+                      copied === 'anomaly'
+                        ? 'rgba(16, 185, 129, 0.2)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: copied === 'anomaly' ? '#10b981' : '#9ca3af',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  {copied === 'anomaly' ? (
+                    <>
+                      <Check style={{ width: '14px', height: '14px' }} />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy style={{ width: '14px', height: '14px' }} />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
+              <pre
+                style={{
+                  padding: '20px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  overflowX: 'auto',
+                  fontSize: '13px',
+                  lineHeight: '1.6',
+                  color: '#e5e7eb',
+                  fontFamily: 'monospace',
+                }}
+              >
+                {JSON.stringify(
+                  {
+                    event: 'anomaly.detected',
+                    timestamp: '2025-10-24T14:28:18.987Z',
+                    data: {
+                      user_id: 'usr_5555666777',
+                      anomaly_id: 'anom_unusual_001',
+                      type: 'unusual_spending_pattern',
+                      severity: 'high',
+                      details: {
+                        transaction_amount: 25000,
+                        average_transaction: 1500,
+                        deviation_percentage: 1567,
+                        location: 'Lagos, Nigeria',
+                        merchant_category: 'Electronics',
+                      },
+                      risk_indicators: [
+                        'Amount 15x higher than average',
+                        'First-time merchant',
+                        'Unusual time of transaction',
+                      ],
+                    },
+                  },
+                  null,
+                  2,
+                )}
+              </pre>
+            </div>
+
+            {/* Webhook Headers Info */}
+            <div
+              style={{
+                marginTop: '16px',
+                padding: '20px',
+                borderRadius: '12px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+              }}
+            >
+              <h4
+                style={{
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  color: '#3b82f6',
+                  marginBottom: '12px',
+                }}
+              >
+                Webhook Headers
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
+                  <code style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}>
+                    Content-Type:
+                  </code>
+                  <span style={{ color: 'white', fontFamily: 'monospace' }}>application/json</span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
+                  <code style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}>
+                    X-Sonaqor-Event:
+                  </code>
+                  <span style={{ color: 'white', fontFamily: 'monospace' }}>
+                    forecast.generated | persona.matched | anomaly.detected
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
+                  <code style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}>
+                    X-Sonaqor-Signature:
+                  </code>
+                  <span style={{ color: 'white', fontFamily: 'monospace' }}>
+                    sha256=&lt;HMAC signature&gt;
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
+                  <code style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}>
+                    X-Sonaqor-Delivery:
+                  </code>
+                  <span style={{ color: 'white', fontFamily: 'monospace' }}>
+                    &lt;unique delivery ID&gt;
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </DashboardLayout>
+  )
+}
