@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Webhook,
   Plus,
@@ -19,6 +19,9 @@ import {
   ChevronRight,
   Search,
   Filter,
+  X,
+  Send,
+  RotateCcw,
 } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
 
@@ -32,6 +35,7 @@ interface WebhookConfig {
   lastTriggered: string
   successRate: number
   totalCalls: number
+  headers?: Record<string, string>
 }
 
 export default function WebhooksPage() {
@@ -42,7 +46,26 @@ export default function WebhooksPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'failed'>('all')
 
-  const webhooks: WebhookConfig[] = [
+  // Webhook filtering
+  const [webhookSearchQuery, setWebhookSearchQuery] = useState('')
+  const [webhookStatusFilter, setWebhookStatusFilter] = useState<
+    'all' | 'active' | 'inactive' | 'error'
+  >('all')
+
+  // Modal states
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showTestModal, setShowTestModal] = useState(false)
+  const [selectedWebhook, setSelectedWebhook] = useState<WebhookConfig | null>(null)
+
+  // Form states
+  const [webhookName, setWebhookName] = useState('')
+  const [webhookUrl, setWebhookUrl] = useState('')
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([])
+  const [webhookHeaders, setWebhookHeaders] = useState<Array<{ key: string; value: string }>>([])
+
+  const [webhooks, setWebhooks] = useState<WebhookConfig[]>([
     {
       id: '1',
       name: 'Production Webhook',
@@ -53,6 +76,11 @@ export default function WebhooksPage() {
       lastTriggered: '2 minutes ago',
       successRate: 99.5,
       totalCalls: 12453,
+      headers: {
+        'Authorization': 'Bearer sk_live_prod_xxx...',
+        'Content-Type': 'application/json',
+        'X-API-Version': 'v2',
+      },
     },
     {
       id: '2',
@@ -64,6 +92,10 @@ export default function WebhooksPage() {
       lastTriggered: '1 hour ago',
       successRate: 98.2,
       totalCalls: 3421,
+      headers: {
+        'X-API-Key': 'staging_key_abc123...',
+        'Content-Type': 'application/json',
+      },
     },
     {
       id: '3',
@@ -76,7 +108,7 @@ export default function WebhooksPage() {
       successRate: 76.5,
       totalCalls: 8932,
     },
-  ]
+  ])
 
   const availableEvents = [
     { name: 'forecast.generated', desc: 'Triggered when a persona forecast is generated' },
@@ -84,7 +116,114 @@ export default function WebhooksPage() {
     { name: 'fscores.calculated', desc: 'Triggered when F_scores are calculated' },
     { name: 'anomaly.detected', desc: 'Triggered when behavioral anomaly is detected' },
     { name: 'transaction.processed', desc: 'Triggered when transaction data is processed' },
+    { name: '*', desc: 'All events (wildcard)' },
   ]
+
+  // Handler functions
+  const handleCreateWebhook = () => {
+    if (!webhookName || !webhookUrl || selectedEvents.length === 0) {
+      alert('Please fill all required fields')
+      return
+    }
+
+    const headers: Record<string, string> = {}
+    webhookHeaders.forEach(({ key, value }) => {
+      if (key && value) headers[key] = value
+    })
+
+    const newWebhook: WebhookConfig = {
+      id: String(Date.now()),
+      name: webhookName,
+      url: webhookUrl,
+      events: selectedEvents,
+      status: 'active',
+      created: new Date().toISOString().split('T')[0],
+      lastTriggered: 'Never',
+      successRate: 100,
+      totalCalls: 0,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
+    }
+
+    setWebhooks([...webhooks, newWebhook])
+    setShowCreateModal(false)
+    setWebhookName('')
+    setWebhookUrl('')
+    setSelectedEvents([])
+    setWebhookHeaders([])
+  }
+
+  const handleEditWebhook = () => {
+    if (!selectedWebhook || !webhookName || !webhookUrl || selectedEvents.length === 0) return
+
+    const headers: Record<string, string> = {}
+    webhookHeaders.forEach(({ key, value }) => {
+      if (key && value) headers[key] = value
+    })
+
+    setWebhooks(
+      webhooks.map((w) =>
+        w.id === selectedWebhook.id
+          ? {
+              ...w,
+              name: webhookName,
+              url: webhookUrl,
+              events: selectedEvents,
+              headers: Object.keys(headers).length > 0 ? headers : undefined,
+            }
+          : w,
+      ),
+    )
+    setShowEditModal(false)
+    setSelectedWebhook(null)
+    setWebhookName('')
+    setWebhookUrl('')
+    setSelectedEvents([])
+    setWebhookHeaders([])
+  }
+
+  const handleDeleteWebhook = () => {
+    if (!selectedWebhook) return
+    setWebhooks(webhooks.filter((w) => w.id !== selectedWebhook.id))
+    setShowDeleteModal(false)
+    setSelectedWebhook(null)
+  }
+
+  const handleTestWebhook = () => {
+    alert(`Test webhook delivery sent to ${selectedWebhook?.name}!`)
+    setShowTestModal(false)
+    setSelectedWebhook(null)
+  }
+
+  const openEditModal = (webhook: WebhookConfig) => {
+    setSelectedWebhook(webhook)
+    setWebhookName(webhook.name)
+    setWebhookUrl(webhook.url)
+    setSelectedEvents(webhook.events)
+    setWebhookHeaders(
+      webhook.headers
+        ? Object.entries(webhook.headers).map(([key, value]) => ({ key, value }))
+        : [],
+    )
+    setShowEditModal(true)
+  }
+
+  const openDeleteModal = (webhook: WebhookConfig) => {
+    setSelectedWebhook(webhook)
+    setShowDeleteModal(true)
+  }
+
+  const openTestModal = (webhook: WebhookConfig) => {
+    setSelectedWebhook(webhook)
+    setShowTestModal(true)
+  }
+
+  const toggleEvent = (eventName: string) => {
+    if (selectedEvents.includes(eventName)) {
+      setSelectedEvents(selectedEvents.filter((e) => e !== eventName))
+    } else {
+      setSelectedEvents([...selectedEvents, eventName])
+    }
+  }
 
   const recentDeliveries = [
     {
@@ -512,6 +651,27 @@ export default function WebhooksPage() {
   // - Expandable payload viewer for each delivery
   // - Copy to clipboard for request/response payloads
 
+  // Filter webhooks
+  const filteredWebhooks = useMemo(() => {
+    let filtered = webhooks
+
+    // Apply status filter
+    if (webhookStatusFilter !== 'all') {
+      filtered = filtered.filter((w) => w.status === webhookStatusFilter)
+    }
+
+    // Apply search filter
+    if (webhookSearchQuery) {
+      filtered = filtered.filter(
+        (w) =>
+          w.name.toLowerCase().includes(webhookSearchQuery.toLowerCase()) ||
+          w.url.toLowerCase().includes(webhookSearchQuery.toLowerCase()),
+      )
+    }
+
+    return filtered
+  }, [webhooks, webhookStatusFilter, webhookSearchQuery])
+
   // Filter and paginate deliveries
   const filteredDeliveries = useMemo(() => {
     let filtered = recentDeliveries
@@ -595,6 +755,7 @@ export default function WebhooksPage() {
               </h1>
             </div>
             <button
+              onClick={() => setShowCreateModal(true)}
               style={{
                 padding: '12px 20px',
                 background: 'linear-gradient(135deg, #10b981 0%, #a78bfa 100%)',
@@ -709,215 +870,386 @@ export default function WebhooksPage() {
           transition={{ delay: 0.2 }}
           style={{ marginBottom: '32px' }}
         >
-          <h2
-            style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '20px' }}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px',
+            }}
           >
-            Configured Webhooks
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {webhooks.map((webhook, index) => {
-              const statusColor = getStatusColor(webhook.status)
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+              Configured Webhooks
+            </h2>
 
-              return (
-                <motion.div
-                  key={webhook.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
+            {/* Webhook Search and Filter */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ position: 'relative' }}>
+                <Search
                   style={{
-                    background:
-                      'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    padding: '24px',
-                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                    position: 'absolute',
+                    left: '14px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '16px',
+                    height: '16px',
+                    color: '#9ca3af',
+                    pointerEvents: 'none',
                   }}
-                >
-                  <div
+                />
+                <input
+                  type="text"
+                  placeholder="Search webhooks..."
+                  value={webhookSearchQuery}
+                  onChange={(e) => setWebhookSearchQuery(e.target.value)}
+                  style={{
+                    padding: '10px 14px 10px 40px',
+                    borderRadius: '10px',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none',
+                    width: '220px',
+                  }}
+                />
+              </div>
+
+              <select
+                value={webhookStatusFilter}
+                onChange={(e) => setWebhookStatusFilter(e.target.value as any)}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="error">Error</option>
+              </select>
+            </div>
+          </div>
+
+          {filteredWebhooks.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                padding: '48px 24px',
+                textAlign: 'center',
+                background: 'rgba(255, 255, 255, 0.02)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
+              <Webhook
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  color: '#6b7280',
+                  margin: '0 auto 16px',
+                  opacity: 0.5,
+                }}
+              />
+              <div
+                style={{
+                  fontSize: '15px',
+                  fontWeight: '500',
+                  color: '#9ca3af',
+                  marginBottom: '8px',
+                }}
+              >
+                No webhooks found
+              </div>
+              <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                {webhookSearchQuery || webhookStatusFilter !== 'all'
+                  ? 'Try adjusting your filters or search query'
+                  : 'Create your first webhook to get started'}
+              </div>
+            </motion.div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {filteredWebhooks.map((webhook, index) => {
+                const statusColor = getStatusColor(webhook.status)
+
+                return (
+                  <motion.div
+                    key={webhook.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
                     style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: '20px',
+                      background:
+                        'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      padding: '24px',
+                      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
                     }}
                   >
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          marginBottom: '12px',
-                        }}
-                      >
-                        <h3 style={{ fontSize: '20px', fontWeight: '600', color: 'white' }}>
-                          {webhook.name}
-                        </h3>
-                        <span
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: '20px',
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div
                           style={{
-                            padding: '4px 12px',
-                            borderRadius: '20px',
-                            background: statusColor.bg,
-                            border: `1px solid ${statusColor.border}`,
-                            color: statusColor.text,
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            textTransform: 'uppercase',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginBottom: '12px',
                           }}
                         >
-                          {webhook.status}
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          padding: '12px 16px',
-                          borderRadius: '10px',
-                          background: 'rgba(0, 0, 0, 0.3)',
-                          marginBottom: '16px',
-                        }}
-                      >
-                        <code
-                          style={{
-                            flex: 1,
-                            fontSize: '14px',
-                            color: '#3b82f6',
-                            fontFamily: 'monospace',
-                          }}
-                        >
-                          {webhook.url}
-                        </code>
-                        <button
-                          onClick={() => copyToClipboard(webhook.url, webhook.id)}
-                          style={{
-                            padding: '6px',
-                            borderRadius: '6px',
-                            background:
-                              copied === webhook.id
-                                ? 'rgba(16, 185, 129, 0.2)'
-                                : 'rgba(255, 255, 255, 0.05)',
-                            border: 'none',
-                            color: copied === webhook.id ? '#10b981' : '#9ca3af',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {copied === webhook.id ? (
-                            <Check style={{ width: '16px', height: '16px' }} />
-                          ) : (
-                            <Copy style={{ width: '16px', height: '16px' }} />
-                          )}
-                        </button>
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          gap: '8px',
-                          marginBottom: '16px',
-                        }}
-                      >
-                        {webhook.events.map((event, i) => (
+                          <h3 style={{ fontSize: '20px', fontWeight: '600', color: 'white' }}>
+                            {webhook.name}
+                          </h3>
                           <span
-                            key={i}
                             style={{
-                              padding: '6px 12px',
-                              borderRadius: '8px',
-                              background: 'rgba(59, 130, 246, 0.1)',
-                              border: '1px solid rgba(59, 130, 246, 0.2)',
+                              padding: '4px 12px',
+                              borderRadius: '20px',
+                              background: statusColor.bg,
+                              border: `1px solid ${statusColor.border}`,
+                              color: statusColor.text,
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {webhook.status}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px 16px',
+                            borderRadius: '10px',
+                            background: 'rgba(0, 0, 0, 0.3)',
+                            marginBottom: '16px',
+                          }}
+                        >
+                          <code
+                            style={{
+                              flex: 1,
+                              fontSize: '14px',
                               color: '#3b82f6',
-                              fontSize: '13px',
                               fontFamily: 'monospace',
                             }}
                           >
-                            {event}
-                          </span>
-                        ))}
+                            {webhook.url}
+                          </code>
+                          <button
+                            onClick={() => copyToClipboard(webhook.url, webhook.id)}
+                            style={{
+                              padding: '6px',
+                              borderRadius: '6px',
+                              background:
+                                copied === webhook.id
+                                  ? 'rgba(16, 185, 129, 0.2)'
+                                  : 'rgba(255, 255, 255, 0.05)',
+                              border: 'none',
+                              color: copied === webhook.id ? '#10b981' : '#9ca3af',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {copied === webhook.id ? (
+                              <Check style={{ width: '16px', height: '16px' }} />
+                            ) : (
+                              <Copy style={{ width: '16px', height: '16px' }} />
+                            )}
+                          </button>
+                        </div>
+
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px',
+                            marginBottom: '16px',
+                          }}
+                        >
+                          {webhook.events.map((event, i) => (
+                            <span
+                              key={i}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                background: 'rgba(59, 130, 246, 0.1)',
+                                border: '1px solid rgba(59, 130, 246, 0.2)',
+                                color: '#3b82f6',
+                                fontSize: '13px',
+                                fontFamily: 'monospace',
+                              }}
+                            >
+                              {event}
+                            </span>
+                          ))}
+                        </div>
+
+                        {webhook.headers && Object.keys(webhook.headers).length > 0 && (
+                          <div
+                            style={{
+                              padding: '12px',
+                              borderRadius: '10px',
+                              background: 'rgba(139, 92, 246, 0.05)',
+                              border: '1px solid rgba(139, 92, 246, 0.2)',
+                              marginBottom: '16px',
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: '12px',
+                                color: '#a78bfa',
+                                fontWeight: '600',
+                                marginBottom: '8px',
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              Custom Headers ({Object.keys(webhook.headers).length})
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              {Object.entries(webhook.headers).map(([key, value]) => (
+                                <div
+                                  key={key}
+                                  style={{
+                                    fontSize: '13px',
+                                    color: '#d1d5db',
+                                    fontFamily: 'monospace',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                  }}
+                                >
+                                  <span style={{ color: '#a78bfa', fontWeight: '600' }}>{key}:</span>
+                                  <span
+                                    style={{
+                                      color: '#9ca3af',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                      maxWidth: '200px',
+                                    }}
+                                  >
+                                    {value.includes('Bearer') || value.includes('key')
+                                      ? value.substring(0, 20) + '...'
+                                      : value}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => openTestModal(webhook)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '10px',
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            color: '#3b82f6',
+                            cursor: 'pointer',
+                          }}
+                          title="Test webhook"
+                        >
+                          <Send style={{ width: '18px', height: '18px' }} />
+                        </button>
+                        <button
+                          onClick={() => openEditModal(webhook)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '10px',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#9ca3af',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Edit2 style={{ width: '18px', height: '18px' }} />
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(webhook)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '10px',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Trash2 style={{ width: '18px', height: '18px' }} />
+                        </button>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        style={{
-                          padding: '10px',
-                          borderRadius: '10px',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          color: '#9ca3af',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <Edit2 style={{ width: '18px', height: '18px' }} />
-                      </button>
-                      <button
-                        style={{
-                          padding: '10px',
-                          borderRadius: '10px',
-                          background: 'rgba(239, 68, 68, 0.1)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          color: '#ef4444',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <Trash2 style={{ width: '18px', height: '18px' }} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '16px',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
-                        Created
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gap: '16px',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
+                          Created
+                        </div>
+                        <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
+                          {webhook.created}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
-                        {webhook.created}
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
+                          Last Triggered
+                        </div>
+                        <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
+                          {webhook.lastTriggered}
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
-                        Last Triggered
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
+                          Success Rate
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '14px',
+                            color: webhook.successRate > 95 ? '#10b981' : '#f59e0b',
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {webhook.successRate}%
+                        </div>
                       </div>
-                      <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
-                        {webhook.lastTriggered}
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
+                          Total Calls
+                        </div>
+                        <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
+                          {webhook.totalCalls.toLocaleString()}
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
-                        Success Rate
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '14px',
-                          color: webhook.successRate > 95 ? '#10b981' : '#f59e0b',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {webhook.successRate}%
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
-                        Total Calls
-                      </div>
-                      <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
-                        {webhook.totalCalls.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
         </motion.div>
 
         {/* Two Column Layout */}
@@ -1979,6 +2311,985 @@ export default function WebhooksPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* Create Webhook Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowCreateModal(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(30, 30, 35, 0.98) 0%, rgba(20, 20, 25, 0.98) 100%)',
+                borderRadius: '20px',
+                padding: '32px',
+                maxWidth: '600px',
+                width: '100%',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '24px',
+                }}
+              >
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                  Create Webhook
+                </h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  style={{
+                    padding: '8px',
+                    borderRadius: '8px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X style={{ width: '20px', height: '20px' }} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      color: '#9ca3af',
+                      marginBottom: '8px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Webhook Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={webhookName}
+                    onChange={(e) => setWebhookName(e.target.value)}
+                    placeholder="Production Webhook"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      fontSize: '15px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      color: '#9ca3af',
+                      marginBottom: '8px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Endpoint URL *
+                  </label>
+                  <input
+                    type="url"
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                    placeholder="https://your-api.com/webhooks"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      fontSize: '15px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <label
+                      style={{
+                        fontSize: '14px',
+                        color: '#9ca3af',
+                        fontWeight: '500',
+                      }}
+                    >
+                      Custom Headers (Optional)
+                    </label>
+                    <button
+                      onClick={() => setWebhookHeaders([...webhookHeaders, { key: '', value: '' }])}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        color: '#10b981',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <Plus style={{ width: '14px', height: '14px' }} />
+                      Add Header
+                    </button>
+                  </div>
+                  {webhookHeaders.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {webhookHeaders.map((header, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            gap: '8px',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <input
+                            type="text"
+                            value={header.key}
+                            onChange={(e) => {
+                              const newHeaders = [...webhookHeaders]
+                              newHeaders[index].key = e.target.value
+                              setWebhookHeaders(newHeaders)
+                            }}
+                            placeholder="Header name (e.g., Authorization)"
+                            style={{
+                              flex: 1,
+                              padding: '10px 12px',
+                              borderRadius: '8px',
+                              background: 'rgba(0, 0, 0, 0.3)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              color: 'white',
+                              fontSize: '14px',
+                              outline: 'none',
+                            }}
+                          />
+                          <input
+                            type="text"
+                            value={header.value}
+                            onChange={(e) => {
+                              const newHeaders = [...webhookHeaders]
+                              newHeaders[index].value = e.target.value
+                              setWebhookHeaders(newHeaders)
+                            }}
+                            placeholder="Header value"
+                            style={{
+                              flex: 1,
+                              padding: '10px 12px',
+                              borderRadius: '8px',
+                              background: 'rgba(0, 0, 0, 0.3)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              color: 'white',
+                              fontSize: '14px',
+                              outline: 'none',
+                            }}
+                          />
+                          <button
+                            onClick={() => {
+                              setWebhookHeaders(webhookHeaders.filter((_, i) => i !== index))
+                            }}
+                            style={{
+                              padding: '8px',
+                              borderRadius: '8px',
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <X style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {webhookHeaders.length === 0 && (
+                    <div
+                      style={{
+                        padding: '16px',
+                        borderRadius: '10px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        textAlign: 'center',
+                        color: '#6b7280',
+                        fontSize: '13px',
+                      }}
+                    >
+                      No custom headers configured. Click &quot;Add Header&quot; to add authentication or custom headers.
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      color: '#9ca3af',
+                      marginBottom: '12px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Events to Subscribe *
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {availableEvents.map((event) => (
+                      <div
+                        key={event.name}
+                        onClick={() => toggleEvent(event.name)}
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '10px',
+                          background: selectedEvents.includes(event.name)
+                            ? 'rgba(16, 185, 129, 0.1)'
+                            : 'rgba(255, 255, 255, 0.03)',
+                          border: selectedEvents.includes(event.name)
+                            ? '1px solid rgba(16, 185, 129, 0.3)'
+                            : '1px solid rgba(255, 255, 255, 0.08)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <div>
+                            <div
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: selectedEvents.includes(event.name) ? '#10b981' : 'white',
+                                fontFamily: 'monospace',
+                                marginBottom: '4px',
+                              }}
+                            >
+                              {event.name}
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#9ca3af' }}>{event.desc}</div>
+                          </div>
+                          {selectedEvents.includes(event.name) && (
+                            <Check style={{ width: '20px', height: '20px', color: '#10b981' }} />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  marginTop: '32px',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateWebhook}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Create Webhook
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Webhook Modal */}
+      <AnimatePresence>
+        {showEditModal && selectedWebhook && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowEditModal(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(30, 30, 35, 0.98) 0%, rgba(20, 20, 25, 0.98) 100%)',
+                borderRadius: '20px',
+                padding: '32px',
+                maxWidth: '600px',
+                width: '100%',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '24px',
+                }}
+              >
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                  Edit Webhook
+                </h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  style={{
+                    padding: '8px',
+                    borderRadius: '8px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X style={{ width: '20px', height: '20px' }} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      color: '#9ca3af',
+                      marginBottom: '8px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Webhook Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={webhookName}
+                    onChange={(e) => setWebhookName(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      fontSize: '15px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      color: '#9ca3af',
+                      marginBottom: '8px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Endpoint URL *
+                  </label>
+                  <input
+                    type="url"
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      fontSize: '15px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <label
+                      style={{
+                        fontSize: '14px',
+                        color: '#9ca3af',
+                        fontWeight: '500',
+                      }}
+                    >
+                      Custom Headers (Optional)
+                    </label>
+                    <button
+                      onClick={() => setWebhookHeaders([...webhookHeaders, { key: '', value: '' }])}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        color: '#10b981',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <Plus style={{ width: '14px', height: '14px' }} />
+                      Add Header
+                    </button>
+                  </div>
+                  {webhookHeaders.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {webhookHeaders.map((header, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            gap: '8px',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <input
+                            type="text"
+                            value={header.key}
+                            onChange={(e) => {
+                              const newHeaders = [...webhookHeaders]
+                              newHeaders[index].key = e.target.value
+                              setWebhookHeaders(newHeaders)
+                            }}
+                            placeholder="Header name (e.g., Authorization)"
+                            style={{
+                              flex: 1,
+                              padding: '10px 12px',
+                              borderRadius: '8px',
+                              background: 'rgba(0, 0, 0, 0.3)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              color: 'white',
+                              fontSize: '14px',
+                              outline: 'none',
+                            }}
+                          />
+                          <input
+                            type="text"
+                            value={header.value}
+                            onChange={(e) => {
+                              const newHeaders = [...webhookHeaders]
+                              newHeaders[index].value = e.target.value
+                              setWebhookHeaders(newHeaders)
+                            }}
+                            placeholder="Header value"
+                            style={{
+                              flex: 1,
+                              padding: '10px 12px',
+                              borderRadius: '8px',
+                              background: 'rgba(0, 0, 0, 0.3)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              color: 'white',
+                              fontSize: '14px',
+                              outline: 'none',
+                            }}
+                          />
+                          <button
+                            onClick={() => {
+                              setWebhookHeaders(webhookHeaders.filter((_, i) => i !== index))
+                            }}
+                            style={{
+                              padding: '8px',
+                              borderRadius: '8px',
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <X style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {webhookHeaders.length === 0 && (
+                    <div
+                      style={{
+                        padding: '16px',
+                        borderRadius: '10px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        textAlign: 'center',
+                        color: '#6b7280',
+                        fontSize: '13px',
+                      }}
+                    >
+                      No custom headers configured. Click &quot;Add Header&quot; to add authentication or custom headers.
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      color: '#9ca3af',
+                      marginBottom: '12px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Events to Subscribe *
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {availableEvents.map((event) => (
+                      <div
+                        key={event.name}
+                        onClick={() => toggleEvent(event.name)}
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '10px',
+                          background: selectedEvents.includes(event.name)
+                            ? 'rgba(16, 185, 129, 0.1)'
+                            : 'rgba(255, 255, 255, 0.03)',
+                          border: selectedEvents.includes(event.name)
+                            ? '1px solid rgba(16, 185, 129, 0.3)'
+                            : '1px solid rgba(255, 255, 255, 0.08)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <div>
+                            <div
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: selectedEvents.includes(event.name) ? '#10b981' : 'white',
+                                fontFamily: 'monospace',
+                                marginBottom: '4px',
+                              }}
+                            >
+                              {event.name}
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#9ca3af' }}>{event.desc}</div>
+                          </div>
+                          {selectedEvents.includes(event.name) && (
+                            <Check style={{ width: '20px', height: '20px', color: '#10b981' }} />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  marginTop: '32px',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditWebhook}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Webhook Modal */}
+      <AnimatePresence>
+        {showDeleteModal && selectedWebhook && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDeleteModal(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(30, 30, 35, 0.98) 0%, rgba(20, 20, 25, 0.98) 100%)',
+                borderRadius: '20px',
+                padding: '32px',
+                maxWidth: '500px',
+                width: '100%',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+              }}
+            >
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '2px solid rgba(239, 68, 68, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 20px',
+                  }}
+                >
+                  <AlertCircle style={{ width: '32px', height: '32px', color: '#ef4444' }} />
+                </div>
+                <h2
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '12px',
+                  }}
+                >
+                  Delete Webhook
+                </h2>
+                <p style={{ fontSize: '15px', color: '#9ca3af', lineHeight: '1.6' }}>
+                  Are you sure you want to delete{' '}
+                  <strong style={{ color: 'white' }}>{selectedWebhook.name}</strong>? This action
+                  cannot be undone and all delivery history will be lost.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteWebhook}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Delete Webhook
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Test Webhook Modal */}
+      <AnimatePresence>
+        {showTestModal && selectedWebhook && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowTestModal(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(30, 30, 35, 0.98) 0%, rgba(20, 20, 25, 0.98) 100%)',
+                borderRadius: '20px',
+                padding: '32px',
+                maxWidth: '500px',
+                width: '100%',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '24px',
+                }}
+              >
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                  Test Webhook
+                </h2>
+                <button
+                  onClick={() => setShowTestModal(false)}
+                  style={{
+                    padding: '8px',
+                    borderRadius: '8px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X style={{ width: '20px', height: '20px' }} />
+                </button>
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <p
+                  style={{
+                    fontSize: '15px',
+                    color: '#9ca3af',
+                    marginBottom: '16px',
+                    lineHeight: '1.6',
+                  }}
+                >
+                  Send a test delivery to{' '}
+                  <strong style={{ color: 'white' }}>{selectedWebhook.name}</strong> to verify your
+                  endpoint is working correctly.
+                </p>
+
+                <div
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                  }}
+                >
+                  <div style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}>
+                    Endpoint URL
+                  </div>
+                  <code
+                    style={{
+                      fontSize: '14px',
+                      color: '#3b82f6',
+                      fontFamily: 'monospace',
+                      wordBreak: 'break-all',
+                    }}
+                  >
+                    {selectedWebhook.url}
+                  </code>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <button
+                  onClick={() => setShowTestModal(false)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleTestWebhook}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <Send style={{ width: '16px', height: '16px' }} />
+                  Send Test
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </DashboardLayout>
   )
 }

@@ -5,10 +5,13 @@ export interface WebhookConfig {
   name: string
   url: string
   events: string[]
-  status: 'active' | 'inactive'
+  status: 'active' | 'inactive' | 'error'
   lastTriggered: string
   successRate: number
   totalCalls: number
+  headers?: Record<string, string>
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface WebhookDelivery {
@@ -61,6 +64,11 @@ export const getWebhooksData = async (): Promise<WebhooksData> => {
         lastTriggered: '2 mins ago',
         successRate: 98.5,
         totalCalls: 12450,
+        headers: {
+          'Authorization': 'Bearer sk_live_xxx...',
+          'Content-Type': 'application/json',
+          'X-API-Version': 'v1',
+        },
       },
       {
         id: '2',
@@ -71,6 +79,10 @@ export const getWebhooksData = async (): Promise<WebhooksData> => {
         lastTriggered: '15 mins ago',
         successRate: 100,
         totalCalls: 8230,
+        headers: {
+          'X-API-Key': 'staging_key_xxx...',
+          'Content-Type': 'application/json',
+        },
       },
       {
         id: '3',
@@ -116,6 +128,56 @@ export const getWebhooksData = async (): Promise<WebhooksData> => {
       { name: 'fscores.calculated', desc: 'Emitted after F_scores are calculated for a user' },
       { name: 'persona.matched', desc: 'Sent when a persona match is found' },
       { name: 'insights.updated', desc: 'Triggered when user insights are refreshed' },
+      { name: 'api.error', desc: 'Fired when an API error occurs' },
+      { name: 'rate.limit.exceeded', desc: 'Sent when rate limit is exceeded' },
+      { name: '*', desc: 'All events (wildcard)' },
     ],
+  }
+}
+
+// Webhook CRUD operations
+export const createWebhook = async (webhook: Omit<WebhookConfig, 'id' | 'lastTriggered' | 'successRate' | 'totalCalls'>): Promise<WebhookConfig> => {
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  // Replace with actual API call
+  const newWebhook: WebhookConfig = {
+    ...webhook,
+    id: `webhook_${Date.now()}`,
+    lastTriggered: 'Never',
+    successRate: 0,
+    totalCalls: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  console.log('Creating webhook:', newWebhook)
+  return newWebhook
+}
+
+export const updateWebhook = async (id: string, updates: Partial<WebhookConfig>): Promise<WebhookConfig> => {
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  // Replace with actual API call
+  const updatedWebhook: WebhookConfig = {
+    id,
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  } as WebhookConfig
+  console.log('Updating webhook:', updatedWebhook)
+  return updatedWebhook
+}
+
+export const deleteWebhook = async (id: string): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  // Replace with actual API call
+  console.log('Deleting webhook:', id)
+}
+
+export const testWebhook = async (id: string): Promise<{ success: boolean; message: string; statusCode?: number }> => {
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+  // Replace with actual API call
+  const success = Math.random() > 0.2 // 80% success rate
+  console.log('Testing webhook:', id)
+  return {
+    success,
+    message: success ? 'Test payload delivered successfully' : 'Failed to deliver test payload',
+    statusCode: success ? 200 : 500,
   }
 }
