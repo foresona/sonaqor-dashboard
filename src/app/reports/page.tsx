@@ -30,6 +30,7 @@ export default function ReportsPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showNewReportModal, setShowNewReportModal] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
   const [scheduleToDelete, setScheduleToDelete] = useState<any>(null)
   const [generating, setGenerating] = useState(false)
@@ -204,6 +205,7 @@ export default function ReportsPage() {
             </div>
 
             <button
+              onClick={() => setShowNewReportModal(true)}
               style={{
                 padding: '12px 20px',
                 background: 'linear-gradient(135deg, #10b981 0%, #a78bfa 100%)',
@@ -1608,6 +1610,199 @@ export default function ReportsPage() {
                     <Trash2 style={{ width: '18px', height: '18px' }} />
                     Delete Schedule
                   </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* New Report Modal - Template Selector */}
+        <AnimatePresence>
+          {showNewReportModal && data && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNewReportModal(false)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.7)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: '20px',
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  borderRadius: '24px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  padding: '32px',
+                  maxWidth: '900px',
+                  width: '100%',
+                  maxHeight: '90vh',
+                  overflow: 'auto',
+                }}
+              >
+                {/* Modal Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                      Create New Report
+                    </h2>
+                    <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+                      Select a template to generate or schedule a report
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowNewReportModal(false)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '8px',
+                      padding: '8px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <X style={{ width: '20px', height: '20px', color: 'white' }} />
+                  </button>
+                </div>
+
+                {/* Template Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                  {data.templates.map((template) => {
+                    const typeColors: Record<string, string> = {
+                      Usage: '#10b981',
+                      Personas: '#a78bfa',
+                      Anomalies: '#ef4444',
+                      Compliance: '#3b82f6',
+                      Financial: '#f59e0b',
+                      Custom: '#ec4899',
+                    }
+                    const color = typeColors[template.type] || '#6b7280'
+
+                    return (
+                      <motion.div
+                        key={template.id}
+                        whileHover={{ scale: 1.02 }}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          backdropFilter: 'blur(10px)',
+                          borderRadius: '16px',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          padding: '20px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        <div style={{ marginBottom: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                            <div
+                              style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '10px',
+                                background: `${color}20`,
+                                border: `1px solid ${color}40`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <FileText style={{ width: '20px', height: '20px', color }} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                                {template.name}
+                              </h3>
+                              <span
+                                style={{
+                                  padding: '3px 8px',
+                                  borderRadius: '6px',
+                                  background: `${color}20`,
+                                  color,
+                                  fontSize: '11px',
+                                  fontWeight: '600',
+                                }}
+                              >
+                                {template.type}
+                              </span>
+                            </div>
+                          </div>
+                          <p style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '12px', lineHeight: '1.5' }}>
+                            {template.description}
+                          </p>
+                          <div style={{ color: '#6b7280', fontSize: '12px' }}>
+                            ⏱ {template.estimatedTime}
+                          </div>
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setShowNewReportModal(false)
+                              handleGenerateReport(template)
+                            }}
+                            style={{
+                              flex: 1,
+                              padding: '10px',
+                              background: 'rgba(16, 185, 129, 0.1)',
+                              border: '1px solid rgba(16, 185, 129, 0.3)',
+                              borderRadius: '8px',
+                              color: '#10b981',
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                            }}
+                          >
+                            <Play style={{ width: '14px', height: '14px' }} />
+                            Generate
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setShowNewReportModal(false)
+                              handleScheduleReportModal(template)
+                            }}
+                            style={{
+                              flex: 1,
+                              padding: '10px',
+                              background: 'rgba(59, 130, 246, 0.1)',
+                              border: '1px solid rgba(59, 130, 246, 0.3)',
+                              borderRadius: '8px',
+                              color: '#3b82f6',
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                            }}
+                          >
+                            <Calendar style={{ width: '14px', height: '14px' }} />
+                            Schedule
+                          </button>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
                 </div>
               </motion.div>
             </motion.div>
