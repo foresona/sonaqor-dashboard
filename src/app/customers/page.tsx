@@ -18,6 +18,10 @@ import {
   TrendingUp,
   CreditCard,
   Activity,
+  Users,
+  Shield,
+  Brain,
+  BarChart3,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -29,6 +33,47 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('All')
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+
+  // Calculate persona distribution
+  const personaDistribution = customers.reduce((acc, customer) => {
+    acc[customer.persona] = (acc[customer.persona] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  const personaStats = Object.entries(personaDistribution).map(([name, count]) => ({
+    name,
+    count,
+    percentage: customers.length > 0 ? (count / customers.length) * 100 : 0,
+  }))
+
+  // Calculate risk distribution
+  const riskDistribution = customers.reduce((acc, customer) => {
+    acc[customer.riskLevel] = (acc[customer.riskLevel] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  const handleExportData = () => {
+    const dataToExport = {
+      exportDate: new Date().toISOString(),
+      totalCustomers: customers.length,
+      personaDistribution,
+      riskDistribution,
+      customers: customers.map(c => ({
+        ...c,
+        exportedAt: new Date().toISOString()
+      }))
+    }
+    
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `customers-export-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   useEffect(() => {
     fetchCustomers()
@@ -105,6 +150,196 @@ export default function CustomersPage() {
             View and manage your end-customers behavioral data • {customers.length} customers
           </p>
         </div>
+
+        {/* Analytics Overview */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '20px',
+            marginBottom: '24px',
+          }}
+        >
+          {/* Total Customers */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+              padding: '24px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <Users style={{ width: '24px', height: '24px', color: '#10b981' }} />
+              <span style={{ color: '#9ca3af', fontSize: '14px', fontWeight: '500' }}>
+                Total Customers
+              </span>
+            </div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#10b981' }}>
+              {customers.length}
+            </div>
+          </motion.div>
+
+          {/* Active Customers */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(167, 139, 250, 0.05) 100%)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(167, 139, 250, 0.2)',
+              padding: '24px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <Activity style={{ width: '24px', height: '24px', color: '#a78bfa' }} />
+              <span style={{ color: '#9ca3af', fontSize: '14px', fontWeight: '500' }}>
+                Active
+              </span>
+            </div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#a78bfa' }}>
+              {customers.filter(c => c.status === 'Active').length}
+            </div>
+          </motion.div>
+
+          {/* High Risk */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              padding: '24px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <Shield style={{ width: '24px', height: '24px', color: '#ef4444' }} />
+              <span style={{ color: '#9ca3af', fontSize: '14px', fontWeight: '500' }}>
+                High Risk
+              </span>
+            </div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#ef4444' }}>
+              {customers.filter(c => c.riskLevel === 'High' || c.riskLevel === 'Critical').length}
+            </div>
+          </motion.div>
+
+          {/* Avg Confidence */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              padding: '24px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <Brain style={{ width: '24px', height: '24px', color: '#3b82f6' }} />
+              <span style={{ color: '#9ca3af', fontSize: '14px', fontWeight: '500' }}>
+                Avg Confidence
+              </span>
+            </div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#3b82f6' }}>
+              {customers.length > 0 
+                ? Math.round((customers.reduce((sum, c) => sum + c.confidence, 0) / customers.length) * 100)
+                : 0}%
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Persona Distribution Chart */}
+        {personaStats.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '24px',
+              marginBottom: '24px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <BarChart3 style={{ width: '24px', height: '24px', color: '#10b981' }} />
+              <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white' }}>
+                Persona Distribution
+              </h2>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+              {personaStats.sort((a, b) => b.count - a.count).map((stat, index) => {
+                const colors = [
+                  '#10b981', '#a78bfa', '#3b82f6', '#f59e0b', '#ef4444', 
+                  '#ec4899', '#8b5cf6', '#06b6d4', '#84cc16'
+                ]
+                const color = colors[index % colors.length]
+                
+                return (
+                  <div
+                    key={stat.name}
+                    style={{
+                      background: `${color}10`,
+                      border: `1px solid ${color}30`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                    }}
+                  >
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ color: 'white', fontWeight: '600', fontSize: '14px', marginBottom: '4px' }}>
+                        {stat.name}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <span style={{ color, fontSize: '24px', fontWeight: 'bold' }}>
+                          {stat.count}
+                        </span>
+                        <span style={{ color: '#9ca3af', fontSize: '14px' }}>
+                          ({stat.percentage.toFixed(1)}%)
+                        </span>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div
+                      style={{
+                        height: '6px',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${stat.percentage}%`,
+                          height: '100%',
+                          background: color,
+                          borderRadius: '3px',
+                          transition: 'width 0.3s ease',
+                        }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
 
         {/* Filters */}
         <div
@@ -194,6 +429,7 @@ export default function CustomersPage() {
 
             {/* Export Button */}
             <button
+              onClick={handleExportData}
               style={{
                 marginLeft: 'auto',
                 padding: '12px 20px',
