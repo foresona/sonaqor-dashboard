@@ -45,6 +45,19 @@ const MOCK_USERS = [
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=partner',
     },
   },
+  {
+    email: 'user@example.com',
+    password: 'user123',
+    user: {
+      id: '3',
+      email: 'user@example.com',
+      name: 'Basic User',
+      role: 'user' as const,
+      organizationId: 'org-3',
+      organizationName: 'User Org',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
+    },
+  },
 ]
 
 export const authService = {
@@ -52,9 +65,7 @@ export const authService = {
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 800))
 
-    const mockUser = MOCK_USERS.find(
-      (u) => u.email === email && u.password === password
-    )
+    const mockUser = MOCK_USERS.find((u) => u.email === email && u.password === password)
 
     if (!mockUser) {
       throw new Error('Invalid email or password')

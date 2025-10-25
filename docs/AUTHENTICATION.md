@@ -14,12 +14,14 @@ This dashboard includes a comprehensive authentication system with the following
 ## Demo Credentials
 
 ### Admin Account
+
 - **Email:** admin@sonaqor.com
 - **Password:** admin123
 - **Role:** Admin
 - **Organization:** Sonaqor
 
 ### Partner Account
+
 - **Email:** partner@example.com
 - **Password:** partner123
 - **Role:** Partner
@@ -46,6 +48,7 @@ src/
 ## How It Works
 
 ### 1. Login Flow
+
 1. User enters credentials on `/login` page
 2. `authService.login()` validates credentials (mock authentication)
 3. Tokens are stored in localStorage and cookies
@@ -53,16 +56,19 @@ src/
 5. User is redirected to dashboard
 
 ### 2. Route Protection
+
 - **Middleware Level:** `src/middleware.ts` checks for auth token in cookies
 - **Component Level:** `ProtectedRoute` component wraps dashboard pages
 - Unauthenticated users are redirected to `/login`
 
 ### 3. Session Persistence
+
 - Auth state is persisted using Zustand's persist middleware
 - Tokens are stored in both localStorage (for client) and cookies (for middleware)
 - On page refresh, `checkAuth()` verifies token validity
 
 ### 4. Logout Flow
+
 1. User clicks logout button in sidebar
 2. `authService.logout()` is called (can invalidate server-side session)
 3. Tokens are removed from localStorage and cookies
@@ -85,11 +91,11 @@ export const authService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     })
-    
+
     if (!response.ok) {
       throw new Error('Invalid credentials')
     }
-    
+
     return response.json()
   },
 
@@ -101,7 +107,7 @@ export const authService = {
     const response = await fetch('/api/auth/verify', {
       headers: { Authorization: `Bearer ${token}` },
     })
-    
+
     if (!response.ok) return null
     return response.json()
   },
@@ -117,7 +123,7 @@ Add automatic token refresh in `src/store/authStore.ts`:
 const refreshAuthToken = async () => {
   const refreshToken = localStorage.getItem('refresh_token')
   if (!refreshToken) return null
-  
+
   const response = await authService.refreshToken(refreshToken)
   // Update tokens and return new access token
   return response.token
@@ -151,7 +157,7 @@ apiClient.interceptors.response.use(
       // Handle token refresh or redirect to login
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 export default apiClient
@@ -160,12 +166,14 @@ export default apiClient
 ## Security Considerations
 
 ### Current Implementation (Mock/Demo)
+
 - ⚠️ Tokens are simple strings (not JWT)
 - ⚠️ No server-side validation
 - ⚠️ Passwords are stored in plain text in mock data
 - ⚠️ No rate limiting or brute force protection
 
 ### Production Recommendations
+
 1. **Use JWT Tokens** - Implement proper JWT token validation
 2. **Secure Password Storage** - Never store passwords in frontend
 3. **HTTPS Only** - Use secure cookies with httpOnly flag
@@ -209,17 +217,21 @@ To test the authentication system:
 ## Troubleshooting
 
 ### Redirect Loop
+
 If you experience redirect loops:
+
 - Clear localStorage: `localStorage.clear()`
 - Clear cookies
 - Refresh the page
 
 ### Token Not Persisting
+
 - Check browser console for errors
 - Verify localStorage is enabled
 - Check cookie settings
 
 ### Can't Access Protected Routes
+
 - Ensure you're logged in
 - Check if token exists: `localStorage.getItem('auth_token')`
 - Verify middleware is running

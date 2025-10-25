@@ -33,12 +33,12 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null })
         try {
           const response = await authService.login(email, password)
-          
+
           // Store tokens in localStorage and cookies
           if (typeof window !== 'undefined') {
             localStorage.setItem('auth_token', response.token)
             localStorage.setItem('refresh_token', response.refreshToken)
-            
+
             // Set cookie for middleware
             document.cookie = `auth_token=${response.token}; path=/; max-age=${60 * 60 * 24 * 7}` // 7 days
           }
@@ -65,12 +65,12 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true })
         try {
           await authService.logout()
-          
+
           // Clear tokens from localStorage and cookies
           if (typeof window !== 'undefined') {
             localStorage.removeItem('auth_token')
             localStorage.removeItem('refresh_token')
-            
+
             // Clear cookie
             document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
           }
@@ -91,7 +91,7 @@ export const useAuthStore = create<AuthState>()(
 
       checkAuth: async () => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-        
+
         if (!token) {
           set({ isAuthenticated: false, user: null })
           return
@@ -124,6 +124,6 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+    },
+  ),
 )

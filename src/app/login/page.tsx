@@ -146,9 +146,7 @@ export default function LoginPage() {
           >
             Welcome to Sonaqor
           </h1>
-          <p style={{ fontSize: '16px', color: '#94a3b8' }}>
-            Sign in to access your dashboard
-          </p>
+          <p style={{ fontSize: '16px', color: '#94a3b8' }}>Sign in to access your dashboard</p>
         </div>
 
         {/* Login Form */}
@@ -385,6 +383,9 @@ export default function LoginPage() {
               </div>
               <div>
                 <strong>Partner:</strong> partner@example.com / partner123
+              </div>
+              <div>
+                <strong>User:</strong> user@example.com / user123
               </div>
             </div>
           </div>
