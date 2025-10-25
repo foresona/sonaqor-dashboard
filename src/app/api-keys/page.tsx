@@ -494,13 +494,13 @@ function ApiKeysContent() {
 
 export default function ApiKeysPage() {
   return (
-    <Suspense fallback={
-      <DashboardLayout>
-        <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
-          Loading...
-        </div>
-      </DashboardLayout>
-    }>
+    <Suspense
+      fallback={
+        <DashboardLayout>
+          <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>
+        </DashboardLayout>
+      }
+    >
       <ApiKeysContent />
     </Suspense>
   )

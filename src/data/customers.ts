@@ -269,7 +269,7 @@ export const getCustomersData = async (filters?: {
       lastAnalysis: '2024-10-23 21:00',
       riskLevel: 'Low',
       persona: 'Information Junkie',
-      confidence: 0.90,
+      confidence: 0.9,
     },
     {
       id: '20',

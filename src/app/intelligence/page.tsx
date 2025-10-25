@@ -811,13 +811,13 @@ function IntelligenceContent() {
 
 export default function IntelligencePage() {
   return (
-    <Suspense fallback={
-      <DashboardLayout>
-        <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
-          Loading...
-        </div>
-      </DashboardLayout>
-    }>
+    <Suspense
+      fallback={
+        <DashboardLayout>
+          <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>
+        </DashboardLayout>
+      }
+    >
       <IntelligenceContent />
     </Suspense>
   )
