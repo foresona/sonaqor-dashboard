@@ -9,6 +9,7 @@ export interface APIKey {
   status: 'Active' | 'Revoked'
   permissions: string[]
   requestsToday: number
+  app?: string
 }
 
 export interface APIKeyUsageStats {
@@ -38,6 +39,7 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         status: 'Active',
         permissions: ['forecast.generate', 'persona.match', 'fscores.calculate'],
         requestsToday: 1247,
+        app: 'app_prod_001',
       },
       {
         id: '2',
@@ -48,6 +50,7 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         status: 'Active',
         permissions: ['forecast.generate', 'persona.match'],
         requestsToday: 342,
+        app: 'app_dev_001',
       },
       {
         id: '3',
@@ -58,6 +61,7 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         status: 'Active',
         permissions: ['forecast.generate', 'fscores.calculate', 'anomaly.detect'],
         requestsToday: 89,
+        app: 'app_staging_001',
       },
       {
         id: '4',
@@ -68,6 +72,7 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         status: 'Revoked',
         permissions: ['forecast.generate'],
         requestsToday: 0,
+        app: 'app_dev_001',
       },
       {
         id: '5',
@@ -78,6 +83,7 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         status: 'Active',
         permissions: ['persona.match', 'fscores.calculate'],
         requestsToday: 523,
+        app: 'app_prod_001',
       },
     ],
     stats: {

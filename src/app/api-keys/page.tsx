@@ -1,9 +1,21 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
+import React, { useState, useEffect, Suspense, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Key, Copy, Eye, EyeOff, Trash2, Plus, Check, Filter, X } from 'lucide-react'
+import { 
+  Key, 
+  Copy, 
+  Eye, 
+  EyeOff, 
+  Trash2, 
+  Plus, 
+  Check, 
+  Filter, 
+  X, 
+  ArrowUpDown, 
+  Layers 
+} from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { getAPIKeysData, type APIKeysData, type APIKey } from '@/data/apiKeys'
 import { getProjectsData } from '@/data/projects'
@@ -23,6 +35,11 @@ function ApiKeysContent() {
   // Filter states
   const [apps, setApps] = useState<any[]>([])
   const [selectedAppFilter, setSelectedAppFilter] = useState<string>('all')
+  
+  // Sorting and grouping states
+  const [sortBy, setSortBy] = useState<'name' | 'created' | 'lastUsed' | 'status'>('created')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [groupBy, setGroupBy] = useState<'none' | 'app' | 'status'>('app')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +76,70 @@ function ApiKeysContent() {
       router.push(`/api-keys?app=${appId}`)
     }
   }
+
+  // Sorting and grouping logic
+  const processedKeys = useMemo(() => {
+    if (!data) return []
+
+    // Filter by app
+    let filtered = selectedAppFilter === 'all' 
+      ? data.keys 
+      : data.keys.filter(key => key.app === selectedAppFilter)
+
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      let comparison = 0
+      
+      switch (sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name)
+          break
+        case 'created':
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          break
+        case 'lastUsed':
+          const aTime = a.lastUsed ? new Date(a.lastUsed).getTime() : 0
+          const bTime = b.lastUsed ? new Date(b.lastUsed).getTime() : 0
+          comparison = aTime - bTime
+          break
+        case 'status':
+          const statusOrder = { 'Active': 1, 'Revoked': 2 }
+          comparison = statusOrder[a.status] - statusOrder[b.status]
+          break
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
+
+    // Group
+    if (groupBy === 'none') {
+      return [{ title: null, keys: sorted }]
+    } else if (groupBy === 'app') {
+      const grouped = sorted.reduce((acc, key) => {
+        const group = acc.find(g => g.title === key.app)
+        if (group) {
+          group.keys.push(key)
+        } else {
+          acc.push({ title: key.app || null, keys: [key] })
+        }
+        return acc
+      }, [] as Array<{ title: string | null; keys: APIKey[] }>)
+      return grouped
+    } else if (groupBy === 'status') {
+      const grouped = sorted.reduce((acc, key) => {
+        const group = acc.find(g => g.title === key.status)
+        if (group) {
+          group.keys.push(key)
+        } else {
+          acc.push({ title: key.status, keys: [key] })
+        }
+        return acc
+      }, [] as Array<{ title: string | null; keys: APIKey[] }>)
+      return grouped
+    }
+
+    return [{ title: null, keys: sorted }]
+  }, [data, selectedAppFilter, sortBy, sortOrder, groupBy])
 
   if (loading || !data) {
     return (
@@ -97,7 +178,7 @@ function ApiKeysContent() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: '8px',
+              marginBottom: '16px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -116,111 +197,200 @@ function ApiKeysContent() {
               </h1>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {/* App Filter */}
-              <select
-                value={selectedAppFilter}
-                onChange={(e) => handleAppFilterChange(e.target.value)}
-                style={{
-                  padding: '12px 16px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontSize: '14px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  minWidth: '200px',
-                }}
-              >
-                <option value="all">All Apps</option>
-                {apps.map((app) => (
-                  <option key={app.id} value={app.id}>
-                    {app.name} ({app.environment})
-                  </option>
-                ))}
-              </select>
-
-              {/* Clear Filter Button */}
-              {selectedAppFilter !== 'all' && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  onClick={handleClearFilter}
-                  style={{
-                    padding: '12px 16px',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    borderRadius: '12px',
-                    color: '#ef4444',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
-                >
-                  <X style={{ width: '16px', height: '16px' }} />
-                  Clear
-                </motion.button>
-              )}
-
-              <button
-                onClick={() => setShowCreateModal(true)}
-                style={{
-                  padding: '12px 20px',
-                  background: 'linear-gradient(135deg, #10b981 0%, #a78bfa 100%)',
-                  border: 'none',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                <Plus style={{ width: '18px', height: '18px' }} />
-                Create API Key
-              </button>
-            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                border: 'none',
+                borderRadius: '12px',
+                color: 'white',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            >
+              <Plus style={{ width: '18px', height: '18px' }} />
+              Create API Key
+            </button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <p style={{ color: '#9ca3af', fontSize: '16px' }}>
-              Manage your API keys and access tokens • {data.keys.length} active keys
-            </p>
 
-            {/* Active Filter Badge */}
+          {/* Controls Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              flexWrap: 'wrap',
+            }}
+          >
+            {/* App Filter */}
+            <select
+              value={selectedAppFilter}
+              onChange={(e) => handleAppFilterChange(e.target.value)}
+              style={{
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                color: 'white',
+                fontSize: '14px',
+                outline: 'none',
+                cursor: 'pointer',
+                minWidth: '180px',
+              }}
+            >
+              <option value="all">All Apps</option>
+              {apps.map((app) => (
+                <option key={app.id} value={app.id}>
+                  {app.name} ({app.environment})
+                </option>
+              ))}
+            </select>
+
+            {/* Sort By */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              style={{
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                color: 'white',
+                fontSize: '14px',
+                outline: 'none',
+                cursor: 'pointer',
+                minWidth: '180px',
+              }}
+            >
+              <option value="created">Created Date</option>
+              <option value="name">Name</option>
+              <option value="lastUsed">Last Used</option>
+              <option value="status">Status</option>
+            </select>
+
+            {/* Sort Order */}
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              style={{
+                padding: '12px 14px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                color: sortOrder === 'desc' ? '#10b981' : '#9ca3af',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'all 0.2s ease',
+              }}
+              title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)')
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)')
+              }
+            >
+              <ArrowUpDown style={{ width: '18px', height: '18px' }} />
+            </button>
+
+            {/* Group By */}
+            <select
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value as any)}
+              style={{
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                color: 'white',
+                fontSize: '14px',
+                outline: 'none',
+                cursor: 'pointer',
+                minWidth: '160px',
+              }}
+            >
+              <option value="none">No Grouping</option>
+              <option value="app">Group by App</option>
+              <option value="status">Group by Status</option>
+            </select>
+
+            {/* Clear Filter Button */}
             {selectedAppFilter !== 'all' && (
-              <motion.div
+              <motion.button
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                onClick={handleClearFilter}
                 style={{
-                  padding: '6px 12px',
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  borderRadius: '8px',
-                  color: '#3b82f6',
-                  fontSize: '13px',
+                  padding: '12px 16px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '12px',
+                  color: '#ef4444',
+                  fontSize: '14px',
                   fontWeight: '600',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
+                  transition: 'all 0.2s ease',
                 }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)')
+                }
               >
-                <Filter style={{ width: '14px', height: '14px' }} />
-                App: {apps.find((a) => a.id === selectedAppFilter)?.name || selectedAppFilter}
-              </motion.div>
+                <X style={{ width: '16px', height: '16px' }} />
+                Clear Filter
+              </motion.button>
             )}
           </div>
         </div>
 
         {/* API Keys List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {data.keys.map((apiKey, index) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {processedKeys.map((group, groupIndex) => (
+            <div key={groupIndex}>
+              {/* Group Header */}
+              {group.title && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  style={{
+                    marginBottom: '16px',
+                    padding: '12px 20px',
+                    borderRadius: '12px',
+                    background: 'rgba(167, 139, 250, 0.1)',
+                    border: '1px solid rgba(167, 139, 250, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <Layers style={{ width: '20px', height: '20px', color: '#a78bfa' }} />
+                  <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#a78bfa', textTransform: 'capitalize' }}>
+                    {groupBy === 'app' ? apps.find(a => a.id === group.title)?.name || group.title : group.title}
+                  </h3>
+                  <span style={{ fontSize: '14px', color: '#9ca3af' }}>
+                    ({group.keys.length} {group.keys.length === 1 ? 'key' : 'keys'})
+                  </span>
+                </motion.div>
+              )}
+
+              {/* Keys in Group */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {group.keys.map((apiKey, index) => (
             <motion.div
               key={apiKey.id}
               initial={{ opacity: 0, y: 20 }}
@@ -422,6 +592,9 @@ function ApiKeysContent() {
                 </div>
               </div>
             </motion.div>
+          ))}
+              </div>
+            </div>
           ))}
         </div>
 
