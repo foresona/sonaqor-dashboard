@@ -11,13 +11,48 @@ import {
   TrendingUp,
   Calendar,
   DollarSign,
+  Plus,
+  X,
+  Trash2,
+  Star,
+  Bell,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function BillingPage() {
   const [data, setData] = useState<BillingData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'overview' | 'invoices' | 'usage'>('overview')
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showAlertModal, setShowAlertModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<any>(null)
+  const [notification, setNotification] = useState<string | null>(null)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
+
+  const handleUpgradePlan = (plan: any) => {
+    setSelectedPlan(plan)
+    setShowUpgradeModal(true)
+  }
+
+  const handleConfirmUpgrade = () => {
+    setShowUpgradeModal(false)
+    setNotification(`Successfully upgraded to ${selectedPlan.name} plan!`)
+    setTimeout(() => setNotification(null), 3000)
+    fetchData()
+  }
+
+  const handleAddPaymentMethod = () => {
+    setShowPaymentModal(false)
+    setNotification('Payment method added successfully!')
+    setTimeout(() => setNotification(null), 3000)
+    fetchData()
+  }
+
+  const handleDownloadInvoice = (invoice: any) => {
+    setNotification(`Downloading invoice ${invoice.id}...`)
+    setTimeout(() => setNotification(null), 2000)
+  }
 
   useEffect(() => {
     fetchData()
@@ -89,6 +124,34 @@ export default function BillingPage() {
             Manage your subscription, usage, and billing information
           </p>
         </div>
+
+        {/* Notification */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              style={{
+                position: 'fixed',
+                top: '24px',
+                right: '24px',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                padding: '16px 24px',
+                borderRadius: '12px',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.4)',
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+              }}
+            >
+              <Check style={{ width: '20px', height: '20px' }} />
+              {notification}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Tab Navigation */}
         <div
@@ -200,6 +263,7 @@ export default function BillingPage() {
                     )}
                   </div>
                   <button
+                    onClick={() => setShowUpgradeModal(true)}
                     style={{
                       padding: '12px 24px',
                       background: `${getPlanColor(currentPlan.name)}20`,
@@ -522,6 +586,201 @@ export default function BillingPage() {
                 </div>
               </div>
             </div>
+
+            {/* Payment Methods */}
+            <div style={{ marginTop: '32px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>
+                  Payment Methods
+                </h2>
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <Plus style={{ width: '18px', height: '18px' }} />
+                  Add Payment Method
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+                {data.paymentMethods.map((method) => (
+                  <div
+                    key={method.id}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: '12px',
+                      border: method.isDefault ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      padding: '20px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <CreditCard style={{ width: '32px', height: '32px', color: '#10b981' }} />
+                      {method.isDefault && (
+                        <span style={{
+                          padding: '4px 10px',
+                          background: 'rgba(16, 185, 129, 0.2)',
+                          borderRadius: '6px',
+                          color: '#10b981',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                        }}>
+                          DEFAULT
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div style={{ color: 'white', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
+                      {method.type === 'card' ? 'Credit Card' : 'Bank Account'} •••• {method.last4}
+                    </div>
+                    
+                    {method.expiryDate && (
+                      <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '8px' }}>
+                        Expires {method.expiryDate}
+                      </div>
+                    )}
+                    
+                    {method.bankName && (
+                      <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '8px' }}>
+                        {method.bankName}
+                      </div>
+                    )}
+                    
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>
+                      Added {method.addedAt}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                      {!method.isDefault && (
+                        <button style={{
+                          flex: 1,
+                          padding: '8px',
+                          background: 'rgba(59, 130, 246, 0.1)',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                          borderRadius: '6px',
+                          color: '#3b82f6',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}>
+                          Set Default
+                        </button>
+                      )}
+                      <button style={{
+                        padding: '8px',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '6px',
+                        color: '#ef4444',
+                        cursor: 'pointer',
+                      }}>
+                        <Trash2 style={{ width: '14px', height: '14px' }} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Budget Alerts */}
+            {data.alerts && data.alerts.length > 0 && (
+              <div style={{ marginTop: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>
+                    Usage Alerts
+                  </h2>
+                  <button
+                    onClick={() => setShowAlertModal(true)}
+                    style={{
+                      padding: '10px 20px',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      borderRadius: '8px',
+                      color: '#3b82f6',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Bell style={{ width: '18px', height: '18px' }} />
+                    Configure Alerts
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {data.alerts.map((alert) => (
+                    <div
+                      key={alert.id}
+                      style={{
+                        background: alert.severity === 'Critical' 
+                          ? 'rgba(239, 68, 68, 0.1)' 
+                          : 'rgba(245, 158, 11, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: '12px',
+                        border: alert.severity === 'Critical'
+                          ? '1px solid rgba(239, 68, 68, 0.3)'
+                          : '1px solid rgba(245, 158, 11, 0.3)',
+                        padding: '16px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'start', gap: '12px' }}>
+                        <AlertTriangle 
+                          style={{ 
+                            width: '24px', 
+                            height: '24px', 
+                            color: alert.severity === 'Critical' ? '#ef4444' : '#f59e0b',
+                            marginTop: '2px',
+                            flexShrink: 0,
+                          }} 
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                            <span style={{ 
+                              color: 'white', 
+                              fontSize: '16px', 
+                              fontWeight: '600',
+                            }}>
+                              {alert.metric} Usage Alert
+                            </span>
+                            <span style={{
+                              padding: '3px 10px',
+                              background: alert.severity === 'Critical' ? '#ef4444' : '#f59e0b',
+                              borderRadius: '6px',
+                              color: 'white',
+                              fontSize: '11px',
+                              fontWeight: '700',
+                            }}>
+                              {alert.severity}
+                            </span>
+                          </div>
+                          <div style={{ color: '#d1d5db', fontSize: '14px', marginBottom: '8px' }}>
+                            You've used {alert.currentUsage.toLocaleString()} of {alert.limit.toLocaleString()} ({alert.percentage}%)
+                          </div>
+                          <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                            {alert.timestamp}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -586,6 +845,7 @@ export default function BillingPage() {
                       </div>
                     </div>
                     <button
+                      onClick={() => handleDownloadInvoice(invoice)}
                       style={{
                         padding: '10px 20px',
                         background: 'rgba(16, 185, 129, 0.1)',
@@ -908,6 +1168,282 @@ export default function BillingPage() {
             </div>
           </div>
         )}
+
+        {/* Upgrade Plan Modal */}
+        <AnimatePresence>
+          {showUpgradeModal && data && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowUpgradeModal(false)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.7)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: '20px',
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  borderRadius: '24px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  padding: '32px',
+                  maxWidth: '1000px',
+                  width: '100%',
+                  maxHeight: '90vh',
+                  overflow: 'auto',
+                }}
+              >
+                {/* Modal Header */}
+                <div style={{ marginBottom: '32px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: 'white' }}>
+                      Choose Your Plan
+                    </h2>
+                    <button
+                      onClick={() => setShowUpgradeModal(false)}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <X style={{ width: '20px', height: '20px', color: 'white' }} />
+                    </button>
+                  </div>
+                  
+                  {/* Billing Cycle Toggle */}
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                    <button
+                      onClick={() => setBillingCycle('monthly')}
+                      style={{
+                        padding: '10px 20px',
+                        background: billingCycle === 'monthly' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                        border: billingCycle === 'monthly' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: billingCycle === 'monthly' ? '#10b981' : '#9ca3af',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      onClick={() => setBillingCycle('yearly')}
+                      style={{
+                        padding: '10px 20px',
+                        background: billingCycle === 'yearly' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                        border: billingCycle === 'yearly' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: billingCycle === 'yearly' ? '#10b981' : '#9ca3af',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      Yearly
+                      <span style={{ padding: '2px 8px', background: '#10b981', color: 'white', borderRadius: '4px', fontSize: '11px' }}>
+                        Save 20%
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Plans Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                  {data.availablePlans.map((plan) => {
+                    const isCurrentPlan = plan.name === data.currentPlan.name
+                    const color = getPlanColor(plan.name)
+                    const price = billingCycle === 'monthly' ? plan.pricing.monthly : Math.floor(plan.pricing.yearly / 12)
+
+                    return (
+                      <motion.div
+                        key={plan.name}
+                        whileHover={{ scale: isCurrentPlan ? 1 : 1.02 }}
+                        style={{
+                          background: isCurrentPlan 
+                            ? `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`
+                            : 'rgba(255, 255, 255, 0.05)',
+                          backdropFilter: 'blur(10px)',
+                          borderRadius: '16px',
+                          border: isCurrentPlan ? `2px solid ${color}` : '1px solid rgba(255, 255, 255, 0.1)',
+                          padding: '24px',
+                          position: 'relative',
+                        }}
+                      >
+                        {isCurrentPlan && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            padding: '4px 12px',
+                            background: color,
+                            borderRadius: '6px',
+                            color: 'white',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                          }}>
+                            CURRENT
+                          </div>
+                        )}
+
+                        {plan.name === 'Pro' && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-12px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            padding: '4px 16px',
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                            borderRadius: '12px',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}>
+                            <Star style={{ width: '12px', height: '12px' }} />
+                            POPULAR
+                          </div>
+                        )}
+
+                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color, marginBottom: '12px', marginTop: isCurrentPlan ? '24px' : '0' }}>
+                          {plan.name}
+                        </h3>
+
+                        <div style={{ marginBottom: '20px' }}>
+                          <div style={{ fontSize: '36px', fontWeight: 'bold', color: 'white' }}>
+                            ${price}
+                          </div>
+                          <div style={{ color: '#9ca3af', fontSize: '14px' }}>
+                            per month {billingCycle === 'yearly' && '(billed yearly)'}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#9ca3af', marginBottom: '4px' }}>
+                            LIMITS
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <span style={{ color: '#9ca3af' }}>API Calls</span>
+                            <span style={{ color: 'white', fontWeight: '600' }}>
+                              {plan.limits.apiCalls === -1 ? 'Unlimited' : plan.limits.apiCalls.toLocaleString()}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <span style={{ color: '#9ca3af' }}>Customers</span>
+                            <span style={{ color: 'white', fontWeight: '600' }}>
+                              {plan.limits.customers === -1 ? 'Unlimited' : plan.limits.customers.toLocaleString()}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <span style={{ color: '#9ca3af' }}>Storage</span>
+                            <span style={{ color: 'white', fontWeight: '600' }}>{plan.limits.storage}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <span style={{ color: '#9ca3af' }}>Team Members</span>
+                            <span style={{ color: 'white', fontWeight: '600' }}>
+                              {plan.limits.teamMembers === -1 ? 'Unlimited' : plan.limits.teamMembers}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '16px', marginBottom: '20px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#9ca3af', marginBottom: '12px' }}>
+                            FEATURES
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {plan.features.slice(0, 5).map((feature, idx) => (
+                              <div key={idx} style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
+                                <Check style={{ width: '16px', height: '16px', color: '#10b981', marginTop: '2px', flexShrink: 0 }} />
+                                <span style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.4' }}>{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            if (!isCurrentPlan) {
+                              setSelectedPlan(plan)
+                              handleConfirmUpgrade()
+                            }
+                          }}
+                          disabled={isCurrentPlan}
+                          style={{
+                            width: '100%',
+                            padding: '14px',
+                            background: isCurrentPlan 
+                              ? 'rgba(107, 114, 128, 0.5)'
+                              : `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+                            border: 'none',
+                            borderRadius: '12px',
+                            color: 'white',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            cursor: isCurrentPlan ? 'not-allowed' : 'pointer',
+                            opacity: isCurrentPlan ? 0.6 : 1,
+                          }}
+                        >
+                          {isCurrentPlan ? 'Current Plan' : `Upgrade to ${plan.name}`}
+                        </button>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+
+                {/* Enterprise Contact */}
+                <div style={{
+                  marginTop: '24px',
+                  padding: '20px',
+                  background: 'rgba(167, 139, 250, 0.1)',
+                  border: '1px solid rgba(167, 139, 250, 0.2)',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ color: 'white', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
+                    Need a custom plan?
+                  </div>
+                  <div style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '16px' }}>
+                    Contact our sales team for enterprise pricing and custom solutions
+                  </div>
+                  <button style={{
+                    padding: '10px 24px',
+                    background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}>
+                    Contact Sales
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   )
