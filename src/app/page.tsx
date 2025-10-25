@@ -187,59 +187,59 @@ export default function DashboardHome() {
                   background:
                     'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
                   backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                borderRadius: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                padding: '24px',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-                transition: 'transform 0.3s ease',
-                cursor: 'pointer',
-                minHeight: '180px',
-                display: 'flex',
-                flexDirection: 'column' as const,
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            >
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '12px',
-                  background: `linear-gradient(135deg, ${stat.gradientStart} 0%, ${stat.gradientEnd} 100%)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '16px',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '24px',
+                  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
                   transition: 'transform 0.3s ease',
+                  cursor: 'pointer',
+                  minHeight: '180px',
+                  display: 'flex',
+                  flexDirection: 'column' as const,
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
               >
-                <IconComponent style={{ width: '28px', height: '28px', color: 'white' }} />
-              </div>
-              <div
-                style={{
-                  fontSize: '36px',
-                  fontWeight: 'bold',
-                  marginBottom: '8px',
-                  color: 'white',
-                }}
-              >
-                {stat.value}
-              </div>
-              <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '12px' }}>
-                {stat.label}
-              </div>
-              <div
-                style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: stat.change.startsWith('+') ? '#34d399' : '#f87171',
-                  marginTop: 'auto',
-                }}
-              >
-                {stat.change} from last week
-              </div>
-            </motion.div>
+                <div
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '12px',
+                    background: `linear-gradient(135deg, ${stat.gradientStart} 0%, ${stat.gradientEnd} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '16px',
+                    transition: 'transform 0.3s ease',
+                  }}
+                >
+                  <IconComponent style={{ width: '28px', height: '28px', color: 'white' }} />
+                </div>
+                <div
+                  style={{
+                    fontSize: '36px',
+                    fontWeight: 'bold',
+                    marginBottom: '8px',
+                    color: 'white',
+                  }}
+                >
+                  {stat.value}
+                </div>
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '12px' }}>
+                  {stat.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: stat.change.startsWith('+') ? '#34d399' : '#f87171',
+                    marginTop: 'auto',
+                  }}
+                >
+                  {stat.change} from last week
+                </div>
+              </motion.div>
             )
           })}
         </div>

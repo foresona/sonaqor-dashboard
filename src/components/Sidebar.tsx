@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -24,6 +24,7 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useAuthStore } from '@/store/authStore'
 
 type MenuItem = {
   icon: any
@@ -79,7 +80,23 @@ const menuSections: MenuSection[] = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
+  const { user, logout } = useAuthStore()
+
+  const handleLogout = async () => {
+    await logout()
+    router.push('/login')
+  }
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user) return 'U'
+    const names = user.name.split(' ')
+    return names.length > 1
+      ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+      : names[0][0].toUpperCase()
+  }
 
   return (
     <motion.aside
@@ -311,7 +328,9 @@ export default function Sidebar() {
               width: '40px',
               height: '40px',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+              background: user?.avatar
+                ? 'transparent'
+                : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -319,16 +338,25 @@ export default function Sidebar() {
               fontWeight: 'bold',
               color: 'white',
               flexShrink: 0,
+              overflow: 'hidden',
             }}
           >
-            AJ
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              getUserInitials()
+            )}
           </div>
           {!collapsed && (
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{ fontWeight: '600', fontSize: '14px', color: 'white', marginBottom: '2px' }}
               >
-                Abraham Jr
+                {user?.name || 'User'}
               </div>
               <div
                 style={{
@@ -339,7 +367,7 @@ export default function Sidebar() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                abraham@foresona.ai
+                {user?.email || 'user@example.com'}
               </div>
             </div>
           )}
@@ -347,6 +375,7 @@ export default function Sidebar() {
 
         {!collapsed && (
           <button
+            onClick={handleLogout}
             style={{
               width: '100%',
               marginTop: '12px',

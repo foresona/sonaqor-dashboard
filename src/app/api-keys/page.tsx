@@ -27,7 +27,14 @@ export default function ApiKeysPage() {
   if (loading || !data) {
     return (
       <DashboardLayout>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '400px',
+          }}
+        >
           <div style={{ fontSize: '18px', color: '#9ca3af' }}>Loading...</div>
         </div>
       </DashboardLayout>

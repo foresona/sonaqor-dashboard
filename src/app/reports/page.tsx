@@ -72,7 +72,14 @@ export default function ReportsPage() {
       <div style={{ padding: '40px', maxWidth: '1600px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '8px',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <FileBarChart style={{ width: '32px', height: '32px', color: '#10b981' }} />
               <h1
@@ -138,7 +145,10 @@ export default function ReportsPage() {
                 flex: 1,
                 padding: '12px 20px',
                 background: activeTab === tab.id ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                border: activeTab === tab.id ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid transparent',
+                border:
+                  activeTab === tab.id
+                    ? '1px solid rgba(16, 185, 129, 0.3)'
+                    : '1px solid transparent',
                 borderRadius: '12px',
                 color: activeTab === tab.id ? '#10b981' : '#9ca3af',
                 fontSize: '14px',
@@ -174,9 +184,23 @@ export default function ReportsPage() {
                   padding: '24px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '16px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'start',
+                    marginBottom: '16px',
+                  }}
+                >
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    <h3
+                      style={{
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        color: 'white',
+                        marginBottom: '8px',
+                      }}
+                    >
                       {template.name}
                     </h3>
                     <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '12px' }}>
@@ -209,12 +233,22 @@ export default function ReportsPage() {
                       marginBottom: '16px',
                     }}
                   >
-                    <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '12px', textTransform: 'uppercase' }}>
+                    <div
+                      style={{
+                        color: '#6b7280',
+                        fontSize: '11px',
+                        marginBottom: '12px',
+                        textTransform: 'uppercase',
+                      }}
+                    >
                       Parameters:
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {template.parameters.map((param, idx) => (
-                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div
+                          key={idx}
+                          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                        >
                           <div
                             style={{
                               width: '6px',
@@ -292,9 +326,18 @@ export default function ReportsPage() {
                   padding: '24px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        marginBottom: '8px',
+                      }}
+                    >
                       <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>
                         {report.name}
                       </h3>
@@ -323,7 +366,9 @@ export default function ReportsPage() {
                         {report.format}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', gap: '24px', fontSize: '13px', color: '#9ca3af' }}>
+                    <div
+                      style={{ display: 'flex', gap: '24px', fontSize: '13px', color: '#9ca3af' }}
+                    >
                       <div>
                         <span style={{ color: '#6b7280' }}>Generated: </span>
                         {report.createdAt}
@@ -376,9 +421,18 @@ export default function ReportsPage() {
                   padding: '24px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}
+                >
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        marginBottom: '12px',
+                      }}
+                    >
                       <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>
                         {schedule.templateName}
                       </h3>
@@ -386,7 +440,9 @@ export default function ReportsPage() {
                         style={{
                           padding: '4px 10px',
                           borderRadius: '8px',
-                          background: schedule.active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(107, 114, 128, 0.2)',
+                          background: schedule.active
+                            ? 'rgba(16, 185, 129, 0.2)'
+                            : 'rgba(107, 114, 128, 0.2)',
                           color: schedule.active ? '#10b981' : '#6b7280',
                           fontSize: '12px',
                           fontWeight: '600',
@@ -395,10 +451,19 @@ export default function ReportsPage() {
                         {schedule.active ? 'Active' : 'Paused'}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                        marginBottom: '12px',
+                      }}
+                    >
                       <div style={{ fontSize: '13px' }}>
                         <span style={{ color: '#6b7280' }}>Frequency: </span>
-                        <span style={{ color: 'white', fontWeight: '500' }}>{schedule.frequency}</span>
+                        <span style={{ color: 'white', fontWeight: '500' }}>
+                          {schedule.frequency}
+                        </span>
                       </div>
                       <div style={{ fontSize: '13px' }}>
                         <span style={{ color: '#6b7280' }}>Format: </span>
@@ -412,7 +477,9 @@ export default function ReportsPage() {
                       </div>
                       <div style={{ fontSize: '13px' }}>
                         <span style={{ color: '#6b7280' }}>Next run: </span>
-                        <span style={{ color: '#10b981', fontWeight: '500' }}>{schedule.nextRun}</span>
+                        <span style={{ color: '#10b981', fontWeight: '500' }}>
+                          {schedule.nextRun}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -420,8 +487,12 @@ export default function ReportsPage() {
                     <button
                       style={{
                         padding: '8px 16px',
-                        background: schedule.active ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                        border: schedule.active ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+                        background: schedule.active
+                          ? 'rgba(245, 158, 11, 0.1)'
+                          : 'rgba(16, 185, 129, 0.1)',
+                        border: schedule.active
+                          ? '1px solid rgba(245, 158, 11, 0.3)'
+                          : '1px solid rgba(16, 185, 129, 0.3)',
                         borderRadius: '8px',
                         color: schedule.active ? '#f59e0b' : '#10b981',
                         fontSize: '13px',

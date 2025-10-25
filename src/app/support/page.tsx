@@ -101,10 +101,14 @@ export default function SupportPage() {
     )
   }
 
-  const categories = ['All', ...Array.from(new Set(data.articles.map((article) => article.category)))]
-  
+  const categories = [
+    'All',
+    ...Array.from(new Set(data.articles.map((article) => article.category))),
+  ]
+
   const filteredArticles = data.articles.filter((article) => {
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch =
+      searchQuery === '' ||
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.content.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === 'All' || article.category === selectedCategory
@@ -116,7 +120,14 @@ export default function SupportPage() {
       <div style={{ padding: '40px', maxWidth: '1600px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '8px',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <HelpCircle style={{ width: '32px', height: '32px', color: '#10b981' }} />
               <h1
@@ -213,7 +224,10 @@ export default function SupportPage() {
                 flex: 1,
                 padding: '12px 20px',
                 background: activeTab === tab.id ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                border: activeTab === tab.id ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid transparent',
+                border:
+                  activeTab === tab.id
+                    ? '1px solid rgba(16, 185, 129, 0.3)'
+                    : '1px solid transparent',
                 borderRadius: '12px',
                 color: activeTab === tab.id ? '#10b981' : '#9ca3af',
                 fontSize: '14px',
@@ -248,9 +262,23 @@ export default function SupportPage() {
                     padding: '24px',
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'start',
+                      marginBottom: '12px',
+                    }}
+                  >
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          marginBottom: '8px',
+                        }}
+                      >
                         <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>
                           {ticket.subject}
                         </h3>
@@ -283,10 +311,17 @@ export default function SupportPage() {
                           {ticket.priority}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', gap: '24px', fontSize: '13px', color: '#9ca3af', marginBottom: '12px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '24px',
+                          fontSize: '13px',
+                          color: '#9ca3af',
+                          marginBottom: '12px',
+                        }}
+                      >
                         <div>
-                          <span style={{ color: '#6b7280' }}>Ticket: </span>
-                          #{ticket.id}
+                          <span style={{ color: '#6b7280' }}>Ticket: </span>#{ticket.id}
                         </div>
                         <div>
                           <span style={{ color: '#6b7280' }}>Created: </span>
@@ -309,7 +344,8 @@ export default function SupportPage() {
                           fontWeight: '600',
                         }}
                       >
-                        {ticket.messages.length} {ticket.messages.length === 1 ? 'Message' : 'Messages'}
+                        {ticket.messages.length}{' '}
+                        {ticket.messages.length === 1 ? 'Message' : 'Messages'}
                       </div>
                       <button
                         style={{
@@ -344,10 +380,23 @@ export default function SupportPage() {
                   onClick={() => setSelectedCategory(category)}
                   style={{
                     padding: '8px 16px',
-                    background: selectedCategory === category ? `${category === 'All' ? '#10b981' : getCategoryColor(category)}20` : 'rgba(255, 255, 255, 0.05)',
-                    border: selectedCategory === category ? `1px solid ${category === 'All' ? '#10b981' : getCategoryColor(category)}40` : '1px solid rgba(255, 255, 255, 0.1)',
+                    background:
+                      selectedCategory === category
+                        ? `${category === 'All' ? '#10b981' : getCategoryColor(category)}20`
+                        : 'rgba(255, 255, 255, 0.05)',
+                    border:
+                      selectedCategory === category
+                        ? `1px solid ${
+                            category === 'All' ? '#10b981' : getCategoryColor(category)
+                          }40`
+                        : '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '8px',
-                    color: selectedCategory === category ? (category === 'All' ? '#10b981' : getCategoryColor(category)) : '#9ca3af',
+                    color:
+                      selectedCategory === category
+                        ? category === 'All'
+                          ? '#10b981'
+                          : getCategoryColor(category)
+                        : '#9ca3af',
                     fontSize: '13px',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -385,7 +434,14 @@ export default function SupportPage() {
                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'start', gap: '12px', marginBottom: '12px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'start',
+                      gap: '12px',
+                      marginBottom: '12px',
+                    }}
+                  >
                     <div
                       style={{
                         width: '40px',
@@ -398,10 +454,23 @@ export default function SupportPage() {
                         flexShrink: 0,
                       }}
                     >
-                      <FileText style={{ width: '20px', height: '20px', color: getCategoryColor(article.category) }} />
+                      <FileText
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          color: getCategoryColor(article.category),
+                        }}
+                      />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginBottom: '6px',
+                        }}
+                      >
                         <span
                           style={{
                             padding: '4px 8px',
@@ -418,15 +487,35 @@ export default function SupportPage() {
                           {article.views} views
                         </span>
                       </div>
-                      <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '8px' }}>
+                      <h3
+                        style={{
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          color: 'white',
+                          marginBottom: '8px',
+                        }}
+                      >
                         {article.title}
                       </h3>
                     </div>
                   </div>
-                  <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
+                  <p
+                    style={{
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      lineHeight: '1.6',
+                      marginBottom: '16px',
+                    }}
+                  >
                     {article.content.substring(0, 150)}...
                   </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
                     <div style={{ color: '#6b7280', fontSize: '12px' }}>
                       Updated {article.lastUpdated}
                     </div>
@@ -458,7 +547,9 @@ export default function SupportPage() {
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               >
-                <Search style={{ width: '48px', height: '48px', color: '#6b7280', margin: '0 auto 16px' }} />
+                <Search
+                  style={{ width: '48px', height: '48px', color: '#6b7280', margin: '0 auto 16px' }}
+                />
                 <p style={{ color: '#9ca3af', fontSize: '16px' }}>
                   No articles found matching your search.
                 </p>
@@ -505,12 +596,26 @@ export default function SupportPage() {
                   width: '100%',
                 }}
               >
-                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>
+                <h2
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '24px',
+                  }}
+                >
                   Submit New Support Ticket
                 </h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#9ca3af',
+                        fontSize: '13px',
+                        marginBottom: '8px',
+                      }}
+                    >
                       Subject
                     </label>
                     <input
@@ -529,7 +634,14 @@ export default function SupportPage() {
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#9ca3af',
+                        fontSize: '13px',
+                        marginBottom: '8px',
+                      }}
+                    >
                       Category
                     </label>
                     <select
@@ -551,7 +663,14 @@ export default function SupportPage() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#9ca3af',
+                        fontSize: '13px',
+                        marginBottom: '8px',
+                      }}
+                    >
                       Priority
                     </label>
                     <select
@@ -572,7 +691,14 @@ export default function SupportPage() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#9ca3af',
+                        fontSize: '13px',
+                        marginBottom: '8px',
+                      }}
+                    >
                       Description
                     </label>
                     <textarea

@@ -103,7 +103,7 @@ export const getSupportData = async (): Promise<SupportData> => {
             id: '1',
             author: 'Abraham Jr',
             authorType: 'user',
-            message: 'What's the best way to export all customer persona data to CSV?',
+            message: `What's the best way to export all customer persona data to CSV?`,
             timestamp: '2024-10-22 11:45',
           },
           {
@@ -111,7 +111,7 @@ export const getSupportData = async (): Promise<SupportData> => {
             author: 'Support Team',
             authorType: 'support',
             message:
-              'You can use the Reports module to generate a Customer Financial Profile report and select CSV format. Here's a guide: https://docs.sonaqor.ai/reports',
+              `You can use the Reports module to generate a Customer Financial Profile report and select CSV format. Here's a guide: https://docs.sonaqor.ai/reports`,
             timestamp: '2024-10-22 16:30',
           },
         ],
@@ -171,7 +171,7 @@ export const getSupportData = async (): Promise<SupportData> => {
         title: 'Risk & Compliance Tools Guide',
         category: 'Compliance',
         content:
-          'Use Sonaqor's risk and compliance tools to detect anomalies, screen for PEP/sanctions, and generate SAR reports. Complete guide with examples...',
+          `Use Sonaqor's risk and compliance tools to detect anomalies, screen for PEP/sanctions, and generate SAR reports. Complete guide with examples...`,
         helpful: 134,
         notHelpful: 7,
         views: 1456,
