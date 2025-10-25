@@ -14,12 +14,14 @@ This dashboard now includes a comprehensive RBAC system to control access to fea
 ## User Roles
 
 ### Admin
+
 - **Full Access** to all features and data
 - Can manage team members and roles
 - Can view and edit all settings
 - Can delete data and manage billing
 
 ### Partner
+
 - **Limited Access** to partner-specific features
 - Can create and manage own projects
 - Can view logs and create webhooks
@@ -27,6 +29,7 @@ This dashboard now includes a comprehensive RBAC system to control access to fea
 - Cannot access all customer data
 
 ### User (Read-Only)
+
 - **View-Only Access** to most features
 - Can view dashboard and reports
 - Can create support tickets
@@ -37,7 +40,7 @@ This dashboard now includes a comprehensive RBAC system to control access to fea
 
 ```
 Admin:   admin@sonaqor.com / admin123
-Partner: partner@example.com / partner123  
+Partner: partner@example.com / partner123
 User:    user@example.com / user123
 ```
 
@@ -63,20 +66,20 @@ The system includes 60+ permissions organized by feature:
 
 ### Full Permission Matrix
 
-| Permission | Admin | Partner | User |
-|------------|-------|---------|------|
-| dashboard.view | ✅ | ✅ | ✅ |
-| dashboard.analytics | ✅ | ✅ | ❌ |
-| projects.create | ✅ | ✅ | ❌ |
-| projects.delete | ✅ | ❌ | ❌ |
-| apikeys.manage | ✅ | ❌ | ❌ |
-| logs.delete | ✅ | ❌ | ❌ |
-| customers.viewAll | ✅ | ❌ | ❌ |
-| billing.manage | ✅ | ❌ | ❌ |
-| team.manageRoles | ✅ | ❌ | ❌ |
-| settings.security | ✅ | ❌ | ❌ |
+| Permission          | Admin | Partner | User |
+| ------------------- | ----- | ------- | ---- |
+| dashboard.view      | ✅    | ✅      | ✅   |
+| dashboard.analytics | ✅    | ✅      | ❌   |
+| projects.create     | ✅    | ✅      | ❌   |
+| projects.delete     | ✅    | ❌      | ❌   |
+| apikeys.manage      | ✅    | ❌      | ❌   |
+| logs.delete         | ✅    | ❌      | ❌   |
+| customers.viewAll   | ✅    | ❌      | ❌   |
+| billing.manage      | ✅    | ❌      | ❌   |
+| team.manageRoles    | ✅    | ❌      | ❌   |
+| settings.security   | ✅    | ❌      | ❌   |
 
-*See `src/lib/rbac.ts` for the complete permission matrix*
+_See `src/lib/rbac.ts` for the complete permission matrix_
 
 ## Usage
 
@@ -88,14 +91,14 @@ import { usePermission, useFeatureAccess, useIsAdmin } from '@/hooks/useRBAC'
 function MyComponent() {
   // Check single permission
   const canCreateProject = usePermission('projects.create')
-  
+
   // Check if user is admin
   const isAdmin = useIsAdmin()
-  
+
   // Get all feature permissions at once
   const projectAccess = useFeatureAccess('projects')
   // Returns: { canCreate, canEdit, canDelete, canExport, canManage, canViewAll }
-  
+
   return (
     <div>
       {canCreateProject && <CreateProjectButton />}
@@ -118,22 +121,19 @@ function MyPage() {
       <Protected permission="projects.create">
         <CreateProjectButton />
       </Protected>
-      
+
       {/* Show if user has ANY of these permissions */}
       <Protected anyPermissions={['projects.edit', 'projects.delete']}>
         <EditControls />
       </Protected>
-      
+
       {/* Show if user has ALL of these permissions */}
       <Protected allPermissions={['team.view', 'team.manageRoles']}>
         <RoleManagement />
       </Protected>
-      
+
       {/* Show fallback if no permission */}
-      <Protected 
-        permission="billing.manage"
-        fallback={<UpgradeBanner />}
-      >
+      <Protected permission="billing.manage" fallback={<UpgradeBanner />}>
         <BillingSettings />
       </Protected>
     </div>
@@ -153,7 +153,7 @@ function MyPage() {
       <Restricted permission="billing.manage">
         <UpgradeToPremiumBanner />
       </Restricted>
-      
+
       <Restricted permission="team.manageRoles">
         <ContactAdminMessage />
       </Restricted>
@@ -170,15 +170,15 @@ import { useAuthStore } from '@/store/authStore'
 
 function MyComponent() {
   const { user } = useAuthStore()
-  
+
   const handleAction = () => {
     if (!user) return
-    
+
     // Check single permission
     if (hasPermission(user.role, 'projects.create')) {
       // Create project
     }
-    
+
     // Check route access
     if (canAccessRoute(user.role, '/team')) {
       router.push('/team')
@@ -221,27 +221,23 @@ import { Protected } from '@/components/Protected'
 
 export default function APIKeysPage() {
   const apiKeyAccess = useFeatureAccess('apikeys')
-  
+
   return (
     <div>
       <h1>API Keys</h1>
-      
+
       {/* Only show create button if user can create */}
       <Protected permission="apikeys.create">
         <button>Create New API Key</button>
       </Protected>
-      
+
       <table>
-        {apiKeys.map(key => (
+        {apiKeys.map((key) => (
           <tr key={key.id}>
             <td>{key.name}</td>
             <td>
               {/* Only show revoke if user can revoke */}
-              {apiKeyAccess.canManage && (
-                <button onClick={() => revokeKey(key.id)}>
-                  Revoke
-                </button>
-              )}
+              {apiKeyAccess.canManage && <button onClick={() => revokeKey(key.id)}>Revoke</button>}
             </td>
           </tr>
         ))}
@@ -259,12 +255,12 @@ import { useCanAccessRoute } from '@/hooks/useRBAC'
 function Sidebar() {
   const canViewTeam = useCanAccessRoute('/team')
   const canViewBilling = useCanAccessRoute('/billing')
-  
+
   return (
     <nav>
       <Link href="/">Dashboard</Link>
       <Link href="/projects">Projects</Link>
-      
+
       {canViewTeam && <Link href="/team">Team</Link>}
       {canViewBilling && <Link href="/billing">Billing</Link>}
     </nav>
@@ -290,14 +286,16 @@ src/
 ### Adding New Permissions
 
 1. Add permission to type in `src/lib/rbac.ts`:
+
 ```typescript
 export type Permission =
   | 'existing.permission'
-  | 'newfeature.view'      // Add here
+  | 'newfeature.view' // Add here
   | 'newfeature.create'
 ```
 
 2. Add to role permissions:
+
 ```typescript
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   admin: [
@@ -305,16 +303,13 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'newfeature.view',
     'newfeature.create',
   ],
-  partner: [
-    'newfeature.view',
-  ],
-  user: [
-    'newfeature.view',
-  ],
+  partner: ['newfeature.view'],
+  user: ['newfeature.view'],
 }
 ```
 
 3. Add route mapping if needed:
+
 ```typescript
 export const ROUTE_PERMISSIONS: Record<string, Permission[]> = {
   '/newfeature': ['newfeature.view'],
@@ -324,6 +319,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission[]> = {
 ### Adding New Roles
 
 1. Update Role type in `src/lib/auth.ts`:
+
 ```typescript
 export interface User {
   role: 'admin' | 'partner' | 'user' | 'newrole'
@@ -331,6 +327,7 @@ export interface User {
 ```
 
 2. Add role permissions in `src/lib/rbac.ts`:
+
 ```typescript
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   // ... existing roles
@@ -344,6 +341,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 ## Security Considerations
 
 ### Current Implementation
+
 - ✅ Client-side permission checks
 - ✅ Route-level protection
 - ✅ Component-level guards
@@ -352,12 +350,14 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 ### Production Recommendations
 
 1. **Backend Validation**: Always validate permissions on the server
+
 ```typescript
 // API endpoint example
 app.post('/api/projects', authenticate, authorize(['projects.create']), createProject)
 ```
 
 2. **Token-Based Permissions**: Include permissions in JWT token
+
 ```typescript
 // JWT payload
 {
@@ -369,24 +369,27 @@ app.post('/api/projects', authenticate, authorize(['projects.create']), createPr
 ```
 
 3. **Audit Logging**: Log permission-based actions
+
 ```typescript
 await auditLog.create({
   userId: user.id,
   action: 'project.create',
   permission: 'projects.create',
-  timestamp: new Date()
+  timestamp: new Date(),
 })
 ```
 
 4. **Dynamic Permissions**: Load permissions from database
+
 ```typescript
 // Instead of static ROLE_PERMISSIONS
 const permissions = await db.rolePermissions.findMany({
-  where: { roleId: user.roleId }
+  where: { roleId: user.roleId },
 })
 ```
 
 5. **Organization-Level Permissions**: Scope permissions by organization
+
 ```typescript
 // Check if user can access resource
 if (resource.organizationId !== user.organizationId) {
@@ -400,12 +403,10 @@ if (resource.organizationId !== user.organizationId) {
 
 1. Log in as Admin (`admin@sonaqor.com / admin123`)
    - You should see all features and controls
-   
 2. Log in as Partner (`partner@example.com / partner123`)
    - Create buttons visible
    - Some admin features hidden
    - Cannot delete data
-   
 3. Log in as User (`user@example.com / user123`)
    - View-only access
    - No create/edit/delete buttons
@@ -414,6 +415,7 @@ if (resource.organizationId !== user.organizationId) {
 ### Verify Permissions
 
 Check the browser console:
+
 ```javascript
 // In browser console
 const { user } = useAuthStore.getState()
@@ -424,16 +426,19 @@ console.log('Permissions:', getRolePermissions(user.role))
 ## Troubleshooting
 
 ### Permission Check Not Working
+
 - Ensure user is authenticated
 - Check if permission is spelled correctly
 - Verify role has the permission in `ROLE_PERMISSIONS`
 
 ### Component Still Visible
+
 - Check if using `<Protected>` or `<Restricted>` correctly
 - Verify permission prop matches actual permission name
 - Check browser console for errors
 
 ### Route Access Denied
+
 - Verify route is in `ROUTE_PERMISSIONS`
 - Check if user role has required permission
 - Clear localStorage and re-login
@@ -443,12 +448,14 @@ console.log('Permissions:', getRolePermissions(user.role))
 To integrate RBAC into existing pages:
 
 1. **Import hooks**:
+
 ```typescript
 import { useFeatureAccess } from '@/hooks/useRBAC'
 import { Protected } from '@/components/Protected'
 ```
 
 2. **Wrap action buttons**:
+
 ```typescript
 <Protected permission="feature.create">
   <CreateButton />
@@ -456,6 +463,7 @@ import { Protected } from '@/components/Protected'
 ```
 
 3. **Use feature access**:
+
 ```typescript
 const access = useFeatureAccess('feature')
 if (access.canEdit) {
@@ -464,6 +472,7 @@ if (access.canEdit) {
 ```
 
 4. **Update navigation**:
+
 ```typescript
 import { useCanAccessRoute } from '@/hooks/useRBAC'
 const canAccess = useCanAccessRoute('/admin')

@@ -6,70 +6,70 @@ export type Permission =
   // Dashboard
   | 'dashboard.view'
   | 'dashboard.analytics'
-  
+
   // Projects
   | 'projects.view'
   | 'projects.create'
   | 'projects.edit'
   | 'projects.delete'
-  
+
   // API Keys
   | 'apikeys.view'
   | 'apikeys.create'
   | 'apikeys.revoke'
   | 'apikeys.manage'
-  
+
   // Logs
   | 'logs.view'
   | 'logs.export'
   | 'logs.delete'
-  
+
   // Webhooks
   | 'webhooks.view'
   | 'webhooks.create'
   | 'webhooks.edit'
   | 'webhooks.delete'
-  
+
   // Customers
   | 'customers.view'
   | 'customers.viewAll'
   | 'customers.edit'
   | 'customers.delete'
   | 'customers.export'
-  
+
   // Intelligence
   | 'intelligence.view'
   | 'intelligence.viewAll'
   | 'intelligence.export'
-  
+
   // Compliance
   | 'compliance.view'
   | 'compliance.manage'
   | 'compliance.export'
-  
+
   // Reports
   | 'reports.view'
   | 'reports.create'
   | 'reports.export'
   | 'reports.schedule'
-  
+
   // Billing
   | 'billing.view'
   | 'billing.manage'
   | 'billing.viewInvoices'
   | 'billing.downloadInvoices'
-  
+
   // Team
   | 'team.view'
   | 'team.invite'
   | 'team.edit'
   | 'team.remove'
   | 'team.manageRoles'
-  
+
   // Support
   | 'support.view'
   | 'support.createTicket'
-  
+
   // Settings
   | 'settings.view'
   | 'settings.edit'

@@ -14,12 +14,12 @@ interface ProtectedProps {
 
 /**
  * Component that conditionally renders children based on permissions
- * 
+ *
  * Usage:
  * <Protected permission="projects.create">
  *   <CreateProjectButton />
  * </Protected>
- * 
+ *
  * <Protected anyPermissions={['projects.edit', 'projects.delete']}>
  *   <EditButton />
  * </Protected>
@@ -65,7 +65,7 @@ interface RestrictedProps {
 /**
  * Component that renders children ONLY if user DOES NOT have the specified permissions
  * Opposite of Protected component
- * 
+ *
  * Usage:
  * <Restricted permission="billing.manage">
  *   <UpgradeToPremiumBanner />
