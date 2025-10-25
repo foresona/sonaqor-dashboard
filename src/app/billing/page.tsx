@@ -26,7 +26,9 @@ export default function BillingPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showAlertModal, setShowAlertModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<any>(null)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
@@ -57,12 +59,16 @@ export default function BillingPage() {
   }
 
   const handleDeletePaymentMethod = (methodId: string) => {
-    if (confirm('Are you sure you want to delete this payment method?')) {
-      setNotification('Payment method deleted successfully!')
-      setTimeout(() => setNotification(null), 3000)
-      // In a real app, this would call the backend to delete
-      fetchData()
-    }
+    setSelectedPaymentMethod(methodId)
+    setShowDeleteModal(true)
+  }
+
+  const handleConfirmDelete = () => {
+    setShowDeleteModal(false)
+    setNotification('Payment method deleted successfully!')
+    setTimeout(() => setNotification(null), 3000)
+    // In a real app, this would call the backend to delete
+    fetchData()
   }
 
   const handleConfigureAlerts = () => {
@@ -1174,6 +1180,1001 @@ export default function BillingPage() {
                     cursor: 'pointer',
                   }}>
                     Contact Sales
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Delete Payment Method Modal */}
+        <AnimatePresence>
+          {showDeleteModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteModal(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.7)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: '20px',
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                  borderRadius: '24px',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  maxWidth: '500px',
+                  width: '100%',
+                  padding: '32px',
+                  position: 'relative',
+                }}
+              >
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#9ca3af',
+                  }}
+                >
+                  <X style={{ width: '18px', height: '18px' }} />
+                </button>
+
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '2px solid rgba(239, 68, 68, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 20px',
+                  }}>
+                    <Trash2 style={{ width: '32px', height: '32px', color: '#ef4444' }} />
+                  </div>
+                  <h2 style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '12px',
+                  }}>
+                    Delete Payment Method
+                  </h2>
+                  <p style={{ color: '#9ca3af', fontSize: '14px', lineHeight: '1.6' }}>
+                    Are you sure you want to delete this payment method? This action cannot be undone.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmDelete}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Configure Alerts Modal */}
+        <AnimatePresence>
+          {showAlertModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAlertModal(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.7)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: '20px',
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                  borderRadius: '24px',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  maxWidth: '600px',
+                  width: '100%',
+                  maxHeight: '90vh',
+                  overflow: 'auto',
+                  padding: '32px',
+                  position: 'relative',
+                }}
+              >
+                <button
+                  onClick={() => setShowAlertModal(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#9ca3af',
+                  }}
+                >
+                  <X style={{ width: '18px', height: '18px' }} />
+                </button>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    border: '2px solid rgba(59, 130, 246, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '20px',
+                  }}>
+                    <Bell style={{ width: '32px', height: '32px', color: '#3b82f6' }} />
+                  </div>
+                  <h2 style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '8px',
+                  }}>
+                    Configure Usage Alerts
+                  </h2>
+                  <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+                    Set thresholds to receive notifications when you're approaching your plan limits
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px' }}>
+                  {/* API Calls Alert */}
+                  <div>
+                    <label style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+                      API Calls Alert Threshold
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <input
+                        type="range"
+                        min="50"
+                        max="95"
+                        defaultValue="80"
+                        style={{
+                          flex: 1,
+                          height: '6px',
+                          borderRadius: '3px',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          outline: 'none',
+                        }}
+                      />
+                      <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '600', minWidth: '45px' }}>80%</span>
+                    </div>
+                    <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '6px' }}>
+                      Get notified when usage reaches this percentage
+                    </p>
+                  </div>
+
+                  {/* Customers Alert */}
+                  <div>
+                    <label style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+                      Customers Alert Threshold
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <input
+                        type="range"
+                        min="50"
+                        max="95"
+                        defaultValue="85"
+                        style={{
+                          flex: 1,
+                          height: '6px',
+                          borderRadius: '3px',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          outline: 'none',
+                        }}
+                      />
+                      <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '600', minWidth: '45px' }}>85%</span>
+                    </div>
+                    <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '6px' }}>
+                      Get notified when usage reaches this percentage
+                    </p>
+                  </div>
+
+                  {/* Storage Alert */}
+                  <div>
+                    <label style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+                      Storage Alert Threshold
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <input
+                        type="range"
+                        min="50"
+                        max="95"
+                        defaultValue="90"
+                        style={{
+                          flex: 1,
+                          height: '6px',
+                          borderRadius: '3px',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          outline: 'none',
+                        }}
+                      />
+                      <span style={{ color: '#f59e0b', fontSize: '14px', fontWeight: '600', minWidth: '45px' }}>90%</span>
+                    </div>
+                    <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '6px' }}>
+                      Get notified when usage reaches this percentage
+                    </p>
+                  </div>
+
+                  {/* Bandwidth Alert */}
+                  <div>
+                    <label style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+                      Bandwidth Alert Threshold
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <input
+                        type="range"
+                        min="50"
+                        max="95"
+                        defaultValue="85"
+                        style={{
+                          flex: 1,
+                          height: '6px',
+                          borderRadius: '3px',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          outline: 'none',
+                        }}
+                      />
+                      <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '600', minWidth: '45px' }}>85%</span>
+                    </div>
+                    <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '6px' }}>
+                      Get notified when usage reaches this percentage
+                    </p>
+                  </div>
+
+                  {/* Email Notifications Toggle */}
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}>
+                    <div>
+                      <div style={{ color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
+                        Email Notifications
+                      </div>
+                      <div style={{ color: '#6b7280', fontSize: '12px' }}>
+                        Receive alerts via email
+                      </div>
+                    </div>
+                    <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '24px' }}>
+                      <input type="checkbox" defaultChecked style={{ opacity: 0, width: 0, height: 0 }} />
+                      <span style={{
+                        position: 'absolute',
+                        cursor: 'pointer',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: '#10b981',
+                        borderRadius: '24px',
+                        transition: '0.4s',
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          content: '',
+                          height: '18px',
+                          width: '18px',
+                          left: '26px',
+                          bottom: '3px',
+                          background: 'white',
+                          borderRadius: '50%',
+                          transition: '0.4s',
+                        }}></span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => setShowAlertModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveAlerts}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Save Settings
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Add Payment Method Modal */}
+        <AnimatePresence>
+          {showPaymentModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPaymentModal(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.7)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: '20px',
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.95) 100%)',
+                  borderRadius: '24px',
+                  padding: '32px',
+                  maxWidth: '500px',
+                  width: '100%',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                  <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                    Add Payment Method
+                  </h3>
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <X style={{ width: '20px', height: '20px', color: '#9ca3af' }} />
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      Payment Type
+                    </label>
+                    <select
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        color: 'white',
+                        fontSize: '14px',
+                      }}
+                    >
+                      <option value="card">Credit/Debit Card</option>
+                      <option value="bank">Bank Account</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      Card Number
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="1234 5678 9012 3456"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        color: 'white',
+                        fontSize: '14px',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                      <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                        Expiry Date
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="MM/YY"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '12px',
+                          color: 'white',
+                          fontSize: '14px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                        CVV
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="123"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '12px',
+                          color: 'white',
+                          fontSize: '14px',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      Cardholder Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="John Doe"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        color: 'white',
+                        fontSize: '14px',
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      Billing Address
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="123 Main St, City, Country"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        color: 'white',
+                        fontSize: '14px',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '12px' }}>
+                    <input type="checkbox" id="setDefault" style={{ width: '18px', height: '18px' }} />
+                    <label htmlFor="setDefault" style={{ color: '#10b981', fontSize: '14px', fontWeight: '600' }}>
+                      Set as default payment method
+                    </label>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddPaymentMethod}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Add Payment Method
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Add Payment Method Modal */}
+        <AnimatePresence>
+          {showPaymentModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPaymentModal(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.7)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: '20px',
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                  borderRadius: '24px',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  maxWidth: '500px',
+                  width: '100%',
+                  maxHeight: '90vh',
+                  overflow: 'auto',
+                  padding: '32px',
+                  position: 'relative',
+                }}
+              >
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#9ca3af',
+                  }}
+                >
+                  <X style={{ width: '18px', height: '18px' }} />
+                </button>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    border: '2px solid rgba(16, 185, 129, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '20px',
+                  }}>
+                    <CreditCard style={{ width: '32px', height: '32px', color: '#10b981' }} />
+                  </div>
+                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    Add Payment Method
+                  </h2>
+                  <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+                    Add a new credit card or bank account for billing
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      Payment Type
+                    </label>
+                    <select style={{
+                      width: '100%',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                    }}>
+                      <option value="card">Credit Card</option>
+                      <option value="bank">Bank Account</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      Card Number
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="1234 5678 9012 3456"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white',
+                        fontSize: '14px',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                        Expiry Date
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="MM/YY"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '8px',
+                          color: 'white',
+                          fontSize: '14px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                        CVV
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="123"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '8px',
+                          color: 'white',
+                          fontSize: '14px',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      Cardholder Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="John Doe"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white',
+                        fontSize: '14px',
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      Billing Address
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="123 Main St, City, State, ZIP"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white',
+                        fontSize: '14px',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="checkbox"
+                      id="setDefault"
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                    <label htmlFor="setDefault" style={{ color: '#d1d5db', fontSize: '14px', cursor: 'pointer' }}>
+                      Set as default payment method
+                    </label>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddPaymentMethod}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Add Payment Method
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Delete Confirmation Modal */}
+        <AnimatePresence>
+          {showDeleteModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteModal(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.7)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: '20px',
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                  borderRadius: '24px',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  maxWidth: '450px',
+                  width: '100%',
+                  padding: '32px',
+                  position: 'relative',
+                }}
+              >
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#9ca3af',
+                  }}
+                >
+                  <X style={{ width: '18px', height: '18px' }} />
+                </button>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '2px solid rgba(239, 68, 68, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '20px',
+                  }}>
+                    <AlertTriangle style={{ width: '32px', height: '32px', color: '#ef4444' }} />
+                  </div>
+                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    Delete Payment Method
+                  </h2>
+                  <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+                    Are you sure you want to delete this payment method? This action cannot be undone.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmDelete}
+                    style={{
+                      flex: 1,
+                      padding: '12px 24px',
+                      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete Method
                   </button>
                 </div>
               </motion.div>
