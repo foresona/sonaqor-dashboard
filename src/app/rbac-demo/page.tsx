@@ -113,7 +113,9 @@ export default function RBACDemoPage() {
                 background: 'rgba(0, 0, 0, 0.3)',
               }}
             >
-              <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Can Edit</div>
+              <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
+                Can Edit
+              </div>
               <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>
                 {projectAccess.canEdit ? '✅ Yes' : '❌ No'}
               </div>
