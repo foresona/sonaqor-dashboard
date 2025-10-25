@@ -116,7 +116,10 @@ export const updateAPISettings = async (settings: APISettings): Promise<void> =>
 }
 
 // Security operations
-export const changePassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ success: boolean; message: string }> => {
   await new Promise((resolve) => setTimeout(resolve, 800))
   // Replace with actual API call
   const success = currentPassword.length > 0 && newPassword.length >= 8
@@ -127,7 +130,11 @@ export const changePassword = async (currentPassword: string, newPassword: strin
   }
 }
 
-export const enable2FA = async (): Promise<{ success: boolean; secret: string; qrCode: string }> => {
+export const enable2FA = async (): Promise<{
+  success: boolean
+  secret: string
+  qrCode: string
+}> => {
   await new Promise((resolve) => setTimeout(resolve, 1000))
   // Replace with actual API call
   console.log('Enabling 2FA')
@@ -138,17 +145,22 @@ export const enable2FA = async (): Promise<{ success: boolean; secret: string; q
   }
 }
 
-export const disable2FA = async (verificationCode: string): Promise<{ success: boolean; message: string }> => {
+export const disable2FA = async (
+  verificationCode: string,
+): Promise<{ success: boolean; message: string }> => {
   await new Promise((resolve) => setTimeout(resolve, 800))
   // Replace with actual API call
   console.log('Disabling 2FA with code:', verificationCode)
   return {
     success: verificationCode.length === 6,
-    message: verificationCode.length === 6 ? '2FA disabled successfully' : 'Invalid verification code',
+    message:
+      verificationCode.length === 6 ? '2FA disabled successfully' : 'Invalid verification code',
   }
 }
 
-export const deleteAccount = async (password: string): Promise<{ success: boolean; message: string }> => {
+export const deleteAccount = async (
+  password: string,
+): Promise<{ success: boolean; message: string }> => {
   await new Promise((resolve) => setTimeout(resolve, 1000))
   // Replace with actual API call
   console.log('Deleting account')

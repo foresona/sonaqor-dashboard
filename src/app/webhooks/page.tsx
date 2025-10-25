@@ -77,7 +77,7 @@ export default function WebhooksPage() {
       successRate: 99.5,
       totalCalls: 12453,
       headers: {
-        'Authorization': 'Bearer sk_live_prod_xxx...',
+        Authorization: 'Bearer sk_live_prod_xxx...',
         'Content-Type': 'application/json',
         'X-API-Version': 'v2',
       },
@@ -1134,7 +1134,9 @@ export default function WebhooksPage() {
                                     gap: '8px',
                                   }}
                                 >
-                                  <span style={{ color: '#a78bfa', fontWeight: '600' }}>{key}:</span>
+                                  <span style={{ color: '#a78bfa', fontWeight: '600' }}>
+                                    {key}:
+                                  </span>
                                   <span
                                     style={{
                                       color: '#9ca3af',
@@ -2560,7 +2562,8 @@ export default function WebhooksPage() {
                         fontSize: '13px',
                       }}
                     >
-                      No custom headers configured. Click &quot;Add Header&quot; to add authentication or custom headers.
+                      No custom headers configured. Click &quot;Add Header&quot; to add
+                      authentication or custom headers.
                     </div>
                   )}
                 </div>
@@ -2916,7 +2919,8 @@ export default function WebhooksPage() {
                         fontSize: '13px',
                       }}
                     >
-                      No custom headers configured. Click &quot;Add Header&quot; to add authentication or custom headers.
+                      No custom headers configured. Click &quot;Add Header&quot; to add
+                      authentication or custom headers.
                     </div>
                   )}
                 </div>

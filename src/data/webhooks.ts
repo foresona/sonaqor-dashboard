@@ -65,7 +65,7 @@ export const getWebhooksData = async (): Promise<WebhooksData> => {
         successRate: 98.5,
         totalCalls: 12450,
         headers: {
-          'Authorization': 'Bearer sk_live_xxx...',
+          Authorization: 'Bearer sk_live_xxx...',
           'Content-Type': 'application/json',
           'X-API-Version': 'v1',
         },
@@ -136,7 +136,9 @@ export const getWebhooksData = async (): Promise<WebhooksData> => {
 }
 
 // Webhook CRUD operations
-export const createWebhook = async (webhook: Omit<WebhookConfig, 'id' | 'lastTriggered' | 'successRate' | 'totalCalls'>): Promise<WebhookConfig> => {
+export const createWebhook = async (
+  webhook: Omit<WebhookConfig, 'id' | 'lastTriggered' | 'successRate' | 'totalCalls'>,
+): Promise<WebhookConfig> => {
   await new Promise((resolve) => setTimeout(resolve, 500))
   // Replace with actual API call
   const newWebhook: WebhookConfig = {
@@ -152,7 +154,10 @@ export const createWebhook = async (webhook: Omit<WebhookConfig, 'id' | 'lastTri
   return newWebhook
 }
 
-export const updateWebhook = async (id: string, updates: Partial<WebhookConfig>): Promise<WebhookConfig> => {
+export const updateWebhook = async (
+  id: string,
+  updates: Partial<WebhookConfig>,
+): Promise<WebhookConfig> => {
   await new Promise((resolve) => setTimeout(resolve, 500))
   // Replace with actual API call
   const updatedWebhook: WebhookConfig = {
@@ -170,7 +175,9 @@ export const deleteWebhook = async (id: string): Promise<void> => {
   console.log('Deleting webhook:', id)
 }
 
-export const testWebhook = async (id: string): Promise<{ success: boolean; message: string; statusCode?: number }> => {
+export const testWebhook = async (
+  id: string,
+): Promise<{ success: boolean; message: string; statusCode?: number }> => {
   await new Promise((resolve) => setTimeout(resolve, 1000))
   // Replace with actual API call
   const success = Math.random() > 0.2 // 80% success rate
