@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Key, Copy, Eye, EyeOff, Trash2, Plus, Check, Filter, X } from 'lucide-react'
@@ -8,7 +8,7 @@ import DashboardLayout from '@/components/DashboardLayout'
 import { getAPIKeysData, type APIKeysData, type APIKey } from '@/data/apiKeys'
 import { getProjectsData } from '@/data/projects'
 
-export default function ApiKeysPage() {
+function ApiKeysContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const appId = searchParams.get('app')
@@ -489,5 +489,19 @@ export default function ApiKeysPage() {
         </motion.div>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function ApiKeysPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
+          Loading...
+        </div>
+      </DashboardLayout>
+    }>
+      <ApiKeysContent />
+    </Suspense>
   )
 }

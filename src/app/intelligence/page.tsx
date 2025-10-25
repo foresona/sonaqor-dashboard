@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
 import { getIntelligenceData, type IntelligenceData } from '@/data/intelligence'
@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-export default function IntelligencePage() {
+function IntelligenceContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const appId = searchParams.get('app')
@@ -806,5 +806,19 @@ export default function IntelligencePage() {
         </div>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function IntelligencePage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
+          Loading...
+        </div>
+      </DashboardLayout>
+    }>
+      <IntelligenceContent />
+    </Suspense>
   )
 }
