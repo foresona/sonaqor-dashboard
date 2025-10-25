@@ -49,6 +49,33 @@ export default function BillingPage() {
     fetchData()
   }
 
+  const handleSetDefaultPayment = (methodId: string) => {
+    setNotification('Default payment method updated!')
+    setTimeout(() => setNotification(null), 3000)
+    // In a real app, this would update the backend
+    fetchData()
+  }
+
+  const handleDeletePaymentMethod = (methodId: string) => {
+    if (confirm('Are you sure you want to delete this payment method?')) {
+      setNotification('Payment method deleted successfully!')
+      setTimeout(() => setNotification(null), 3000)
+      // In a real app, this would call the backend to delete
+      fetchData()
+    }
+  }
+
+  const handleConfigureAlerts = () => {
+    setShowAlertModal(true)
+  }
+
+  const handleSaveAlerts = () => {
+    setShowAlertModal(false)
+    setNotification('Alert settings saved successfully!')
+    setTimeout(() => setNotification(null), 3000)
+    fetchData()
+  }
+
   const handleDownloadInvoice = (invoice: any) => {
     setNotification(`Downloading invoice ${invoice.id}...`)
     setTimeout(() => setNotification(null), 2000)
@@ -290,303 +317,6 @@ export default function BillingPage() {
               </div>
             </div>
 
-            {/* Available Plans */}
-            <div style={{ marginBottom: '32px' }}>
-              <h2
-                style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  marginBottom: '16px',
-                }}
-              >
-                Available Plans
-              </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                {data.availablePlans.map((plan, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: 'blur(10px)',
-                      borderRadius: '16px',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      padding: '24px',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: '18px',
-                        fontWeight: 'bold',
-                        color: getPlanColor(plan.name),
-                        marginBottom: '8px',
-                      }}
-                    >
-                      {plan.name}
-                    </h3>
-                    <div
-                      style={{
-                        fontSize: '28px',
-                        fontWeight: 'bold',
-                        color: 'white',
-                        marginBottom: '16px',
-                      }}
-                    >
-                      ${plan.pricing.monthly}
-                      <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 'normal' }}>
-                        /month
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '10px',
-                        marginBottom: '20px',
-                      }}
-                    >
-                      {plan.features.slice(0, 4).map((feature, idx) => (
-                        <div key={idx} style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                          <Check
-                            style={{
-                              width: '16px',
-                              height: '16px',
-                              color: '#10b981',
-                              marginTop: '2px',
-                              flexShrink: 0,
-                            }}
-                          />
-                          <span style={{ color: '#d1d5db', fontSize: '13px' }}>{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        background: `${getPlanColor(plan.name)}20`,
-                        border: `1px solid ${getPlanColor(plan.name)}40`,
-                        borderRadius: '8px',
-                        color: getPlanColor(plan.name),
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Select Plan
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h2
-                style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  marginBottom: '16px',
-                }}
-              >
-                Current Usage
-              </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                <div
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    padding: '20px',
-                  }}
-                >
-                  <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '12px' }}>
-                    API Calls
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '24px',
-                      fontWeight: 'bold',
-                      color: 'white',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    {data.usage.apiCalls.current.toLocaleString()} /{' '}
-                    {data.usage.apiCalls.limit.toLocaleString()}
-                  </div>
-                  <div
-                    style={{
-                      height: '6px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '3px',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${data.usage.apiCalls.percentage}%`,
-                        background:
-                          data.usage.apiCalls.percentage > 80
-                            ? 'linear-gradient(to right, #f59e0b, #d97706)'
-                            : 'linear-gradient(to right, #10b981, #059669)',
-                        transition: 'width 0.3s',
-                      }}
-                    />
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
-                    {data.usage.apiCalls.percentage}% used
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    padding: '20px',
-                  }}
-                >
-                  <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '12px' }}>
-                    Customers
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '24px',
-                      fontWeight: 'bold',
-                      color: 'white',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    {data.usage.customers.current.toLocaleString()} /{' '}
-                    {data.usage.customers.limit.toLocaleString()}
-                  </div>
-                  <div
-                    style={{
-                      height: '6px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '3px',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${data.usage.customers.percentage}%`,
-                        background:
-                          data.usage.customers.percentage > 80
-                            ? 'linear-gradient(to right, #f59e0b, #d97706)'
-                            : 'linear-gradient(to right, #10b981, #059669)',
-                        transition: 'width 0.3s',
-                      }}
-                    />
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
-                    {data.usage.customers.percentage}% used
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    padding: '20px',
-                  }}
-                >
-                  <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '12px' }}>
-                    Storage
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '24px',
-                      fontWeight: 'bold',
-                      color: 'white',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    {data.usage.storage.current} / {data.usage.storage.limit}
-                  </div>
-                  <div
-                    style={{
-                      height: '6px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '3px',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${data.usage.storage.percentage}%`,
-                        background:
-                          data.usage.storage.percentage > 80
-                            ? 'linear-gradient(to right, #f59e0b, #d97706)'
-                            : 'linear-gradient(to right, #10b981, #059669)',
-                        transition: 'width 0.3s',
-                      }}
-                    />
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
-                    {data.usage.storage.percentage}% used
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    padding: '20px',
-                  }}
-                >
-                  <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '12px' }}>
-                    Bandwidth
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '24px',
-                      fontWeight: 'bold',
-                      color: 'white',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    {data.usage.bandwidth.current} / {data.usage.bandwidth.limit}
-                  </div>
-                  <div
-                    style={{
-                      height: '6px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '3px',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${data.usage.bandwidth.percentage}%`,
-                        background:
-                          data.usage.bandwidth.percentage > 80
-                            ? 'linear-gradient(to right, #f59e0b, #d97706)'
-                            : 'linear-gradient(to right, #10b981, #059669)',
-                        transition: 'width 0.3s',
-                      }}
-                    />
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
-                    {data.usage.bandwidth.percentage}% used
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Payment Methods */}
             <div style={{ marginTop: '32px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -664,28 +394,34 @@ export default function BillingPage() {
 
                     <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                       {!method.isDefault && (
-                        <button style={{
-                          flex: 1,
-                          padding: '8px',
-                          background: 'rgba(59, 130, 246, 0.1)',
-                          border: '1px solid rgba(59, 130, 246, 0.3)',
-                          borderRadius: '6px',
-                          color: '#3b82f6',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        }}>
+                        <button 
+                          onClick={() => handleSetDefaultPayment(method.id)}
+                          style={{
+                            flex: 1,
+                            padding: '8px',
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '6px',
+                            color: '#3b82f6',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                          }}
+                        >
                           Set Default
                         </button>
                       )}
-                      <button style={{
-                        padding: '8px',
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        borderRadius: '6px',
-                        color: '#ef4444',
-                        cursor: 'pointer',
-                      }}>
+                      <button 
+                        onClick={() => handleDeletePaymentMethod(method.id)}
+                        style={{
+                          padding: '8px',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '6px',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                        }}
+                      >
                         <Trash2 style={{ width: '14px', height: '14px' }} />
                       </button>
                     </div>
