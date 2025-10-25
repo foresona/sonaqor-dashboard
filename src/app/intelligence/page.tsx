@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
 import { getIntelligenceData, type IntelligenceData } from '@/data/intelligence'
+import { getProjectsData } from '@/data/projects'
 import {
   Brain,
   TrendingUp,
@@ -13,23 +15,127 @@ import {
   AlertCircle,
   Calendar,
   Filter,
+  Download,
+  BarChart3,
+  Eye,
+  X,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function IntelligencePage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const appId = searchParams.get('app')
+  const projectId = searchParams.get('project')
+
   const [data, setData] = useState<IntelligenceData | null>(null)
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | '90d'>('30d')
+  const [notification, setNotification] = useState<string | null>(null)
+
+  // Filter states
+  const [projects, setProjects] = useState<any[]>([])
+  const [apps, setApps] = useState<any[]>([])
+  const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('all')
+  const [selectedAppFilter, setSelectedAppFilter] = useState<string>('all')
 
   useEffect(() => {
     fetchData()
+    fetchProjectsAndApps()
   }, [timeRange])
+
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [notification])
+
+  useEffect(() => {
+    // Set initial filters from URL params
+    if (appId) setSelectedAppFilter(appId)
+    if (projectId) setSelectedProjectFilter(projectId)
+  }, [appId, projectId])
 
   const fetchData = async () => {
     setLoading(true)
     const intelligenceData = await getIntelligenceData(timeRange)
     setData(intelligenceData)
     setLoading(false)
+  }
+
+  const fetchProjectsAndApps = async () => {
+    const projectsData = await getProjectsData()
+    setProjects(projectsData.projects)
+    setApps(projectsData.apps)
+  }
+
+  const handleClearFilter = () => {
+    setSelectedAppFilter('all')
+    setSelectedProjectFilter('all')
+    router.push('/intelligence')
+  }
+
+  const handleProjectFilterChange = (projectId: string) => {
+    setSelectedProjectFilter(projectId)
+    setSelectedAppFilter('all') // Reset app filter when project changes
+
+    if (projectId === 'all') {
+      router.push('/intelligence')
+    } else {
+      router.push(`/intelligence?project=${projectId}`)
+    }
+  }
+
+  const handleAppFilterChange = (appId: string) => {
+    setSelectedAppFilter(appId)
+
+    if (appId === 'all') {
+      if (selectedProjectFilter !== 'all') {
+        router.push(`/intelligence?project=${selectedProjectFilter}`)
+      } else {
+        router.push('/intelligence')
+      }
+    } else {
+      const app = apps.find((a) => a.id === appId)
+      if (app) {
+        router.push(`/intelligence?app=${appId}&project=${app.projectId}`)
+      }
+    }
+  }
+
+  const getFilteredApps = () => {
+    if (selectedProjectFilter === 'all') return apps
+    return apps.filter((app) => app.projectId === selectedProjectFilter)
+  }
+
+  const handleExportData = () => {
+    if (!data) return
+
+    const exportData = {
+      timeRange,
+      appId,
+      projectId,
+      exportedAt: new Date().toISOString(),
+      totalCustomers: data.totalCustomers,
+      personas: data.personas,
+      cravings: data.cravings,
+      driftAlerts: data.driftAlerts,
+      demographics: data.demographics,
+      contextualPersonas: data.contextualPersonas,
+    }
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `intelligence-${timeRange}-${Date.now()}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+
+    setNotification('Analytics data exported successfully!')
   }
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
@@ -92,6 +198,36 @@ export default function IntelligencePage() {
   return (
     <DashboardLayout>
       <div style={{ padding: '40px', maxWidth: '1600px', margin: '0 auto' }}>
+        {/* Notification Toast */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              style={{
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                zIndex: 9999,
+                background:
+                  'linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%)',
+                color: 'white',
+                padding: '16px 24px',
+                borderRadius: '12px',
+                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                minWidth: '300px',
+              }}
+            >
+              <Download style={{ width: '20px', height: '20px' }} />
+              <span style={{ fontWeight: '600', fontSize: '14px' }}>{notification}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
           <div
@@ -118,30 +254,177 @@ export default function IntelligencePage() {
               </h1>
             </div>
 
-            {/* Time Range Filter */}
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as any)}
-              style={{
-                padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="24h">Last 24 Hours</option>
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
-            </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Project Filter */}
+              <select
+                value={selectedProjectFilter}
+                onChange={(e) => handleProjectFilterChange(e.target.value)}
+                style={{
+                  padding: '12px 16px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '180px',
+                }}
+              >
+                <option value="all">All Projects</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* App Filter */}
+              <select
+                value={selectedAppFilter}
+                onChange={(e) => handleAppFilterChange(e.target.value)}
+                style={{
+                  padding: '12px 16px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '200px',
+                }}
+              >
+                <option value="all">All Apps</option>
+                {getFilteredApps().map((app) => (
+                  <option key={app.id} value={app.id}>
+                    {app.name} ({app.environment})
+                  </option>
+                ))}
+              </select>
+
+              {/* Clear Filter Button */}
+              {(selectedProjectFilter !== 'all' || selectedAppFilter !== 'all') && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={handleClearFilter}
+                  style={{
+                    padding: '12px 16px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '12px',
+                    color: '#ef4444',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <X style={{ width: '16px', height: '16px' }} />
+                  Clear
+                </motion.button>
+              )}
+
+              {/* Export Button */}
+              <button
+                onClick={handleExportData}
+                style={{
+                  padding: '12px 20px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: '12px',
+                  color: '#10b981',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <Download style={{ width: '16px', height: '16px' }} />
+                Export Data
+              </button>
+
+              {/* Time Range Filter */}
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value as any)}
+                style={{
+                  padding: '12px 16px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="24h">Last 24 Hours</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+              </select>
+            </div>
           </div>
-          <p style={{ color: '#9ca3af', fontSize: '16px' }}>
-            Behavioral personas, craving profiles, and drift analytics
-          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <p style={{ color: '#9ca3af', fontSize: '16px' }}>
+              Behavioral personas, craving profiles, and drift analytics
+            </p>
+
+            {/* Active Filter Badges */}
+            {selectedProjectFilter !== 'all' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                style={{
+                  padding: '6px 12px',
+                  background: 'rgba(167, 139, 250, 0.1)',
+                  border: '1px solid rgba(167, 139, 250, 0.3)',
+                  borderRadius: '8px',
+                  color: '#a78bfa',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <Filter style={{ width: '14px', height: '14px' }} />
+                Project:{' '}
+                {projects.find((p) => p.id === selectedProjectFilter)?.name ||
+                  selectedProjectFilter}
+              </motion.div>
+            )}
+
+            {selectedAppFilter !== 'all' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                style={{
+                  padding: '6px 12px',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  borderRadius: '8px',
+                  color: '#3b82f6',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <Filter style={{ width: '14px', height: '14px' }} />
+                App: {apps.find((a) => a.id === selectedAppFilter)?.name || selectedAppFilter}
+              </motion.div>
+            )}
+          </div>
         </div>
 
         {/* Persona Distribution */}

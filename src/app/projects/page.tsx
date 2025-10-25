@@ -32,13 +32,13 @@ export default function ProjectsPage() {
   const [data, setData] = useState<ProjectsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
-  
+
   // Modal states
   const [showCreateProject, setShowCreateProject] = useState(false)
   const [showCreateApp, setShowCreateApp] = useState(false)
   const [showAppSettings, setShowAppSettings] = useState(false)
   const [selectedAppForEdit, setSelectedAppForEdit] = useState<App | null>(null)
-  
+
   // Form states
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [newApp, setNewApp] = useState({
@@ -47,17 +47,17 @@ export default function ProjectsPage() {
     rateLimit: 100,
     ipWhitelist: '',
   })
-  
+
   // Notification state
   const [notification, setNotification] = useState<{
     type: 'success' | 'error'
     message: string
   } | null>(null)
-  
+
   // Search & filter
   const [searchQuery, setSearchQuery] = useState('')
   const [filterEnv, setFilterEnv] = useState<string>('All')
-  
+
   // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -90,7 +90,7 @@ export default function ProjectsPage() {
     }
 
     setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate API call
 
     const project: Project = {
       id: String(Date.now()),
@@ -101,11 +101,15 @@ export default function ProjectsPage() {
       status: 'Active',
     }
 
-    setData(prev => prev ? {
-      ...prev,
-      projects: [...prev.projects, project],
-      stats: { ...prev.stats, totalProjects: prev.stats.totalProjects + 1 }
-    } : null)
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            projects: [...prev.projects, project],
+            stats: { ...prev.stats, totalProjects: prev.stats.totalProjects + 1 },
+          }
+        : null,
+    )
 
     setNotification({ type: 'success', message: 'Project created successfully!' })
     setShowCreateProject(false)
@@ -122,7 +126,7 @@ export default function ProjectsPage() {
     if (!selectedProject) return
 
     setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     const app: App = {
       id: String(Date.now()),
@@ -134,15 +138,26 @@ export default function ProjectsPage() {
       webhooks: 0,
       lastUsed: 'Just now',
       createdAt: new Date().toISOString().split('T')[0],
-      ipWhitelist: newApp.ipWhitelist.split(',').map(ip => ip.trim()).filter(Boolean),
+      ipWhitelist: newApp.ipWhitelist
+        .split(',')
+        .map((ip) => ip.trim())
+        .filter(Boolean),
       rateLimit: newApp.rateLimit,
     }
 
-    setData(prev => prev ? {
-      ...prev,
-      apps: [...prev.apps, app],
-      stats: { ...prev.stats, totalApps: prev.stats.totalApps + 1, activeApps: prev.stats.activeApps + 1 }
-    } : null)
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            apps: [...prev.apps, app],
+            stats: {
+              ...prev.stats,
+              totalApps: prev.stats.totalApps + 1,
+              activeApps: prev.stats.activeApps + 1,
+            },
+          }
+        : null,
+    )
 
     setNotification({ type: 'success', message: 'App created successfully!' })
     setShowCreateApp(false)
@@ -154,12 +169,18 @@ export default function ProjectsPage() {
     if (!selectedAppForEdit) return
 
     setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-    setData(prev => prev ? {
-      ...prev,
-      apps: prev.apps.map(app => app.id === selectedAppForEdit.id ? selectedAppForEdit : app)
-    } : null)
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            apps: prev.apps.map((app) =>
+              app.id === selectedAppForEdit.id ? selectedAppForEdit : app,
+            ),
+          }
+        : null,
+    )
 
     setNotification({ type: 'success', message: 'App updated successfully!' })
     setShowAppSettings(false)
@@ -171,13 +192,21 @@ export default function ProjectsPage() {
     if (!confirm('Are you sure you want to delete this app? This action cannot be undone.')) return
 
     setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-    setData(prev => prev ? {
-      ...prev,
-      apps: prev.apps.filter(app => app.id !== appId),
-      stats: { ...prev.stats, totalApps: prev.stats.totalApps - 1, activeApps: prev.stats.activeApps - 1 }
-    } : null)
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            apps: prev.apps.filter((app) => app.id !== appId),
+            stats: {
+              ...prev.stats,
+              totalApps: prev.stats.totalApps - 1,
+              activeApps: prev.stats.activeApps - 1,
+            },
+          }
+        : null,
+    )
 
     setNotification({ type: 'success', message: 'App deleted successfully!' })
     setShowAppSettings(false)
@@ -237,9 +266,10 @@ export default function ProjectsPage() {
   const currentProject = data.projects.find((p) => p.id === selectedProject)
   const projectApps = data.apps
     .filter((app) => app.projectId === selectedProject)
-    .filter((app) => 
-      app.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (filterEnv === 'All' || app.environment === filterEnv)
+    .filter(
+      (app) =>
+        app.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (filterEnv === 'All' || app.environment === filterEnv),
     )
 
   return (
@@ -257,9 +287,10 @@ export default function ProjectsPage() {
                 top: '20px',
                 right: '20px',
                 zIndex: 9999,
-                background: notification.type === 'success' 
-                  ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%)'
-                  : 'linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%)',
+                background:
+                  notification.type === 'success'
+                    ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%)'
+                    : 'linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%)',
                 color: 'white',
                 padding: '16px 24px',
                 borderRadius: '12px',
@@ -497,18 +528,20 @@ export default function ProjectsPage() {
                   <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>
                     Applications
                   </h2>
-                  
+
                   {/* Search */}
                   <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
-                    <Search style={{ 
-                      position: 'absolute', 
-                      left: '12px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)',
-                      width: '16px', 
-                      height: '16px', 
-                      color: '#6b7280' 
-                    }} />
+                    <Search
+                      style={{
+                        position: 'absolute',
+                        left: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '16px',
+                        height: '16px',
+                        color: '#6b7280',
+                      }}
+                    />
                     <input
                       type="text"
                       placeholder="Search apps..."
@@ -525,7 +558,7 @@ export default function ProjectsPage() {
                       }}
                     />
                   </div>
-                  
+
                   {/* Environment Filter */}
                   <select
                     value={filterEnv}
@@ -546,7 +579,7 @@ export default function ProjectsPage() {
                     <option value="Development">Development</option>
                   </select>
                 </div>
-                
+
                 <button
                   onClick={() => setShowCreateApp(true)}
                   style={{
@@ -833,7 +866,8 @@ export default function ProjectsPage() {
                 exit={{ scale: 0.9, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
                   backdropFilter: 'blur(20px)',
                   borderRadius: '20px',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -842,8 +876,17 @@ export default function ProjectsPage() {
                   width: '90%',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>Create New Project</h2>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '24px',
+                  }}
+                >
+                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                    Create New Project
+                  </h2>
                   <button
                     onClick={() => setShowCreateProject(false)}
                     disabled={isSubmitting}
@@ -860,7 +903,15 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     Project Name *
                   </label>
                   <input
@@ -882,7 +933,15 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     Description
                   </label>
                   <textarea
@@ -926,9 +985,10 @@ export default function ProjectsPage() {
                     disabled={isSubmitting || !newProject.name.trim()}
                     style={{
                       padding: '12px 24px',
-                      background: isSubmitting || !newProject.name.trim() 
-                        ? 'rgba(16, 185, 129, 0.3)' 
-                        : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      background:
+                        isSubmitting || !newProject.name.trim()
+                          ? 'rgba(16, 185, 129, 0.3)'
+                          : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                       border: 'none',
                       borderRadius: '10px',
                       color: 'white',
@@ -973,7 +1033,8 @@ export default function ProjectsPage() {
                 exit={{ scale: 0.9, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
                   backdropFilter: 'blur(20px)',
                   borderRadius: '20px',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -982,8 +1043,17 @@ export default function ProjectsPage() {
                   width: '90%',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>Create New App</h2>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '24px',
+                  }}
+                >
+                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                    Create New App
+                  </h2>
                   <button
                     onClick={() => setShowCreateApp(false)}
                     disabled={isSubmitting}
@@ -1000,7 +1070,15 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     App Name *
                   </label>
                   <input
@@ -1022,7 +1100,15 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     Environment *
                   </label>
                   <select
@@ -1047,13 +1133,23 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     Rate Limit (requests/min)
                   </label>
                   <input
                     type="number"
                     value={newApp.rateLimit}
-                    onChange={(e) => setNewApp({ ...newApp, rateLimit: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setNewApp({ ...newApp, rateLimit: parseInt(e.target.value) || 0 })
+                    }
                     placeholder="100"
                     disabled={isSubmitting}
                     min="1"
@@ -1070,7 +1166,15 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     IP Whitelist (comma-separated)
                   </label>
                   <textarea
@@ -1114,9 +1218,10 @@ export default function ProjectsPage() {
                     disabled={isSubmitting || !newApp.name.trim()}
                     style={{
                       padding: '12px 24px',
-                      background: isSubmitting || !newApp.name.trim()
-                        ? 'rgba(16, 185, 129, 0.3)'
-                        : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      background:
+                        isSubmitting || !newApp.name.trim()
+                          ? 'rgba(16, 185, 129, 0.3)'
+                          : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                       border: 'none',
                       borderRadius: '10px',
                       color: 'white',
@@ -1158,7 +1263,8 @@ export default function ProjectsPage() {
                 exit={{ scale: 0.9, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
                   backdropFilter: 'blur(20px)',
                   borderRadius: '20px',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -1169,8 +1275,17 @@ export default function ProjectsPage() {
                   overflowY: 'auto',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>App Settings</h2>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '24px',
+                  }}
+                >
+                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                    App Settings
+                  </h2>
                   <button
                     onClick={() => setShowAppSettings(false)}
                     disabled={isSubmitting}
@@ -1187,13 +1302,23 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     App Name
                   </label>
                   <input
                     type="text"
                     value={selectedAppForEdit.name}
-                    onChange={(e) => setSelectedAppForEdit({ ...selectedAppForEdit, name: e.target.value })}
+                    onChange={(e) =>
+                      setSelectedAppForEdit({ ...selectedAppForEdit, name: e.target.value })
+                    }
                     disabled={isSubmitting}
                     style={{
                       width: '100%',
@@ -1208,12 +1333,25 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     Environment
                   </label>
                   <select
                     value={selectedAppForEdit.environment}
-                    onChange={(e) => setSelectedAppForEdit({ ...selectedAppForEdit, environment: e.target.value as any })}
+                    onChange={(e) =>
+                      setSelectedAppForEdit({
+                        ...selectedAppForEdit,
+                        environment: e.target.value as any,
+                      })
+                    }
                     disabled={isSubmitting}
                     style={{
                       width: '100%',
@@ -1233,13 +1371,26 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     Rate Limit (requests/min)
                   </label>
                   <input
                     type="number"
                     value={selectedAppForEdit.rateLimit}
-                    onChange={(e) => setSelectedAppForEdit({ ...selectedAppForEdit, rateLimit: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setSelectedAppForEdit({
+                        ...selectedAppForEdit,
+                        rateLimit: parseInt(e.target.value) || 0,
+                      })
+                    }
                     disabled={isSubmitting}
                     min="1"
                     style={{
@@ -1255,12 +1406,25 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     Status
                   </label>
                   <select
                     value={selectedAppForEdit.status}
-                    onChange={(e) => setSelectedAppForEdit({ ...selectedAppForEdit, status: e.target.value as any })}
+                    onChange={(e) =>
+                      setSelectedAppForEdit({
+                        ...selectedAppForEdit,
+                        status: e.target.value as any,
+                      })
+                    }
                     disabled={isSubmitting}
                     style={{
                       width: '100%',
@@ -1279,7 +1443,15 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '8px', fontWeight: '600' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
                     IP Whitelist
                   </label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1306,7 +1478,9 @@ export default function ProjectsPage() {
                         />
                         <button
                           onClick={() => {
-                            const newList = selectedAppForEdit.ipWhitelist.filter((_, i) => i !== idx)
+                            const newList = selectedAppForEdit.ipWhitelist.filter(
+                              (_, i) => i !== idx,
+                            )
                             setSelectedAppForEdit({ ...selectedAppForEdit, ipWhitelist: newList })
                           }}
                           disabled={isSubmitting}
@@ -1324,10 +1498,12 @@ export default function ProjectsPage() {
                       </div>
                     ))}
                     <button
-                      onClick={() => setSelectedAppForEdit({ 
-                        ...selectedAppForEdit, 
-                        ipWhitelist: [...selectedAppForEdit.ipWhitelist, ''] 
-                      })}
+                      onClick={() =>
+                        setSelectedAppForEdit({
+                          ...selectedAppForEdit,
+                          ipWhitelist: [...selectedAppForEdit.ipWhitelist, ''],
+                        })
+                      }
                       disabled={isSubmitting}
                       style={{
                         padding: '10px',
@@ -1350,13 +1526,15 @@ export default function ProjectsPage() {
                   </div>
                 </div>
 
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '12px', 
-                  justifyContent: 'space-between',
-                  paddingTop: '20px',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-                }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '12px',
+                    justifyContent: 'space-between',
+                    paddingTop: '20px',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                >
                   <button
                     onClick={() => handleDeleteApp(selectedAppForEdit.id)}
                     disabled={isSubmitting}
@@ -1377,7 +1555,7 @@ export default function ProjectsPage() {
                     <Trash2 style={{ width: '16px', height: '16px' }} />
                     Delete App
                   </button>
-                  
+
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <button
                       onClick={() => setShowAppSettings(false)}

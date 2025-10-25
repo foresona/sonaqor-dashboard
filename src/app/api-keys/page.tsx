@@ -1,18 +1,28 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Key, Copy, Eye, EyeOff, Trash2, Plus, Check } from 'lucide-react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Key, Copy, Eye, EyeOff, Trash2, Plus, Check, Filter, X } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { getAPIKeysData, type APIKeysData, type APIKey } from '@/data/apiKeys'
+import { getProjectsData } from '@/data/projects'
 
 export default function ApiKeysPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const appId = searchParams.get('app')
+
   const [data, setData] = useState<APIKeysData | null>(null)
   const [loading, setLoading] = useState(true)
   const [showKey, setShowKey] = useState<{ [key: string]: boolean }>({})
   const [copied, setCopied] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
+
+  // Filter states
+  const [apps, setApps] = useState<any[]>([])
+  const [selectedAppFilter, setSelectedAppFilter] = useState<string>('all')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,7 +32,33 @@ export default function ApiKeysPage() {
       setLoading(false)
     }
     fetchData()
+    fetchApps()
   }, [])
+
+  useEffect(() => {
+    // Set initial filter from URL param
+    if (appId) setSelectedAppFilter(appId)
+  }, [appId])
+
+  const fetchApps = async () => {
+    const projectsData = await getProjectsData()
+    setApps(projectsData.apps)
+  }
+
+  const handleClearFilter = () => {
+    setSelectedAppFilter('all')
+    router.push('/api-keys')
+  }
+
+  const handleAppFilterChange = (appId: string) => {
+    setSelectedAppFilter(appId)
+
+    if (appId === 'all') {
+      router.push('/api-keys')
+    } else {
+      router.push(`/api-keys?app=${appId}`)
+    }
+  }
 
   if (loading || !data) {
     return (
@@ -79,29 +115,107 @@ export default function ApiKeysPage() {
                 API Keys
               </h1>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              style={{
-                padding: '12px 20px',
-                background: 'linear-gradient(135deg, #10b981 0%, #a78bfa 100%)',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <Plus style={{ width: '18px', height: '18px' }} />
-              Create API Key
-            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* App Filter */}
+              <select
+                value={selectedAppFilter}
+                onChange={(e) => handleAppFilterChange(e.target.value)}
+                style={{
+                  padding: '12px 16px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '200px',
+                }}
+              >
+                <option value="all">All Apps</option>
+                {apps.map((app) => (
+                  <option key={app.id} value={app.id}>
+                    {app.name} ({app.environment})
+                  </option>
+                ))}
+              </select>
+
+              {/* Clear Filter Button */}
+              {selectedAppFilter !== 'all' && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={handleClearFilter}
+                  style={{
+                    padding: '12px 16px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '12px',
+                    color: '#ef4444',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <X style={{ width: '16px', height: '16px' }} />
+                  Clear
+                </motion.button>
+              )}
+
+              <button
+                onClick={() => setShowCreateModal(true)}
+                style={{
+                  padding: '12px 20px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #a78bfa 100%)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <Plus style={{ width: '18px', height: '18px' }} />
+                Create API Key
+              </button>
+            </div>
           </div>
-          <p style={{ color: '#9ca3af', fontSize: '16px' }}>
-            Manage your API keys and monitor usage • {data.keys.length} active keys
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <p style={{ color: '#9ca3af', fontSize: '16px' }}>
+              Manage your API keys and access tokens • {data.keys.length} active keys
+            </p>
+
+            {/* Active Filter Badge */}
+            {selectedAppFilter !== 'all' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                style={{
+                  padding: '6px 12px',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  borderRadius: '8px',
+                  color: '#3b82f6',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <Filter style={{ width: '14px', height: '14px' }} />
+                App: {apps.find((a) => a.id === selectedAppFilter)?.name || selectedAppFilter}
+              </motion.div>
+            )}
+          </div>
         </div>
 
         {/* API Keys List */}
