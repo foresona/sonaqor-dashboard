@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Activity,
@@ -17,220 +17,82 @@ import {
   Check,
 } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
-
-interface LogEntry {
-  id: string
-  timestamp: string
-  method: string
-  endpoint: string
-  status: number
-  duration: number
-  ip: string
-  apiKey: string
-  requestBody?: any
-  responseBody?: any
-  headers?: Record<string, string>
-}
+import { getLogsData, type LogsData, type APILogEntry } from '@/data/logs'
 
 export default function LogsPage() {
+  const [data, setData] = useState<LogsData | null>(null)
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedLog, setExpandedLog] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
 
-  const logs: LogEntry[] = [
-    {
-      id: '1',
-      timestamp: '2025-10-24 14:32:15',
-      method: 'POST',
-      endpoint: '/v1/forecast/generate',
-      status: 200,
-      duration: 1.8,
-      ip: '192.168.1.1',
-      apiKey: 'sk_live_****9pQ',
-      requestBody: {
-        user_id: 'usr_1234567890',
-        transaction_data: {
-          amount: 5000,
-          merchant: 'Amazon',
-          category: 'Shopping',
-          location: 'Lagos, Nigeria',
-        },
-      },
-      responseBody: {
-        forecast_id: 'fct_abc123def456',
-        persona_type: 'impulsive_spender',
-        confidence_score: 0.87,
-        predicted_behavior: {
-          spending_pattern: 'high_frequency',
-          risk_level: 'medium',
-        },
-      },
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer sk_live_****9pQ',
-        'User-Agent': 'SonaqorSDK/1.0.0',
-      },
-    },
-    {
-      id: '2',
-      timestamp: '2025-10-24 14:31:42',
-      method: 'POST',
-      endpoint: '/v1/persona/match',
-      status: 200,
-      duration: 0.9,
-      ip: '192.168.1.2',
-      apiKey: 'sk_live_****9pQ',
-      requestBody: {
-        user_id: 'usr_9876543210',
-        transaction_history: [
-          { amount: 1000, category: 'Savings' },
-          { amount: 500, category: 'Investment' },
-        ],
-      },
-      responseBody: {
-        match_id: 'mtch_xyz789ghi012',
-        persona: 'conservative_saver',
-        match_score: 0.92,
-        recommendations: ['Fixed deposit accounts', 'Government bonds'],
-      },
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer sk_live_****9pQ',
-      },
-    },
-    {
-      id: '3',
-      timestamp: '2025-10-24 14:30:18',
-      method: 'GET',
-      endpoint: '/v1/fscores/calculate',
-      status: 429,
-      duration: 0.1,
-      ip: '192.168.1.3',
-      apiKey: 'sk_test_****9pQ',
-      requestBody: null,
-      responseBody: {
-        error: 'rate_limit_exceeded',
-        message: 'You have exceeded the rate limit. Please try again in 60 seconds.',
-        retry_after: 60,
-      },
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer sk_test_****9pQ',
-      },
-    },
-    {
-      id: '4',
-      timestamp: '2025-10-24 14:29:55',
-      method: 'POST',
-      endpoint: '/v1/forecast/generate',
-      status: 500,
-      duration: 5.2,
-      ip: '192.168.1.1',
-      apiKey: 'sk_live_****9pQ',
-      requestBody: {
-        user_id: 'usr_error_test',
-        transaction_data: {
-          amount: 10000,
-          merchant: 'Test Merchant',
-        },
-      },
-      responseBody: {
-        error: 'internal_server_error',
-        message: 'An unexpected error occurred while processing the forecast.',
-        request_id: 'req_error_12345',
-      },
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer sk_live_****9pQ',
-      },
-    },
-    {
-      id: '5',
-      timestamp: '2025-10-24 14:28:33',
-      method: 'POST',
-      endpoint: '/v1/persona/match',
-      status: 200,
-      duration: 1.1,
-      ip: '192.168.1.4',
-      apiKey: 'sk_live_****9pQ',
-      requestBody: {
-        user_id: 'usr_5555666777',
-        transaction_history: [
-          { amount: 25000, category: 'Electronics' },
-          { amount: 30000, category: 'Furniture' },
-        ],
-      },
-      responseBody: {
-        match_id: 'mtch_impulsive_123',
-        persona: 'big_spender',
-        match_score: 0.95,
-      },
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer sk_live_****9pQ',
-      },
-    },
-    {
-      id: '6',
-      timestamp: '2025-10-24 14:27:10',
-      method: 'GET',
-      endpoint: '/v1/health',
-      status: 200,
-      duration: 0.05,
-      ip: '192.168.1.5',
-      apiKey: 'sk_live_****9pQ',
-      requestBody: null,
-      responseBody: {
-        status: 'healthy',
-        version: '1.0.0',
-        uptime: 345600,
-      },
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  ]
+  useEffect(() => {
+    fetchData()
+  }, [searchQuery, filter])
+
+  const fetchData = async () => {
+    setLoading(true)
+    const logsData = await getLogsData(searchQuery, filter)
+    setData(logsData)
+    setLoading(false)
+  }
 
   const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(JSON.stringify(text, null, 2))
     setCopied(id)
     setTimeout(() => setCopied(null), 2000)
+  }
+
+  const getStatusIcon = (status: number) => {
+    if (status >= 200 && status < 300) return CheckCircle
+    if (status >= 400 && status < 500) return AlertTriangle
+    if (status >= 500) return XCircle
+    return Clock
   }
 
   const getStatusColor = (status: number) => {
     if (status >= 200 && status < 300)
       return { bg: 'rgba(16, 185, 129, 0.2)', border: 'rgba(16, 185, 129, 0.3)', text: '#10b981' }
     if (status >= 400 && status < 500)
-      return { bg: 'rgba(251, 191, 36, 0.2)', border: 'rgba(251, 191, 36, 0.3)', text: '#fbbf24' }
+      return { bg: 'rgba(245, 158, 11, 0.2)', border: 'rgba(245, 158, 11, 0.3)', text: '#f59e0b' }
     if (status >= 500)
       return { bg: 'rgba(239, 68, 68, 0.2)', border: 'rgba(239, 68, 68, 0.3)', text: '#ef4444' }
-    return { bg: 'rgba(156, 163, 175, 0.2)', border: 'rgba(156, 163, 175, 0.3)', text: '#9ca3af' }
-  }
-
-  const getStatusIcon = (status: number) => {
-    if (status >= 200 && status < 300)
-      return <CheckCircle style={{ width: '16px', height: '16px' }} />
-    if (status >= 400 && status < 500)
-      return <AlertTriangle style={{ width: '16px', height: '16px' }} />
-    if (status >= 500) return <XCircle style={{ width: '16px', height: '16px' }} />
-    return <Clock style={{ width: '16px', height: '16px' }} />
+    return { bg: 'rgba(107, 114, 128, 0.2)', border: 'rgba(107, 114, 128, 0.3)', text: '#6b7280' }
   }
 
   const getMethodColor = (method: string) => {
-    switch (method) {
-      case 'GET':
-        return { bg: 'rgba(59, 130, 246, 0.2)', text: '#3b82f6' }
-      case 'POST':
-        return { bg: 'rgba(16, 185, 129, 0.2)', text: '#10b981' }
-      case 'PUT':
-        return { bg: 'rgba(251, 191, 36, 0.2)', text: '#fbbf24' }
-      case 'DELETE':
-        return { bg: 'rgba(239, 68, 68, 0.2)', text: '#ef4444' }
-      default:
-        return { bg: 'rgba(156, 163, 175, 0.2)', text: '#9ca3af' }
+    const colors: any = {
+      GET: { bg: 'rgba(59, 130, 246, 0.2)', text: '#3b82f6' },
+      POST: { bg: 'rgba(16, 185, 129, 0.2)', text: '#10b981' },
+      PUT: { bg: 'rgba(245, 158, 11, 0.2)', text: '#f59e0b' },
+      DELETE: { bg: 'rgba(239, 68, 68, 0.2)', text: '#ef4444' },
+      PATCH: { bg: 'rgba(167, 139, 250, 0.2)', text: '#a78bfa' },
     }
+    return colors[method] || { bg: 'rgba(107, 114, 128, 0.2)', text: '#6b7280' }
   }
+
+  if (loading || !data) {
+    return (
+      <DashboardLayout>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
+          Loading API logs...
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  const filteredLogs = data.logs.filter((log) => {
+    const matchesSearch =
+      searchQuery === '' ||
+      log.endpoint.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.ip.includes(searchQuery)
+    const matchesFilter =
+      filter === 'all' ||
+      (filter === 'success' && log.status >= 200 && log.status < 300) ||
+      (filter === 'error' && log.status >= 400)
+    return matchesSearch && matchesFilter
+  })
 
   return (
     <DashboardLayout>
@@ -266,25 +128,25 @@ export default function LogsPage() {
           {[
             {
               label: 'Total Requests',
-              value: '45,234',
+              value: data.stats.totalRequests,
               icon: Activity,
               gradient: { start: '#3b82f6', end: '#8b5cf6' },
             },
             {
               label: 'Success Rate',
-              value: '50.2%',
+              value: `${data.stats.successRate}%`,
               icon: CheckCircle,
               gradient: { start: '#10b981', end: '#059669' },
             },
             {
               label: 'Avg Response',
-              value: '1.2s',
+              value: data.stats.avgResponse,
               icon: Clock,
               gradient: { start: '#a855f7', end: '#ec4899' },
             },
             {
               label: 'Errors',
-              value: '342',
+              value: data.stats.errors.toString(),
               icon: XCircle,
               gradient: { start: '#ef4444', end: '#dc2626' },
             },
@@ -499,7 +361,7 @@ export default function LogsPage() {
 
           {/* Table Body */}
           <div>
-            {logs.map((log, index) => {
+            {filteredLogs.map((log, index) => {
               const statusColor = getStatusColor(log.status)
               const methodColor = getMethodColor(log.method)
               const isExpanded = expandedLog === log.id
@@ -560,7 +422,7 @@ export default function LogsPage() {
                           gap: '6px',
                         }}
                       >
-                        {getStatusIcon(log.status)}
+                        {React.createElement(getStatusIcon(log.status), { size: 16 })}
                         {log.status}
                       </span>
                     </div>
@@ -625,7 +487,7 @@ export default function LogsPage() {
                               overflowX: 'auto',
                             }}
                           >
-                            {JSON.stringify(log.headers, null, 2)}
+                            {JSON.stringify(log.requestHeaders, null, 2)}
                           </pre>
                         </div>
 

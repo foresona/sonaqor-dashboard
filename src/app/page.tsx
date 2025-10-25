@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
@@ -22,9 +22,47 @@ import {
   Filter,
 } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
+import { getDashboardData, type DashboardData } from '@/data/dashboard'
+
+const iconMap: { [key: string]: typeof Users } = {
+  Users,
+  TrendingUp,
+  Activity,
+  AlertCircle,
+  Zap,
+}
 
 export default function DashboardHome() {
   const [timeRange, setTimeRange] = useState('7d')
+  const [data, setData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      const result = await getDashboardData(timeRange)
+      setData(result)
+      setLoading(false)
+    }
+    fetchData()
+  }, [timeRange])
+
+  if (loading || !data) {
+    return (
+      <DashboardLayout>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '400px',
+          }}
+        >
+          <div style={{ fontSize: '18px', color: '#9ca3af' }}>Loading...</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>
@@ -137,49 +175,18 @@ export default function DashboardHome() {
             marginBottom: '32px',
           }}
         >
-          {[
-            {
-              icon: Users,
-              label: 'Total Users',
-              value: '1,234',
-              change: '+12%',
-              gradientStart: '#3b82f6',
-              gradientEnd: '#06b6d4',
-            },
-            {
-              icon: TrendingUp,
-              label: 'API Calls',
-              value: '45.2K',
-              change: '+23%',
-              gradientStart: '#10b981',
-              gradientEnd: '#059669',
-            },
-            {
-              icon: Activity,
-              label: 'Avg F_score',
-              value: '72.5',
-              change: '+5.2',
-              gradientStart: '#a855f7',
-              gradientEnd: '#ec4899',
-            },
-            {
-              icon: AlertCircle,
-              label: 'Anomalies',
-              value: '12',
-              change: '-8%',
-              gradientStart: '#ef4444',
-              gradientEnd: '#f97316',
-            },
-          ].map((stat, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + idx * 0.1 }}
-              style={{
-                background:
-                  'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                backdropFilter: 'blur(16px)',
+          {data.stats.map((stat, idx) => {
+            const IconComponent = iconMap[stat.icon] || Activity
+            return (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + idx * 0.1 }}
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
                 borderRadius: '16px',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -207,7 +214,7 @@ export default function DashboardHome() {
                   transition: 'transform 0.3s ease',
                 }}
               >
-                <stat.icon style={{ width: '28px', height: '28px', color: 'white' }} />
+                <IconComponent style={{ width: '28px', height: '28px', color: 'white' }} />
               </div>
               <div
                 style={{
@@ -233,7 +240,8 @@ export default function DashboardHome() {
                 {stat.change} from last week
               </div>
             </motion.div>
-          ))}
+            )
+          })}
         </div>
 
         {/* Two Column Layout */}

@@ -1,43 +1,38 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Key, Copy, Eye, EyeOff, Trash2, Plus, Check } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
-
-interface ApiKey {
-  id: string
-  name: string
-  key: string
-  created: string
-  lastUsed: string
-  requests: number
-}
+import { getAPIKeysData, type APIKeysData, type APIKey } from '@/data/apiKeys'
 
 export default function ApiKeysPage() {
+  const [data, setData] = useState<APIKeysData | null>(null)
+  const [loading, setLoading] = useState(true)
   const [showKey, setShowKey] = useState<{ [key: string]: boolean }>({})
   const [copied, setCopied] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
 
-  const apiKeys: ApiKey[] = [
-    {
-      id: '1',
-      name: 'Production API Key',
-      key: 'sk_live_51KxYz2HqF9vE4w2H4K8mN3pQ7rS6tU9vW0xY1zA2bC3dE4fG5hI6jK7lM8nO9pQ',
-      created: '2025-10-01',
-      lastUsed: '2 hours ago',
-      requests: 45234,
-    },
-    {
-      id: '2',
-      name: 'Development API Key',
-      key: 'sk_test_51KxYz2HqF9vE4w2H4K8mN3pQ7rS6tU9vW0xY1zA2bC3dE4fG5hI6jK7lM8nO9pQ',
-      created: '2025-09-15',
-      lastUsed: '1 day ago',
-      requests: 12453,
-    },
-  ]
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      const result = await getAPIKeysData()
+      setData(result)
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
+  if (loading || !data) {
+    return (
+      <DashboardLayout>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+          <div style={{ fontSize: '18px', color: '#9ca3af' }}>Loading...</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
@@ -107,7 +102,7 @@ export default function ApiKeysPage() {
       <div style={{ padding: '40px' }}>
         {/* API Keys List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {apiKeys.map((apiKey, index) => (
+          {data.keys.map((apiKey, index) => (
             <motion.div
               key={apiKey.id}
               initial={{ opacity: 0, y: 20 }}
@@ -158,7 +153,7 @@ export default function ApiKeysPage() {
                       {apiKey.name}
                     </h3>
                     <p style={{ fontSize: '14px', color: '#9ca3af' }}>
-                      Created {apiKey.created} • Last used {apiKey.lastUsed}
+                      Created {apiKey.createdAt} • Last used {apiKey.lastUsed}
                     </p>
                   </div>
                 </div>
@@ -272,10 +267,10 @@ export default function ApiKeysPage() {
               >
                 <div>
                   <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
-                    Total Requests
+                    Requests Today
                   </div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
-                    {apiKey.requests.toLocaleString()}
+                    {apiKey.requestsToday.toLocaleString()}
                   </div>
                 </div>
                 <div>
