@@ -16,6 +16,9 @@ import {
   Trash2,
   Star,
   Bell,
+  Search,
+  Filter,
+  ArrowUpDown,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -31,6 +34,18 @@ export default function BillingPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
+  const [invoiceFilter, setInvoiceFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all')
+  const [invoiceSort, setInvoiceSort] = useState<
+    'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
+  >('date-desc')
+  const [invoiceSearch, setInvoiceSearch] = useState('')
+  const [usageMetric, setUsageMetric] = useState<
+    'all' | 'apiCalls' | 'customers' | 'storage' | 'bandwidth'
+  >('all')
+  const [usageSort, setUsageSort] = useState<'date-desc' | 'date-asc' | 'usage-desc' | 'usage-asc'>(
+    'date-desc',
+  )
+  const [usageSearch, setUsageSearch] = useState('')
 
   const handleUpgradePlan = (plan: any) => {
     setSelectedPlan(plan)
@@ -325,7 +340,14 @@ export default function BillingPage() {
 
             {/* Payment Methods */}
             <div style={{ marginTop: '32px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '16px',
+                }}
+              >
                 <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>
                   Payment Methods
                 </h2>
@@ -350,7 +372,13 @@ export default function BillingPage() {
                 </button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                  gap: '16px',
+                }}
+              >
                 {data.paymentMethods.map((method) => (
                   <div
                     key={method.id}
@@ -358,49 +386,65 @@ export default function BillingPage() {
                       background: 'rgba(255, 255, 255, 0.05)',
                       backdropFilter: 'blur(10px)',
                       borderRadius: '12px',
-                      border: method.isDefault ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      border: method.isDefault
+                        ? '1px solid rgba(16, 185, 129, 0.3)'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
                       padding: '20px',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '12px',
+                      }}
+                    >
                       <CreditCard style={{ width: '32px', height: '32px', color: '#10b981' }} />
                       {method.isDefault && (
-                        <span style={{
-                          padding: '4px 10px',
-                          background: 'rgba(16, 185, 129, 0.2)',
-                          borderRadius: '6px',
-                          color: '#10b981',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                        }}>
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            background: 'rgba(16, 185, 129, 0.2)',
+                            borderRadius: '6px',
+                            color: '#10b981',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                          }}
+                        >
                           DEFAULT
                         </span>
                       )}
                     </div>
-                    
-                    <div style={{ color: 'white', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
+
+                    <div
+                      style={{
+                        color: 'white',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        marginBottom: '8px',
+                      }}
+                    >
                       {method.type === 'card' ? 'Credit Card' : 'Bank Account'} •••• {method.last4}
                     </div>
-                    
+
                     {method.expiryDate && (
                       <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '8px' }}>
                         Expires {method.expiryDate}
                       </div>
                     )}
-                    
+
                     {method.bankName && (
                       <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '8px' }}>
                         {method.bankName}
                       </div>
                     )}
-                    
-                    <div style={{ color: '#6b7280', fontSize: '12px' }}>
-                      Added {method.addedAt}
-                    </div>
+
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>Added {method.addedAt}</div>
 
                     <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                       {!method.isDefault && (
-                        <button 
+                        <button
                           onClick={() => handleSetDefaultPayment(method.id)}
                           style={{
                             flex: 1,
@@ -417,7 +461,7 @@ export default function BillingPage() {
                           Set Default
                         </button>
                       )}
-                      <button 
+                      <button
                         onClick={() => handleDeletePaymentMethod(method.id)}
                         style={{
                           padding: '8px',
@@ -439,7 +483,14 @@ export default function BillingPage() {
             {/* Budget Alerts */}
             {data.alerts && data.alerts.length > 0 && (
               <div style={{ marginTop: '32px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '16px',
+                  }}
+                >
                   <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>
                     Usage Alerts
                   </h2>
@@ -469,49 +520,63 @@ export default function BillingPage() {
                     <div
                       key={alert.id}
                       style={{
-                        background: alert.severity === 'Critical' 
-                          ? 'rgba(239, 68, 68, 0.1)' 
-                          : 'rgba(245, 158, 11, 0.1)',
+                        background:
+                          alert.severity === 'Critical'
+                            ? 'rgba(239, 68, 68, 0.1)'
+                            : 'rgba(245, 158, 11, 0.1)',
                         backdropFilter: 'blur(10px)',
                         borderRadius: '12px',
-                        border: alert.severity === 'Critical'
-                          ? '1px solid rgba(239, 68, 68, 0.3)'
-                          : '1px solid rgba(245, 158, 11, 0.3)',
+                        border:
+                          alert.severity === 'Critical'
+                            ? '1px solid rgba(239, 68, 68, 0.3)'
+                            : '1px solid rgba(245, 158, 11, 0.3)',
                         padding: '16px',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'start', gap: '12px' }}>
-                        <AlertTriangle 
-                          style={{ 
-                            width: '24px', 
-                            height: '24px', 
+                        <AlertTriangle
+                          style={{
+                            width: '24px',
+                            height: '24px',
                             color: alert.severity === 'Critical' ? '#ef4444' : '#f59e0b',
                             marginTop: '2px',
                             flexShrink: 0,
-                          }} 
+                          }}
                         />
                         <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                            <span style={{ 
-                              color: 'white', 
-                              fontSize: '16px', 
-                              fontWeight: '600',
-                            }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              marginBottom: '8px',
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: 'white',
+                                fontSize: '16px',
+                                fontWeight: '600',
+                              }}
+                            >
                               {alert.metric} Usage Alert
                             </span>
-                            <span style={{
-                              padding: '3px 10px',
-                              background: alert.severity === 'Critical' ? '#ef4444' : '#f59e0b',
-                              borderRadius: '6px',
-                              color: 'white',
-                              fontSize: '11px',
-                              fontWeight: '700',
-                            }}>
+                            <span
+                              style={{
+                                padding: '3px 10px',
+                                background: alert.severity === 'Critical' ? '#ef4444' : '#f59e0b',
+                                borderRadius: '6px',
+                                color: 'white',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                              }}
+                            >
                               {alert.severity}
                             </span>
                           </div>
                           <div style={{ color: '#d1d5db', fontSize: '14px', marginBottom: '8px' }}>
-                            You've used {alert.currentUsage.toLocaleString()} of {alert.limit.toLocaleString()} ({alert.percentage}%)
+                            You've used {alert.currentUsage.toLocaleString()} of{' '}
+                            {alert.limit.toLocaleString()} ({alert.percentage}%)
                           </div>
                           <div style={{ color: '#9ca3af', fontSize: '12px' }}>
                             {alert.timestamp}
@@ -528,385 +593,947 @@ export default function BillingPage() {
 
         {/* Invoices Tab */}
         {activeTab === 'invoices' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {data.invoices.map((invoice) => (
+          <div>
+            {/* Billing History Header with Stats */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '16px',
+                marginBottom: '24px',
+              }}
+            >
               <div
-                key={invoice.id}
                 style={{
                   background: 'rgba(255, 255, 255, 0.05)',
                   backdropFilter: 'blur(10px)',
                   borderRadius: '16px',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
-                  padding: '24px',
+                  padding: '20px',
                 }}
               >
-                <div
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>
-                        Invoice #{invoice.id}
-                      </h3>
-                      <span
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: '8px',
-                          background: `${getStatusColor(invoice.status)}20`,
-                          color: getStatusColor(invoice.status),
-                          fontSize: '12px',
-                          fontWeight: '600',
-                        }}
-                      >
-                        {invoice.status}
-                      </span>
-                    </div>
-                    <div
-                      style={{ display: 'flex', gap: '24px', fontSize: '13px', color: '#9ca3af' }}
-                    >
-                      <div>
-                        <span style={{ color: '#6b7280' }}>Date: </span>
-                        {invoice.date}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
-                        ${invoice.amount}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                        {invoice.status === 'Paid' ? `Paid on ${invoice.date}` : 'Unpaid'}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDownloadInvoice(invoice)}
-                      style={{
-                        padding: '10px 20px',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '8px',
-                        color: '#10b981',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <Download style={{ width: '16px', height: '16px' }} />
-                      Download
-                    </button>
-                  </div>
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
+                  Total Invoices
+                </div>
+                <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white' }}>
+                  {data.invoices.length}
                 </div>
               </div>
-            ))}
+
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '20px',
+                }}
+              >
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>Paid</div>
+                <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#10b981' }}>
+                  {data.invoices.filter((i) => i.status === 'Paid').length}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '20px',
+                }}
+              >
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
+                  Pending
+                </div>
+                <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>
+                  {data.invoices.filter((i) => i.status === 'Pending').length}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '20px',
+                }}
+              >
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
+                  Total Amount
+                </div>
+                <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white' }}>
+                  ${data.invoices.reduce((sum, inv) => sum + Number(inv.amount), 0).toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            {/* Filters and Search */}
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '20px',
+                marginBottom: '20px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto auto',
+                  gap: '12px',
+                  alignItems: 'center',
+                }}
+              >
+                {/* Search */}
+                <div style={{ position: 'relative' }}>
+                  <Search
+                    style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '18px',
+                      height: '18px',
+                      color: '#9ca3af',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search invoices..."
+                    value={invoiceSearch}
+                    onChange={(e) => setInvoiceSearch(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px 10px 40px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                    }}
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Filter style={{ width: '18px', height: '18px', color: '#9ca3af' }} />
+                  <select
+                    value={invoiceFilter}
+                    onChange={(e) => setInvoiceFilter(e.target.value as any)}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                    }}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="overdue">Overdue</option>
+                  </select>
+                </div>
+
+                {/* Sort */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ArrowUpDown style={{ width: '18px', height: '18px', color: '#9ca3af' }} />
+                  <select
+                    value={invoiceSort}
+                    onChange={(e) => setInvoiceSort(e.target.value as any)}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                    }}
+                  >
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="amount-desc">Highest Amount</option>
+                    <option value="amount-asc">Lowest Amount</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Invoices List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {(() => {
+                // Filter invoices
+                let filtered = data.invoices.filter((invoice) => {
+                  // Status filter
+                  if (invoiceFilter !== 'all' && invoice.status.toLowerCase() !== invoiceFilter) {
+                    return false
+                  }
+                  // Search filter
+                  if (
+                    invoiceSearch &&
+                    !invoice.id.toLowerCase().includes(invoiceSearch.toLowerCase())
+                  ) {
+                    return false
+                  }
+                  return true
+                })
+
+                // Sort invoices
+                filtered = filtered.sort((a, b) => {
+                  switch (invoiceSort) {
+                    case 'date-desc':
+                      return new Date(b.date).getTime() - new Date(a.date).getTime()
+                    case 'date-asc':
+                      return new Date(a.date).getTime() - new Date(b.date).getTime()
+                    case 'amount-desc':
+                      return Number(b.amount) - Number(a.amount)
+                    case 'amount-asc':
+                      return Number(a.amount) - Number(b.amount)
+                    default:
+                      return 0
+                  }
+                })
+
+                if (filtered.length === 0) {
+                  return (
+                    <div
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        padding: '60px 24px',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <Calendar
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          color: '#6b7280',
+                          margin: '0 auto 16px',
+                        }}
+                      />
+                      <h3
+                        style={{
+                          fontSize: '18px',
+                          fontWeight: '600',
+                          color: 'white',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        No invoices found
+                      </h3>
+                      <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+                        Try adjusting your filters or search query
+                      </p>
+                    </div>
+                  )
+                }
+
+                return filtered.map((invoice) => (
+                  <motion.div
+                    key={invoice.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      padding: '24px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginBottom: '8px',
+                          }}
+                        >
+                          <Calendar style={{ width: '20px', height: '20px', color: '#9ca3af' }} />
+                          <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>
+                            Invoice #{invoice.id}
+                          </h3>
+                          <span
+                            style={{
+                              padding: '4px 10px',
+                              borderRadius: '8px',
+                              background: `${getStatusColor(invoice.status)}20`,
+                              color: getStatusColor(invoice.status),
+                              fontSize: '12px',
+                              fontWeight: '600',
+                            }}
+                          >
+                            {invoice.status}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: '24px',
+                            fontSize: '13px',
+                            color: '#9ca3af',
+                          }}
+                        >
+                          <div>
+                            <span style={{ color: '#6b7280' }}>Date: </span>
+                            {invoice.date}
+                          </div>
+                          <div>
+                            <span style={{ color: '#6b7280' }}>Billing Period: </span>
+                            Monthly
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                            ${invoice.amount}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                            {invoice.status === 'Paid'
+                              ? `Paid on ${invoice.date}`
+                              : invoice.status === 'Overdue'
+                              ? 'Payment Overdue'
+                              : 'Awaiting Payment'}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDownloadInvoice(invoice)}
+                          style={{
+                            padding: '10px 20px',
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            borderRadius: '8px',
+                            color: '#10b981',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                          }}
+                        >
+                          <Download style={{ width: '16px', height: '16px' }} />
+                          Download
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              })()}
+            </div>
           </div>
         )}
 
         {/* Usage Tab */}
-        {activeTab === 'usage' && data.usage && (
+        {activeTab === 'usage' && data.usageHistory && (
           <div>
-            <div style={{ marginBottom: '24px' }}>
-              <h2
+            {/* Current Period Stats */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '16px',
+                marginBottom: '24px',
+              }}
+            >
+              <div
                 style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  marginBottom: '8px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '20px',
                 }}
               >
-                Current Billing Period
-              </h2>
-              <p style={{ color: '#9ca3af', fontSize: '14px' }}>
-                {data.billingCycle} billing cycle
-              </p>
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
+                  API Calls
+                </div>
+                <div
+                  style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '4px',
+                  }}
+                >
+                  {data.usage.apiCalls.current.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '600' }}>
+                  {data.usage.apiCalls.percentage}% of limit
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '20px',
+                }}
+              >
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
+                  Customers
+                </div>
+                <div
+                  style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '4px',
+                  }}
+                >
+                  {data.usage.customers.current.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '600' }}>
+                  {data.usage.customers.percentage}% of limit
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '20px',
+                }}
+              >
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
+                  Storage
+                </div>
+                <div
+                  style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '4px',
+                  }}
+                >
+                  {data.usage.storage.current}
+                </div>
+                <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '600' }}>
+                  {data.usage.storage.percentage}% of limit
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '20px',
+                }}
+              >
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
+                  Bandwidth
+                </div>
+                <div
+                  style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '4px',
+                  }}
+                >
+                  {data.usage.bandwidth.current}
+                </div>
+                <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '600' }}>
+                  {data.usage.bandwidth.percentage}% of limit
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+            {/* Filters */}
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '20px',
+                marginBottom: '20px',
+              }}
+            >
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  padding: '24px',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto auto',
+                  gap: '12px',
+                  alignItems: 'center',
                 }}
               >
-                <div style={{ marginBottom: '16px' }}>
-                  <div
+                {/* Search */}
+                <div style={{ position: 'relative' }}>
+                  <Search
                     style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'start',
-                      marginBottom: '12px',
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '18px',
+                      height: '18px',
+                      color: '#9ca3af',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search by month..."
+                    value={usageSearch}
+                    onChange={(e) => setUsageSearch(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px 10px 40px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                    }}
+                  />
+                </div>
+
+                {/* Metric Filter */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Filter style={{ width: '18px', height: '18px', color: '#9ca3af' }} />
+                  <select
+                    value={usageMetric}
+                    onChange={(e) => setUsageMetric(e.target.value as any)}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
                     }}
                   >
-                    <div>
-                      <h3
-                        style={{
-                          fontSize: '16px',
-                          fontWeight: '600',
-                          color: 'white',
-                          marginBottom: '4px',
-                        }}
-                      >
-                        API Calls
-                      </h3>
-                      <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white' }}>
-                        {data.usage.apiCalls.current.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
+                    <option value="all">All Metrics</option>
+                    <option value="apiCalls">API Calls</option>
+                    <option value="customers">Customers</option>
+                    <option value="storage">Storage</option>
+                    <option value="bandwidth">Bandwidth</option>
+                  </select>
+                </div>
 
-                  <div
+                {/* Sort */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ArrowUpDown style={{ width: '18px', height: '18px', color: '#9ca3af' }} />
+                  <select
+                    value={usageSort}
+                    onChange={(e) => setUsageSort(e.target.value as any)}
                     style={{
-                      height: '8px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                      marginBottom: '8px',
+                      padding: '10px 16px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
                     }}
                   >
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${data.usage.apiCalls.percentage}%`,
-                        background:
-                          data.usage.apiCalls.percentage > 80
-                            ? 'linear-gradient(to right, #f59e0b, #d97706)'
-                            : 'linear-gradient(to right, #10b981, #059669)',
-                        transition: 'width 0.3s',
-                      }}
-                    />
-                  </div>
-
-                  <div
-                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}
-                  >
-                    <span style={{ color: '#9ca3af' }}>
-                      Limit: {data.usage.apiCalls.limit.toLocaleString()}
-                    </span>
-                    <span style={{ color: '#9ca3af', fontWeight: '600' }}>
-                      {data.usage.apiCalls.percentage}%
-                    </span>
-                  </div>
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="usage-desc">Highest Usage</option>
+                    <option value="usage-asc">Lowest Usage</option>
+                  </select>
                 </div>
               </div>
+            </div>
 
-              <div
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  padding: '24px',
-                }}
-              >
-                <div style={{ marginBottom: '16px' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'start',
-                      marginBottom: '12px',
-                    }}
-                  >
-                    <div>
-                      <h3
-                        style={{
-                          fontSize: '16px',
-                          fontWeight: '600',
-                          color: 'white',
-                          marginBottom: '4px',
-                        }}
-                      >
-                        Customers
-                      </h3>
-                      <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white' }}>
-                        {data.usage.customers.current.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
+            {/* Usage History List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {(() => {
+                // Filter usage history
+                let filtered = data.usageHistory.filter((usage) => {
+                  // Search filter
+                  if (
+                    usageSearch &&
+                    !usage.month.toLowerCase().includes(usageSearch.toLowerCase())
+                  ) {
+                    return false
+                  }
+                  return true
+                })
 
-                  <div
-                    style={{
-                      height: '8px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                      marginBottom: '8px',
-                    }}
-                  >
+                // Sort usage history
+                filtered = filtered.sort((a, b) => {
+                  switch (usageSort) {
+                    case 'date-desc':
+                      return (
+                        new Date(b.period.split(' - ')[0]).getTime() -
+                        new Date(a.period.split(' - ')[0]).getTime()
+                      )
+                    case 'date-asc':
+                      return (
+                        new Date(a.period.split(' - ')[0]).getTime() -
+                        new Date(b.period.split(' - ')[0]).getTime()
+                      )
+                    case 'usage-desc':
+                      return b.cost - a.cost
+                    case 'usage-asc':
+                      return a.cost - b.cost
+                    default:
+                      return 0
+                  }
+                })
+
+                if (filtered.length === 0) {
+                  return (
                     <div
                       style={{
-                        height: '100%',
-                        width: `${data.usage.customers.percentage}%`,
-                        background:
-                          data.usage.customers.percentage > 80
-                            ? 'linear-gradient(to right, #f59e0b, #d97706)'
-                            : 'linear-gradient(to right, #10b981, #059669)',
-                        transition: 'width 0.3s',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        padding: '60px 24px',
+                        textAlign: 'center',
                       }}
-                    />
-                  </div>
-
-                  <div
-                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}
-                  >
-                    <span style={{ color: '#9ca3af' }}>
-                      Limit: {data.usage.customers.limit.toLocaleString()}
-                    </span>
-                    <span style={{ color: '#9ca3af', fontWeight: '600' }}>
-                      {data.usage.customers.percentage}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  padding: '24px',
-                }}
-              >
-                <div style={{ marginBottom: '16px' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'start',
-                      marginBottom: '12px',
-                    }}
-                  >
-                    <div>
+                    >
+                      <TrendingUp
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          color: '#6b7280',
+                          margin: '0 auto 16px',
+                        }}
+                      />
                       <h3
                         style={{
-                          fontSize: '16px',
+                          fontSize: '18px',
                           fontWeight: '600',
                           color: 'white',
-                          marginBottom: '4px',
+                          marginBottom: '8px',
                         }}
                       >
-                        Storage
+                        No usage data found
                       </h3>
-                      <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white' }}>
-                        {data.usage.storage.current}
-                      </div>
+                      <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+                        Try adjusting your filters or search query
+                      </p>
                     </div>
-                  </div>
+                  )
+                }
 
-                  <div
-                    style={{
-                      height: '8px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    <div
+                return filtered.map((usage, index) => {
+                  const hasOverage = usage.overages > 0
+
+                  return (
+                    <motion.div
+                      key={usage.month}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
                       style={{
-                        height: '100%',
-                        width: `${data.usage.storage.percentage}%`,
-                        background:
-                          data.usage.storage.percentage > 80
-                            ? 'linear-gradient(to right, #f59e0b, #d97706)'
-                            : 'linear-gradient(to right, #10b981, #059669)',
-                        transition: 'width 0.3s',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: '16px',
+                        border: hasOverage
+                          ? '1px solid rgba(239, 68, 68, 0.3)'
+                          : '1px solid rgba(255, 255, 255, 0.1)',
+                        padding: '24px',
                       }}
-                    />
-                  </div>
-
-                  <div
-                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}
-                  >
-                    <span style={{ color: '#9ca3af' }}>Limit: {data.usage.storage.limit}</span>
-                    <span style={{ color: '#9ca3af', fontWeight: '600' }}>
-                      {data.usage.storage.percentage}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  padding: '24px',
-                }}
-              >
-                <div style={{ marginBottom: '16px' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'start',
-                      marginBottom: '12px',
-                    }}
-                  >
-                    <div>
-                      <h3
+                    >
+                      <div
                         style={{
-                          fontSize: '16px',
-                          fontWeight: '600',
-                          color: 'white',
-                          marginBottom: '4px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'start',
+                          marginBottom: '20px',
                         }}
                       >
-                        Bandwidth
-                      </h3>
-                      <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white' }}>
-                        {data.usage.bandwidth.current}
+                        <div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              marginBottom: '8px',
+                            }}
+                          >
+                            <Calendar style={{ width: '20px', height: '20px', color: '#9ca3af' }} />
+                            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>
+                              {usage.month}
+                            </h3>
+                            {hasOverage && (
+                              <span
+                                style={{
+                                  padding: '4px 10px',
+                                  borderRadius: '8px',
+                                  background: 'rgba(239, 68, 68, 0.2)',
+                                  color: '#ef4444',
+                                  fontSize: '12px',
+                                  fontWeight: '600',
+                                }}
+                              >
+                                OVERAGE
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ color: '#9ca3af', fontSize: '14px' }}>{usage.period}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div
+                            style={{
+                              fontSize: '28px',
+                              fontWeight: 'bold',
+                              color: 'white',
+                              marginBottom: '4px',
+                            }}
+                          >
+                            ${usage.cost.toFixed(2)}
+                          </div>
+                          {hasOverage && (
+                            <div style={{ fontSize: '13px', color: '#ef4444', fontWeight: '600' }}>
+                              +${usage.overages.toFixed(2)} overage
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div
-                    style={{
-                      height: '8px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${data.usage.bandwidth.percentage}%`,
-                        background:
-                          data.usage.bandwidth.percentage > 80
-                            ? 'linear-gradient(to right, #f59e0b, #d97706)'
-                            : 'linear-gradient(to right, #10b981, #059669)',
-                        transition: 'width 0.3s',
-                      }}
-                    />
-                  </div>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(4, 1fr)',
+                          gap: '16px',
+                        }}
+                      >
+                        {(usageMetric === 'all' || usageMetric === 'apiCalls') && (
+                          <div
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.03)',
+                              padding: '16px',
+                              borderRadius: '12px',
+                              border: '1px solid rgba(255, 255, 255, 0.05)',
+                            }}
+                          >
+                            <div
+                              style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}
+                            >
+                              API Calls
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '20px',
+                                fontWeight: 'bold',
+                                color: 'white',
+                                marginBottom: '8px',
+                              }}
+                            >
+                              {usage.apiCalls.used.toLocaleString()}
+                            </div>
+                            <div
+                              style={{
+                                height: '4px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: '2px',
+                                overflow: 'hidden',
+                                marginBottom: '6px',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: '100%',
+                                  width: `${Math.min(usage.apiCalls.percentage, 100)}%`,
+                                  background:
+                                    usage.apiCalls.percentage > 100
+                                      ? 'linear-gradient(to right, #ef4444, #dc2626)'
+                                      : usage.apiCalls.percentage > 80
+                                      ? 'linear-gradient(to right, #f59e0b, #d97706)'
+                                      : 'linear-gradient(to right, #10b981, #059669)',
+                                }}
+                              />
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                              {usage.apiCalls.percentage.toFixed(1)}% of{' '}
+                              {usage.apiCalls.limit.toLocaleString()}
+                            </div>
+                          </div>
+                        )}
 
-                  <div
-                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}
-                  >
-                    <span style={{ color: '#9ca3af' }}>Limit: {data.usage.bandwidth.limit}</span>
-                    <span style={{ color: '#9ca3af', fontWeight: '600' }}>
-                      {data.usage.bandwidth.percentage}%
-                    </span>
-                  </div>
-                </div>
-              </div>
+                        {(usageMetric === 'all' || usageMetric === 'customers') && (
+                          <div
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.03)',
+                              padding: '16px',
+                              borderRadius: '12px',
+                              border: '1px solid rgba(255, 255, 255, 0.05)',
+                            }}
+                          >
+                            <div
+                              style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}
+                            >
+                              Customers
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '20px',
+                                fontWeight: 'bold',
+                                color: 'white',
+                                marginBottom: '8px',
+                              }}
+                            >
+                              {usage.customers.used.toLocaleString()}
+                            </div>
+                            <div
+                              style={{
+                                height: '4px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: '2px',
+                                overflow: 'hidden',
+                                marginBottom: '6px',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: '100%',
+                                  width: `${Math.min(usage.customers.percentage, 100)}%`,
+                                  background:
+                                    usage.customers.percentage > 100
+                                      ? 'linear-gradient(to right, #ef4444, #dc2626)'
+                                      : usage.customers.percentage > 80
+                                      ? 'linear-gradient(to right, #f59e0b, #d97706)'
+                                      : 'linear-gradient(to right, #10b981, #059669)',
+                                }}
+                              />
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                              {usage.customers.percentage.toFixed(1)}% of{' '}
+                              {usage.customers.limit.toLocaleString()}
+                            </div>
+                          </div>
+                        )}
+
+                        {(usageMetric === 'all' || usageMetric === 'storage') && (
+                          <div
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.03)',
+                              padding: '16px',
+                              borderRadius: '12px',
+                              border: '1px solid rgba(255, 255, 255, 0.05)',
+                            }}
+                          >
+                            <div
+                              style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}
+                            >
+                              Storage
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '20px',
+                                fontWeight: 'bold',
+                                color: 'white',
+                                marginBottom: '8px',
+                              }}
+                            >
+                              {usage.storage.used}
+                            </div>
+                            <div
+                              style={{
+                                height: '4px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: '2px',
+                                overflow: 'hidden',
+                                marginBottom: '6px',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: '100%',
+                                  width: `${Math.min(usage.storage.percentage, 100)}%`,
+                                  background:
+                                    usage.storage.percentage > 100
+                                      ? 'linear-gradient(to right, #ef4444, #dc2626)'
+                                      : usage.storage.percentage > 80
+                                      ? 'linear-gradient(to right, #f59e0b, #d97706)'
+                                      : 'linear-gradient(to right, #10b981, #059669)',
+                                }}
+                              />
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                              {usage.storage.percentage.toFixed(1)}% of {usage.storage.limit}
+                            </div>
+                          </div>
+                        )}
+
+                        {(usageMetric === 'all' || usageMetric === 'bandwidth') && (
+                          <div
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.03)',
+                              padding: '16px',
+                              borderRadius: '12px',
+                              border: '1px solid rgba(255, 255, 255, 0.05)',
+                            }}
+                          >
+                            <div
+                              style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}
+                            >
+                              Bandwidth
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '20px',
+                                fontWeight: 'bold',
+                                color: 'white',
+                                marginBottom: '8px',
+                              }}
+                            >
+                              {usage.bandwidth.used}
+                            </div>
+                            <div
+                              style={{
+                                height: '4px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: '2px',
+                                overflow: 'hidden',
+                                marginBottom: '6px',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: '100%',
+                                  width: `${Math.min(usage.bandwidth.percentage, 100)}%`,
+                                  background:
+                                    usage.bandwidth.percentage > 100
+                                      ? 'linear-gradient(to right, #ef4444, #dc2626)'
+                                      : usage.bandwidth.percentage > 80
+                                      ? 'linear-gradient(to right, #f59e0b, #d97706)'
+                                      : 'linear-gradient(to right, #10b981, #059669)',
+                                }}
+                              />
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                              {usage.bandwidth.percentage.toFixed(1)}% of {usage.bandwidth.limit}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )
+                })
+              })()}
             </div>
           </div>
         )}
@@ -951,7 +1578,14 @@ export default function BillingPage() {
               >
                 {/* Modal Header */}
                 <div style={{ marginBottom: '32px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '8px',
+                    }}
+                  >
                     <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: 'white' }}>
                       Choose Your Plan
                     </h2>
@@ -968,15 +1602,21 @@ export default function BillingPage() {
                       <X style={{ width: '20px', height: '20px', color: 'white' }} />
                     </button>
                   </div>
-                  
+
                   {/* Billing Cycle Toggle */}
                   <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                     <button
                       onClick={() => setBillingCycle('monthly')}
                       style={{
                         padding: '10px 20px',
-                        background: billingCycle === 'monthly' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                        border: billingCycle === 'monthly' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        background:
+                          billingCycle === 'monthly'
+                            ? 'rgba(16, 185, 129, 0.2)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        border:
+                          billingCycle === 'monthly'
+                            ? '1px solid rgba(16, 185, 129, 0.3)'
+                            : '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '8px',
                         color: billingCycle === 'monthly' ? '#10b981' : '#9ca3af',
                         fontSize: '14px',
@@ -990,8 +1630,14 @@ export default function BillingPage() {
                       onClick={() => setBillingCycle('yearly')}
                       style={{
                         padding: '10px 20px',
-                        background: billingCycle === 'yearly' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                        border: billingCycle === 'yearly' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        background:
+                          billingCycle === 'yearly'
+                            ? 'rgba(16, 185, 129, 0.2)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        border:
+                          billingCycle === 'yearly'
+                            ? '1px solid rgba(16, 185, 129, 0.3)'
+                            : '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '8px',
                         color: billingCycle === 'yearly' ? '#10b981' : '#9ca3af',
                         fontSize: '14px',
@@ -1003,7 +1649,15 @@ export default function BillingPage() {
                       }}
                     >
                       Yearly
-                      <span style={{ padding: '2px 8px', background: '#10b981', color: 'white', borderRadius: '4px', fontSize: '11px' }}>
+                      <span
+                        style={{
+                          padding: '2px 8px',
+                          background: '#10b981',
+                          color: 'white',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                        }}
+                      >
                         Save 20%
                       </span>
                     </button>
@@ -1011,65 +1665,88 @@ export default function BillingPage() {
                 </div>
 
                 {/* Plans Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                    gap: '20px',
+                  }}
+                >
                   {data.availablePlans.map((plan) => {
                     const isCurrentPlan = plan.name === data.currentPlan.name
                     const color = getPlanColor(plan.name)
-                    const price = billingCycle === 'monthly' ? plan.pricing.monthly : Math.floor(plan.pricing.yearly / 12)
+                    const price =
+                      billingCycle === 'monthly'
+                        ? plan.pricing.monthly
+                        : Math.floor(plan.pricing.yearly / 12)
 
                     return (
                       <motion.div
                         key={plan.name}
                         whileHover={{ scale: isCurrentPlan ? 1 : 1.02 }}
                         style={{
-                          background: isCurrentPlan 
+                          background: isCurrentPlan
                             ? `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`
                             : 'rgba(255, 255, 255, 0.05)',
                           backdropFilter: 'blur(10px)',
                           borderRadius: '16px',
-                          border: isCurrentPlan ? `2px solid ${color}` : '1px solid rgba(255, 255, 255, 0.1)',
+                          border: isCurrentPlan
+                            ? `2px solid ${color}`
+                            : '1px solid rgba(255, 255, 255, 0.1)',
                           padding: '24px',
                           position: 'relative',
                         }}
                       >
                         {isCurrentPlan && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            right: '12px',
-                            padding: '4px 12px',
-                            background: color,
-                            borderRadius: '6px',
-                            color: 'white',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                          }}>
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '12px',
+                              right: '12px',
+                              padding: '4px 12px',
+                              background: color,
+                              borderRadius: '6px',
+                              color: 'white',
+                              fontSize: '11px',
+                              fontWeight: '700',
+                            }}
+                          >
                             CURRENT
                           </div>
                         )}
 
                         {plan.name === 'Pro' && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '-12px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            padding: '4px 16px',
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                            borderRadius: '12px',
-                            color: 'white',
-                            fontSize: '12px',
-                            fontWeight: '700',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}>
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '-12px',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              padding: '4px 16px',
+                              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                              borderRadius: '12px',
+                              color: 'white',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
                             <Star style={{ width: '12px', height: '12px' }} />
                             POPULAR
                           </div>
                         )}
 
-                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color, marginBottom: '12px', marginTop: isCurrentPlan ? '24px' : '0' }}>
+                        <h3
+                          style={{
+                            fontSize: '20px',
+                            fontWeight: 'bold',
+                            color,
+                            marginBottom: '12px',
+                            marginTop: isCurrentPlan ? '24px' : '0',
+                          }}
+                        >
                           {plan.name}
                         </h3>
 
@@ -1082,43 +1759,117 @@ export default function BillingPage() {
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#9ca3af', marginBottom: '4px' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            marginBottom: '20px',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              color: '#9ca3af',
+                              marginBottom: '4px',
+                            }}
+                          >
                             LIMITS
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              fontSize: '13px',
+                            }}
+                          >
                             <span style={{ color: '#9ca3af' }}>API Calls</span>
                             <span style={{ color: 'white', fontWeight: '600' }}>
-                              {plan.limits.apiCalls === -1 ? 'Unlimited' : plan.limits.apiCalls.toLocaleString()}
+                              {plan.limits.apiCalls === -1
+                                ? 'Unlimited'
+                                : plan.limits.apiCalls.toLocaleString()}
                             </span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              fontSize: '13px',
+                            }}
+                          >
                             <span style={{ color: '#9ca3af' }}>Customers</span>
                             <span style={{ color: 'white', fontWeight: '600' }}>
-                              {plan.limits.customers === -1 ? 'Unlimited' : plan.limits.customers.toLocaleString()}
+                              {plan.limits.customers === -1
+                                ? 'Unlimited'
+                                : plan.limits.customers.toLocaleString()}
                             </span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              fontSize: '13px',
+                            }}
+                          >
                             <span style={{ color: '#9ca3af' }}>Storage</span>
-                            <span style={{ color: 'white', fontWeight: '600' }}>{plan.limits.storage}</span>
+                            <span style={{ color: 'white', fontWeight: '600' }}>
+                              {plan.limits.storage}
+                            </span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              fontSize: '13px',
+                            }}
+                          >
                             <span style={{ color: '#9ca3af' }}>Team Members</span>
                             <span style={{ color: 'white', fontWeight: '600' }}>
-                              {plan.limits.teamMembers === -1 ? 'Unlimited' : plan.limits.teamMembers}
+                              {plan.limits.teamMembers === -1
+                                ? 'Unlimited'
+                                : plan.limits.teamMembers}
                             </span>
                           </div>
                         </div>
 
-                        <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '16px', marginBottom: '20px' }}>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#9ca3af', marginBottom: '12px' }}>
+                        <div
+                          style={{
+                            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                            paddingTop: '16px',
+                            marginBottom: '20px',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              color: '#9ca3af',
+                              marginBottom: '12px',
+                            }}
+                          >
                             FEATURES
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {plan.features.slice(0, 5).map((feature, idx) => (
-                              <div key={idx} style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                                <Check style={{ width: '16px', height: '16px', color: '#10b981', marginTop: '2px', flexShrink: 0 }} />
-                                <span style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.4' }}>{feature}</span>
+                              <div
+                                key={idx}
+                                style={{ display: 'flex', alignItems: 'start', gap: '8px' }}
+                              >
+                                <Check
+                                  style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    color: '#10b981',
+                                    marginTop: '2px',
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <span
+                                  style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.4' }}
+                                >
+                                  {feature}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -1135,7 +1886,7 @@ export default function BillingPage() {
                           style={{
                             width: '100%',
                             padding: '14px',
-                            background: isCurrentPlan 
+                            background: isCurrentPlan
                               ? 'rgba(107, 114, 128, 0.5)'
                               : `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
                             border: 'none',
@@ -1155,30 +1906,41 @@ export default function BillingPage() {
                 </div>
 
                 {/* Enterprise Contact */}
-                <div style={{
-                  marginTop: '24px',
-                  padding: '20px',
-                  background: 'rgba(167, 139, 250, 0.1)',
-                  border: '1px solid rgba(167, 139, 250, 0.2)',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ color: 'white', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
+                <div
+                  style={{
+                    marginTop: '24px',
+                    padding: '20px',
+                    background: 'rgba(167, 139, 250, 0.1)',
+                    border: '1px solid rgba(167, 139, 250, 0.2)',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      color: 'white',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      marginBottom: '8px',
+                    }}
+                  >
                     Need a custom plan?
                   </div>
                   <div style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '16px' }}>
                     Contact our sales team for enterprise pricing and custom solutions
                   </div>
-                  <button style={{
-                    padding: '10px 24px',
-                    background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    color: 'white',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}>
+                  <button
+                    style={{
+                      padding: '10px 24px',
+                      background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
                     Contact Sales
                   </button>
                 </div>
@@ -1216,7 +1978,8 @@ export default function BillingPage() {
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
                   borderRadius: '24px',
                   border: '1px solid rgba(239, 68, 68, 0.3)',
                   maxWidth: '500px',
@@ -1247,29 +2010,34 @@ export default function BillingPage() {
                 </button>
 
                 <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '2px solid rgba(239, 68, 68, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 20px',
-                  }}>
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '2px solid rgba(239, 68, 68, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 20px',
+                    }}
+                  >
                     <Trash2 style={{ width: '32px', height: '32px', color: '#ef4444' }} />
                   </div>
-                  <h2 style={{
-                    fontSize: '24px',
-                    fontWeight: 'bold',
-                    color: 'white',
-                    marginBottom: '12px',
-                  }}>
+                  <h2
+                    style={{
+                      fontSize: '24px',
+                      fontWeight: 'bold',
+                      color: 'white',
+                      marginBottom: '12px',
+                    }}
+                  >
                     Delete Payment Method
                   </h2>
                   <p style={{ color: '#9ca3af', fontSize: '14px', lineHeight: '1.6' }}>
-                    Are you sure you want to delete this payment method? This action cannot be undone.
+                    Are you sure you want to delete this payment method? This action cannot be
+                    undone.
                   </p>
                 </div>
 
@@ -1341,7 +2109,8 @@ export default function BillingPage() {
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
                   borderRadius: '24px',
                   border: '1px solid rgba(59, 130, 246, 0.3)',
                   maxWidth: '600px',
@@ -1374,25 +2143,29 @@ export default function BillingPage() {
                 </button>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    border: '2px solid rgba(59, 130, 246, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '20px',
-                  }}>
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      border: '2px solid rgba(59, 130, 246, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '20px',
+                    }}
+                  >
                     <Bell style={{ width: '32px', height: '32px', color: '#3b82f6' }} />
                   </div>
-                  <h2 style={{
-                    fontSize: '24px',
-                    fontWeight: 'bold',
-                    color: 'white',
-                    marginBottom: '8px',
-                  }}>
+                  <h2
+                    style={{
+                      fontSize: '24px',
+                      fontWeight: 'bold',
+                      color: 'white',
+                      marginBottom: '8px',
+                    }}
+                  >
                     Configure Usage Alerts
                   </h2>
                   <p style={{ color: '#9ca3af', fontSize: '14px' }}>
@@ -1400,10 +2173,25 @@ export default function BillingPage() {
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '24px',
+                    marginBottom: '24px',
+                  }}
+                >
                   {/* API Calls Alert */}
                   <div>
-                    <label style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        marginBottom: '12px',
+                      }}
+                    >
                       API Calls Alert Threshold
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1420,7 +2208,16 @@ export default function BillingPage() {
                           outline: 'none',
                         }}
                       />
-                      <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '600', minWidth: '45px' }}>80%</span>
+                      <span
+                        style={{
+                          color: '#10b981',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          minWidth: '45px',
+                        }}
+                      >
+                        80%
+                      </span>
                     </div>
                     <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '6px' }}>
                       Get notified when usage reaches this percentage
@@ -1429,7 +2226,15 @@ export default function BillingPage() {
 
                   {/* Customers Alert */}
                   <div>
-                    <label style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        marginBottom: '12px',
+                      }}
+                    >
                       Customers Alert Threshold
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1446,7 +2251,16 @@ export default function BillingPage() {
                           outline: 'none',
                         }}
                       />
-                      <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '600', minWidth: '45px' }}>85%</span>
+                      <span
+                        style={{
+                          color: '#10b981',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          minWidth: '45px',
+                        }}
+                      >
+                        85%
+                      </span>
                     </div>
                     <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '6px' }}>
                       Get notified when usage reaches this percentage
@@ -1455,7 +2269,15 @@ export default function BillingPage() {
 
                   {/* Storage Alert */}
                   <div>
-                    <label style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        marginBottom: '12px',
+                      }}
+                    >
                       Storage Alert Threshold
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1472,7 +2294,16 @@ export default function BillingPage() {
                           outline: 'none',
                         }}
                       />
-                      <span style={{ color: '#f59e0b', fontSize: '14px', fontWeight: '600', minWidth: '45px' }}>90%</span>
+                      <span
+                        style={{
+                          color: '#f59e0b',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          minWidth: '45px',
+                        }}
+                      >
+                        90%
+                      </span>
                     </div>
                     <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '6px' }}>
                       Get notified when usage reaches this percentage
@@ -1481,7 +2312,15 @@ export default function BillingPage() {
 
                   {/* Bandwidth Alert */}
                   <div>
-                    <label style={{ display: 'block', color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        marginBottom: '12px',
+                      }}
+                    >
                       Bandwidth Alert Threshold
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1498,7 +2337,16 @@ export default function BillingPage() {
                           outline: 'none',
                         }}
                       />
-                      <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '600', minWidth: '45px' }}>85%</span>
+                      <span
+                        style={{
+                          color: '#10b981',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          minWidth: '45px',
+                        }}
+                      >
+                        85%
+                      </span>
                     </div>
                     <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '6px' }}>
                       Get notified when usage reaches this percentage
@@ -1506,46 +2354,70 @@ export default function BillingPage() {
                   </div>
 
                   {/* Email Notifications Toggle */}
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: '12px',
-                    padding: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}>
+                  <div
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
                     <div>
-                      <div style={{ color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
+                      <div
+                        style={{
+                          color: 'white',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          marginBottom: '4px',
+                        }}
+                      >
                         Email Notifications
                       </div>
                       <div style={{ color: '#6b7280', fontSize: '12px' }}>
                         Receive alerts via email
                       </div>
                     </div>
-                    <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '24px' }}>
-                      <input type="checkbox" defaultChecked style={{ opacity: 0, width: 0, height: 0 }} />
-                      <span style={{
-                        position: 'absolute',
-                        cursor: 'pointer',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: '#10b981',
-                        borderRadius: '24px',
-                        transition: '0.4s',
-                      }}>
-                        <span style={{
+                    <label
+                      style={{
+                        position: 'relative',
+                        display: 'inline-block',
+                        width: '48px',
+                        height: '24px',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        defaultChecked
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                      />
+                      <span
+                        style={{
                           position: 'absolute',
-                          content: '',
-                          height: '18px',
-                          width: '18px',
-                          left: '26px',
-                          bottom: '3px',
-                          background: 'white',
-                          borderRadius: '50%',
+                          cursor: 'pointer',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: '#10b981',
+                          borderRadius: '24px',
                           transition: '0.4s',
-                        }}></span>
+                        }}
+                      >
+                        <span
+                          style={{
+                            position: 'absolute',
+                            content: '',
+                            height: '18px',
+                            width: '18px',
+                            left: '26px',
+                            bottom: '3px',
+                            background: 'white',
+                            borderRadius: '50%',
+                            transition: '0.4s',
+                          }}
+                        ></span>
                       </span>
                     </label>
                   </div>
@@ -1619,7 +2491,8 @@ export default function BillingPage() {
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.95) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.95) 100%)',
                   borderRadius: '24px',
                   padding: '32px',
                   maxWidth: '500px',
@@ -1628,7 +2501,14 @@ export default function BillingPage() {
                   boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '24px',
+                  }}
+                >
                   <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
                     Add Payment Method
                   </h3>
@@ -1651,7 +2531,15 @@ export default function BillingPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#9ca3af',
+                        fontSize: '14px',
+                        marginBottom: '8px',
+                        fontWeight: '600',
+                      }}
+                    >
                       Payment Type
                     </label>
                     <select
@@ -1671,7 +2559,15 @@ export default function BillingPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#9ca3af',
+                        fontSize: '14px',
+                        marginBottom: '8px',
+                        fontWeight: '600',
+                      }}
+                    >
                       Card Number
                     </label>
                     <input
@@ -1691,7 +2587,15 @@ export default function BillingPage() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div>
-                      <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          color: '#9ca3af',
+                          fontSize: '14px',
+                          marginBottom: '8px',
+                          fontWeight: '600',
+                        }}
+                      >
                         Expiry Date
                       </label>
                       <input
@@ -1709,7 +2613,15 @@ export default function BillingPage() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          color: '#9ca3af',
+                          fontSize: '14px',
+                          marginBottom: '8px',
+                          fontWeight: '600',
+                        }}
+                      >
                         CVV
                       </label>
                       <input
@@ -1729,7 +2641,15 @@ export default function BillingPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#9ca3af',
+                        fontSize: '14px',
+                        marginBottom: '8px',
+                        fontWeight: '600',
+                      }}
+                    >
                       Cardholder Name
                     </label>
                     <input
@@ -1748,7 +2668,15 @@ export default function BillingPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#9ca3af',
+                        fontSize: '14px',
+                        marginBottom: '8px',
+                        fontWeight: '600',
+                      }}
+                    >
                       Billing Address
                     </label>
                     <input
@@ -1766,9 +2694,26 @@ export default function BillingPage() {
                     />
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '12px' }}>
-                    <input type="checkbox" id="setDefault" style={{ width: '18px', height: '18px' }} />
-                    <label htmlFor="setDefault" style={{ color: '#10b981', fontSize: '14px', fontWeight: '600' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px',
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      border: '1px solid rgba(16, 185, 129, 0.2)',
+                      borderRadius: '12px',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      id="setDefault"
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <label
+                      htmlFor="setDefault"
+                      style={{ color: '#10b981', fontSize: '14px', fontWeight: '600' }}
+                    >
                       Set as default payment method
                     </label>
                   </div>
@@ -1842,7 +2787,8 @@ export default function BillingPage() {
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
                   borderRadius: '24px',
                   border: '1px solid rgba(16, 185, 129, 0.3)',
                   maxWidth: '500px',
@@ -1875,20 +2821,29 @@ export default function BillingPage() {
                 </button>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    background: 'rgba(16, 185, 129, 0.1)',
-                    border: '2px solid rgba(16, 185, 129, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '20px',
-                  }}>
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      border: '2px solid rgba(16, 185, 129, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '20px',
+                    }}
+                  >
                     <CreditCard style={{ width: '32px', height: '32px', color: '#10b981' }} />
                   </div>
-                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                  <h2
+                    style={{
+                      fontSize: '24px',
+                      fontWeight: 'bold',
+                      color: 'white',
+                      marginBottom: '8px',
+                    }}
+                  >
                     Add Payment Method
                   </h2>
                   <p style={{ color: '#9ca3af', fontSize: '14px' }}>
@@ -1896,27 +2851,52 @@ export default function BillingPage() {
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '20px',
+                    marginBottom: '24px',
+                  }}
+                >
                   <div>
-                    <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#d1d5db',
+                        fontSize: '14px',
+                        marginBottom: '8px',
+                        fontWeight: '600',
+                      }}
+                    >
                       Payment Type
                     </label>
-                    <select style={{
-                      width: '100%',
-                      padding: '12px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white',
-                      fontSize: '14px',
-                    }}>
+                    <select
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white',
+                        fontSize: '14px',
+                      }}
+                    >
                       <option value="card">Credit Card</option>
                       <option value="bank">Bank Account</option>
                     </select>
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#d1d5db',
+                        fontSize: '14px',
+                        marginBottom: '8px',
+                        fontWeight: '600',
+                      }}
+                    >
                       Card Number
                     </label>
                     <input
@@ -1936,7 +2916,15 @@ export default function BillingPage() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
-                      <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          color: '#d1d5db',
+                          fontSize: '14px',
+                          marginBottom: '8px',
+                          fontWeight: '600',
+                        }}
+                      >
                         Expiry Date
                       </label>
                       <input
@@ -1954,7 +2942,15 @@ export default function BillingPage() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          color: '#d1d5db',
+                          fontSize: '14px',
+                          marginBottom: '8px',
+                          fontWeight: '600',
+                        }}
+                      >
                         CVV
                       </label>
                       <input
@@ -1974,7 +2970,15 @@ export default function BillingPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#d1d5db',
+                        fontSize: '14px',
+                        marginBottom: '8px',
+                        fontWeight: '600',
+                      }}
+                    >
                       Cardholder Name
                     </label>
                     <input
@@ -1993,7 +2997,15 @@ export default function BillingPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', color: '#d1d5db', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#d1d5db',
+                        fontSize: '14px',
+                        marginBottom: '8px',
+                        fontWeight: '600',
+                      }}
+                    >
                       Billing Address
                     </label>
                     <input
@@ -2017,7 +3029,10 @@ export default function BillingPage() {
                       id="setDefault"
                       style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                     />
-                    <label htmlFor="setDefault" style={{ color: '#d1d5db', fontSize: '14px', cursor: 'pointer' }}>
+                    <label
+                      htmlFor="setDefault"
+                      style={{ color: '#d1d5db', fontSize: '14px', cursor: 'pointer' }}
+                    >
                       Set as default payment method
                     </label>
                   </div>
@@ -2091,7 +3106,8 @@ export default function BillingPage() {
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
                   borderRadius: '24px',
                   border: '1px solid rgba(239, 68, 68, 0.3)',
                   maxWidth: '450px',
@@ -2122,24 +3138,34 @@ export default function BillingPage() {
                 </button>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '2px solid rgba(239, 68, 68, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '20px',
-                  }}>
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '2px solid rgba(239, 68, 68, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '20px',
+                    }}
+                  >
                     <AlertTriangle style={{ width: '32px', height: '32px', color: '#ef4444' }} />
                   </div>
-                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                  <h2
+                    style={{
+                      fontSize: '24px',
+                      fontWeight: 'bold',
+                      color: 'white',
+                      marginBottom: '8px',
+                    }}
+                  >
                     Delete Payment Method
                   </h2>
                   <p style={{ color: '#9ca3af', fontSize: '14px' }}>
-                    Are you sure you want to delete this payment method? This action cannot be undone.
+                    Are you sure you want to delete this payment method? This action cannot be
+                    undone.
                   </p>
                 </div>
 

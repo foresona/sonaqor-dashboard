@@ -1655,9 +1655,23 @@ export default function ReportsPage() {
                 }}
               >
                 {/* Modal Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '24px',
+                  }}
+                >
                   <div>
-                    <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    <h2
+                      style={{
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: 'white',
+                        marginBottom: '8px',
+                      }}
+                    >
                       Create New Report
                     </h2>
                     <p style={{ color: '#9ca3af', fontSize: '14px' }}>
@@ -1679,7 +1693,9 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Template Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div
+                  style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}
+                >
                   {data.templates.map((template) => {
                     const typeColors: Record<string, string> = {
                       Usage: '#10b981',
@@ -1706,7 +1722,14 @@ export default function ReportsPage() {
                         }}
                       >
                         <div style={{ marginBottom: '16px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              marginBottom: '8px',
+                            }}
+                          >
                             <div
                               style={{
                                 width: '40px',
@@ -1722,7 +1745,14 @@ export default function ReportsPage() {
                               <FileText style={{ width: '20px', height: '20px', color }} />
                             </div>
                             <div style={{ flex: 1 }}>
-                              <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                              <h3
+                                style={{
+                                  fontSize: '16px',
+                                  fontWeight: 'bold',
+                                  color: 'white',
+                                  marginBottom: '4px',
+                                }}
+                              >
                                 {template.name}
                               </h3>
                               <span
@@ -1739,7 +1769,14 @@ export default function ReportsPage() {
                               </span>
                             </div>
                           </div>
-                          <p style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '12px', lineHeight: '1.5' }}>
+                          <p
+                            style={{
+                              color: '#9ca3af',
+                              fontSize: '13px',
+                              marginBottom: '12px',
+                              lineHeight: '1.5',
+                            }}
+                          >
                             {template.description}
                           </p>
                           <div style={{ color: '#6b7280', fontSize: '12px' }}>
