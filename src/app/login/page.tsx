@@ -177,7 +177,9 @@ export default function LoginPage() {
                 gap: '12px',
               }}
             >
-              <AlertCircle style={{ width: '18px', height: '18px', color: '#ef4444', flexShrink: 0 }} />
+              <AlertCircle
+                style={{ width: '18px', height: '18px', color: '#ef4444', flexShrink: 0 }}
+              />
               <span style={{ fontSize: '14px', color: '#dc2626' }}>{displayError}</span>
             </motion.div>
           )}
@@ -228,7 +230,14 @@ export default function LoginPage() {
 
           {/* Password Field */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '8px',
+              }}
+            >
               <label
                 htmlFor="password"
                 style={{
@@ -339,7 +348,16 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div style={{ position: 'relative', textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: '#e5e7eb' }} />
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                right: 0,
+                height: '1px',
+                background: '#e5e7eb',
+              }}
+            />
             <span
               style={{
                 position: 'relative',
@@ -375,9 +393,15 @@ export default function LoginPage() {
               Demo Credentials
             </div>
             <div style={{ fontSize: '13px', color: '#374151', lineHeight: '1.8' }}>
-              <div><strong>Admin:</strong> admin@sonaqor.com / admin123</div>
-              <div><strong>Partner:</strong> partner@example.com / partner123</div>
-              <div><strong>User:</strong> user@example.com / user123</div>
+              <div>
+                <strong>Admin:</strong> admin@sonaqor.com / admin123
+              </div>
+              <div>
+                <strong>Partner:</strong> partner@example.com / partner123
+              </div>
+              <div>
+                <strong>User:</strong> user@example.com / user123
+              </div>
             </div>
           </div>
         </form>
@@ -411,7 +435,9 @@ export default function LoginPage() {
         }}
       >
         <span>© Sonaqor</span>
-        <a href="#" style={{ color: 'rgba(255, 255, 255, 0.8)', textDecoration: 'none' }}>Privacy & terms</a>
+        <a href="#" style={{ color: 'rgba(255, 255, 255, 0.8)', textDecoration: 'none' }}>
+          Privacy & terms
+        </a>
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ This guide covers deploying the Sonaqor Partner Dashboard to production.
 ## Recommended: Vercel Deployment (5 minutes)
 
 ### Why Vercel?
+
 - ✅ Built specifically for Next.js applications
 - ✅ Zero configuration deployment
 - ✅ Automatic HTTPS and CDN
@@ -14,6 +15,7 @@ This guide covers deploying the Sonaqor Partner Dashboard to production.
 - ✅ Built-in analytics and monitoring
 
 ### Prerequisites
+
 - GitHub account with repository access
 - Vercel account (free tier is sufficient)
 
@@ -22,6 +24,7 @@ This guide covers deploying the Sonaqor Partner Dashboard to production.
 #### 1. Prepare Your Repository
 
 Ensure these files are committed:
+
 ```bash
 git status
 git add .
@@ -83,6 +86,7 @@ If you plan to connect to a real backend API:
 ### Post-Deployment
 
 Your dashboard will be available at:
+
 - Production: `https://sonaqor-dashboard.vercel.app`
 - Custom domain: `https://dashboard.sonaqor.com` (if configured)
 
@@ -94,6 +98,7 @@ Pull requests get preview URLs like: `https://sonaqor-dashboard-git-feature-user
 ## Alternative: DigitalOcean Deployment
 
 ### Why DigitalOcean?
+
 - Full server control
 - Better for backend services
 - Can run databases on same server
@@ -101,21 +106,21 @@ Pull requests get preview URLs like: `https://sonaqor-dashboard-git-feature-user
 
 ### Cost Comparison
 
-| Service | Vercel | DigitalOcean |
-|---------|--------|--------------|
-| Hobby/Free Tier | ✅ Free | ❌ $6/month minimum |
-| Custom Domains | ✅ Free | ✅ Free |
-| SSL Certificates | ✅ Free | ✅ Free (Let's Encrypt) |
-| Auto-Scaling | ✅ Yes | ⚠️ Manual |
-| Deployment | ✅ Git push | ⚠️ Manual/CI setup |
-| Server Management | ✅ None | ⚠️ You manage it |
+| Service           | Vercel      | DigitalOcean            |
+| ----------------- | ----------- | ----------------------- |
+| Hobby/Free Tier   | ✅ Free     | ❌ $6/month minimum     |
+| Custom Domains    | ✅ Free     | ✅ Free                 |
+| SSL Certificates  | ✅ Free     | ✅ Free (Let's Encrypt) |
+| Auto-Scaling      | ✅ Yes      | ⚠️ Manual               |
+| Deployment        | ✅ Git push | ⚠️ Manual/CI setup      |
+| Server Management | ✅ None     | ⚠️ You manage it        |
 
 ### DigitalOcean Setup (30-45 minutes)
 
 #### 1. Create Droplet
 
 ```bash
-# Specs: 
+# Specs:
 # - OS: Ubuntu 22.04 LTS
 # - Size: Basic $6/month (1GB RAM)
 # - Datacenter: Closest to your users
@@ -262,16 +267,19 @@ cd /var/www/sonaqor-dashboard
 ## Cost Comparison (Annual)
 
 ### Vercel
+
 - **Free Tier**: $0/year
 - **Pro Plan**: $240/year ($20/month)
 - **Enterprise**: Custom pricing
 
 **Free Tier Limits:**
+
 - 100GB bandwidth
 - 100 deployments/day
 - Unlimited personal/hobby projects
 
 ### DigitalOcean
+
 - **Basic Droplet**: $72/year ($6/month)
 - **Production Droplet**: $144/year ($12/month - 2GB RAM)
 - **Load Balancer**: $120/year (if needed)
@@ -281,20 +289,21 @@ cd /var/www/sonaqor-dashboard
 
 ## Performance Comparison
 
-| Metric | Vercel | DigitalOcean |
-|--------|--------|--------------|
-| Global CDN | ✅ Automatic | ⚠️ Manual setup |
-| Edge Caching | ✅ Built-in | ❌ Need CloudFlare |
-| Image Optimization | ✅ Automatic | ❌ Manual |
-| Deploy Time | ~2 minutes | ~5-10 minutes |
-| Zero Downtime | ✅ Yes | ⚠️ Need config |
-| Rollback | ✅ Instant | ⚠️ Manual |
+| Metric             | Vercel       | DigitalOcean       |
+| ------------------ | ------------ | ------------------ |
+| Global CDN         | ✅ Automatic | ⚠️ Manual setup    |
+| Edge Caching       | ✅ Built-in  | ❌ Need CloudFlare |
+| Image Optimization | ✅ Automatic | ❌ Manual          |
+| Deploy Time        | ~2 minutes   | ~5-10 minutes      |
+| Zero Downtime      | ✅ Yes       | ⚠️ Need config     |
+| Rollback           | ✅ Instant   | ⚠️ Manual          |
 
 ---
 
 ## Recommendation Summary
 
 ### Choose Vercel if:
+
 - ✅ You want the simplest deployment
 - ✅ You're deploying a Next.js frontend only
 - ✅ You want automatic scaling
@@ -303,6 +312,7 @@ cd /var/www/sonaqor-dashboard
 - ✅ You don't want to manage servers
 
 ### Choose DigitalOcean if:
+
 - ✅ You need to run backend services too
 - ✅ You need a database on same server
 - ✅ You want full server control
@@ -314,12 +324,14 @@ cd /var/www/sonaqor-dashboard
 ## Hybrid Approach (Best of Both Worlds)
 
 **Recommended Setup:**
+
 1. **Frontend** → Vercel (sonaqor-dashboard)
 2. **Backend API** → DigitalOcean (sonaqor-core)
 3. **Database** → DigitalOcean Managed Database or AWS RDS
 4. **CDN/DNS** → Cloudflare (free tier)
 
 This gives you:
+
 - ✅ Fast, globally distributed frontend
 - ✅ Full control over backend
 - ✅ Managed database with backups
@@ -348,16 +360,19 @@ This gives you:
 ## Support & Resources
 
 ### Vercel
+
 - Dashboard: https://vercel.com/dashboard
 - Docs: https://vercel.com/docs
 - Support: support@vercel.com
 
 ### DigitalOcean
+
 - Dashboard: https://cloud.digitalocean.com
 - Docs: https://docs.digitalocean.com
 - Community: https://www.digitalocean.com/community
 
 ### Need Help?
+
 - Check deployment logs in Vercel dashboard
 - Use `vercel logs` CLI command
 - Review Next.js deployment docs

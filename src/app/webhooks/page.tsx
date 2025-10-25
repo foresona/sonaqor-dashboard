@@ -614,7 +614,8 @@ export default function WebhooksPage() {
             </button>
           </div>
           <p style={{ color: '#9ca3af', fontSize: '16px' }}>
-            Configure webhooks to receive real-time event notifications • {webhooks.length} webhooks configured
+            Configure webhooks to receive real-time event notifications • {webhooks.length} webhooks
+            configured
           </p>
         </div>
 
