@@ -53,60 +53,57 @@ export default function ApiKeysPage() {
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <div
-        style={{
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          background: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(10px)',
-        }}
-      >
-        <div
-          style={{
-            padding: '32px 40px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <h1
-              style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}
-            >
-              API Keys
-            </h1>
-            <p style={{ fontSize: '16px', color: '#9ca3af' }}>
-              Manage your API keys and monitor usage
-            </p>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
+      <div style={{ padding: '40px', maxWidth: '1600px', margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '32px' }}>
+          <div
             style={{
-              padding: '12px 24px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              border: 'none',
-              color: 'white',
-              fontWeight: '600',
-              fontSize: '15px',
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              transition: 'transform 0.2s ease',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+              justifyContent: 'space-between',
+              marginBottom: '8px',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           >
-            <Plus style={{ width: '20px', height: '20px' }} />
-            Create New Key
-          </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Key style={{ width: '32px', height: '32px', color: '#10b981' }} />
+              <h1
+                style={{
+                  fontSize: '32px',
+                  fontWeight: 'bold',
+                  background: 'linear-gradient(to right, #10b981, #a78bfa)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                API Keys
+              </h1>
+            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: '12px 20px',
+                background: 'linear-gradient(135deg, #10b981 0%, #a78bfa 100%)',
+                border: 'none',
+                borderRadius: '12px',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <Plus style={{ width: '18px', height: '18px' }} />
+              Create API Key
+            </button>
+          </div>
+          <p style={{ color: '#9ca3af', fontSize: '16px' }}>
+            Manage your API keys and monitor usage • {data.keys.length} active keys
+          </p>
         </div>
-      </div>
 
-      {/* Content */}
-      <div style={{ padding: '40px' }}>
         {/* API Keys List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {data.keys.map((apiKey, index) => (

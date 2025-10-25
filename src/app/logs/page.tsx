@@ -96,26 +96,29 @@ export default function LogsPage() {
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <div
-        style={{
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          background: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(10px)',
-        }}
-      >
-        <div style={{ padding: '32px 40px' }}>
-          <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
-            API Logs
-          </h1>
-          <p style={{ fontSize: '16px', color: '#9ca3af' }}>
-            Monitor and analyze your API requests in real-time
+      <div style={{ padding: '40px', maxWidth: '1600px', margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <Activity style={{ width: '32px', height: '32px', color: '#10b981' }} />
+            <h1
+              style={{
+                fontSize: '32px',
+                fontWeight: 'bold',
+                background: 'linear-gradient(to right, #10b981, #a78bfa)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              API Logs
+            </h1>
+          </div>
+          <p style={{ color: '#9ca3af', fontSize: '16px' }}>
+            Monitor and analyze your API requests in real-time • {data.stats.totalRequests} total
+            requests
           </p>
         </div>
-      </div>
-
-      {/* Content */}
-      <div style={{ padding: '40px' }}>
         {/* Stats Overview */}
         <div
           style={{

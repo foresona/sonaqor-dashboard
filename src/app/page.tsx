@@ -66,106 +66,100 @@ export default function DashboardHome() {
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <div
-        style={{
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          background: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(10px)',
-        }}
-      >
-        <div style={{ padding: '32px 40px' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+      <div style={{ padding: '40px', maxWidth: '1600px', margin: '0 auto' }}>
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          style={{ marginBottom: '32px' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '8px',
+            }}
           >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '16px',
-              }}
-            >
-              <div>
-                <h1
-                  style={{
-                    fontSize: '36px',
-                    fontWeight: 'bold',
-                    color: 'white',
-                    marginBottom: '8px',
-                  }}
-                >
-                  Welcome back, Abraham 👋
-                </h1>
-                <p style={{ fontSize: '16px', color: '#9ca3af' }}>
-                  Here's what's happening with your API
-                </p>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <BarChart3 style={{ width: '32px', height: '32px', color: '#10b981' }} />
+              <h1
+                style={{
+                  fontSize: '32px',
+                  fontWeight: 'bold',
+                  background: 'linear-gradient(to right, #10b981, #a78bfa)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                Welcome back, Abraham 👋
+              </h1>
+            </div>
 
-              {/* Time Range Filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Calendar style={{ width: '20px', height: '20px', color: '#9ca3af' }} />
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '8px',
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    padding: '4px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}
-                >
-                  {[
-                    { label: '24h', value: '24h' },
-                    { label: '7d', value: '7d' },
-                    { label: '30d', value: '30d' },
-                    { label: '90d', value: '90d' },
-                  ].map((range) => (
-                    <button
-                      key={range.value}
-                      onClick={() => setTimeRange(range.value)}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        background:
-                          timeRange === range.value
-                            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)'
-                            : 'transparent',
-                        border:
-                          timeRange === range.value
-                            ? '1px solid rgba(16, 185, 129, 0.4)'
-                            : '1px solid transparent',
-                        color: timeRange === range.value ? '#10b981' : '#9ca3af',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (timeRange !== range.value) {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (timeRange !== range.value) {
-                          e.currentTarget.style.background = 'transparent'
-                        }
-                      }}
-                    >
-                      {range.label}
-                    </button>
-                  ))}
-                </div>
+            {/* Time Range Filter */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Calendar style={{ width: '20px', height: '20px', color: '#9ca3af' }} />
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '8px',
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  padding: '4px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                {[
+                  { label: '24h', value: '24h' },
+                  { label: '7d', value: '7d' },
+                  { label: '30d', value: '30d' },
+                  { label: '90d', value: '90d' },
+                ].map((range) => (
+                  <button
+                    key={range.value}
+                    onClick={() => setTimeRange(range.value)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      background:
+                        timeRange === range.value
+                          ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)'
+                          : 'transparent',
+                      border:
+                        timeRange === range.value
+                          ? '1px solid rgba(16, 185, 129, 0.4)'
+                          : '1px solid transparent',
+                      color: timeRange === range.value ? '#10b981' : '#9ca3af',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (timeRange !== range.value) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (timeRange !== range.value) {
+                        e.currentTarget.style.background = 'transparent'
+                      }
+                    }}
+                  >
+                    {range.label}
+                  </button>
+                ))}
               </div>
             </div>
-          </motion.div>
-        </div>
-      </div>
+          </div>
+          <p style={{ color: '#9ca3af', fontSize: '16px' }}>
+            Here's what's happening with your API
+          </p>
+        </motion.div>
 
-      {/* Main Content */}
-      <div style={{ padding: '40px' }}>
+        {/* Content */}
         {/* Stats Grid */}
         <div
           style={{
