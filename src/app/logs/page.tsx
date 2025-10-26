@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   Activity,
@@ -26,6 +26,14 @@ export default function LogsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedLog, setExpandedLog] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  const [sortBy, setSortBy] = useState<'timestamp' | 'app' | 'status' | 'duration'>('timestamp')
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc')
+  const [appFilter, setAppFilter] = useState<string>('all')
+  const [envFilter, setEnvFilter] = useState<string>('all')
+  const [dateFrom, setDateFrom] = useState<string>('')
+  const [dateTo, setDateTo] = useState<string>('')
+  const [timeFrom, setTimeFrom] = useState<string>('')
+  const [timeTo, setTimeTo] = useState<string>('')
 
   useEffect(() => {
     fetchData()
@@ -72,6 +80,98 @@ export default function LogsPage() {
     return colors[method] || { bg: 'rgba(107, 114, 128, 0.2)', text: '#6b7280' }
   }
 
+  // parse durations like '1.2s' or '845ms' into milliseconds
+  const parseDurationMs = (d: string) => {
+    if (!d) return 0
+    const s = d.toString().trim()
+    if (s.endsWith('ms')) return parseFloat(s.replace('ms', ''))
+    if (s.endsWith('s')) return parseFloat(s.replace('s', '')) * 1000
+    // fallback: try numeric
+    const n = parseFloat(s)
+    return Number.isNaN(n) ? 0 : n
+  }
+
+  const filteredLogs = useMemo(() => {
+    if (!data) return []
+    return data.logs.filter((log) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        log.endpoint.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.ip.includes(searchQuery)
+      const matchesFilter =
+        filter === 'all' ||
+        (filter === 'success' && log.status >= 200 && log.status < 300) ||
+        (filter === 'error' && log.status >= 400)
+      const matchesApp = appFilter === 'all' || log.appName === appFilter
+      const matchesEnv = envFilter === 'all' || log.environment === envFilter
+      
+      // Date range filter
+      let matchesDateRange = true
+      if (dateFrom || dateTo) {
+        const logDate = new Date(log.timestamp)
+        if (dateFrom) {
+          const fromDateTime = new Date(dateFrom)
+          // If timeFrom is specified, set the time, otherwise start of day
+          if (timeFrom) {
+            const [hours, minutes] = timeFrom.split(':')
+            fromDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+          } else {
+            fromDateTime.setHours(0, 0, 0, 0)
+          }
+          matchesDateRange = matchesDateRange && logDate >= fromDateTime
+        }
+        if (dateTo) {
+          const toDateTime = new Date(dateTo)
+          // If timeTo is specified, set the time, otherwise end of day
+          if (timeTo) {
+            const [hours, minutes] = timeTo.split(':')
+            toDateTime.setHours(parseInt(hours), parseInt(minutes), 59, 999)
+          } else {
+            toDateTime.setHours(23, 59, 59, 999) // Include entire end date
+          }
+          matchesDateRange = matchesDateRange && logDate <= toDateTime
+        }
+      }
+      
+      return matchesSearch && matchesFilter && matchesApp && matchesEnv && matchesDateRange
+    })
+  }, [data, searchQuery, filter, appFilter, envFilter, dateFrom, dateTo])
+
+  // Get unique app names for the filter dropdown
+  const uniqueAppNames = useMemo(() => {
+    if (!data) return []
+    const names = new Set(data.logs.map((log) => log.appName).filter(Boolean))
+    return Array.from(names).sort()
+  }, [data])
+
+  // Get unique environments for the filter dropdown
+  const uniqueEnvironments = useMemo(() => {
+    if (!data) return []
+    const envs = new Set(data.logs.map((log) => log.environment).filter(Boolean))
+    return Array.from(envs).sort()
+  }, [data])
+
+  const sortedLogs = useMemo(() => {
+    const arr = [...filteredLogs]
+    arr.sort((a, b) => {
+      let res = 0
+      if (sortBy === 'app') {
+        res = (a.appName || '').localeCompare(b.appName || '')
+      } else if (sortBy === 'status') {
+        res = a.status - b.status
+      } else if (sortBy === 'duration') {
+        res = parseDurationMs(a.duration) - parseDurationMs(b.duration)
+      } else {
+        // timestamp (newest first by default)
+        const ta = new Date(a.timestamp).getTime()
+        const tb = new Date(b.timestamp).getTime()
+        res = ta - tb
+      }
+      return sortOrder === 'asc' ? res : -res
+    })
+    return arr
+  }, [filteredLogs, sortBy, sortOrder])
+
   if (loading || !data) {
     return (
       <DashboardLayout>
@@ -81,18 +181,6 @@ export default function LogsPage() {
       </DashboardLayout>
     )
   }
-
-  const filteredLogs = data.logs.filter((log) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      log.endpoint.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.ip.includes(searchQuery)
-    const matchesFilter =
-      filter === 'all' ||
-      (filter === 'success' && log.status >= 200 && log.status < 300) ||
-      (filter === 'error' && log.status >= 400)
-    return matchesSearch && matchesFilter
-  })
 
   return (
     <DashboardLayout>
@@ -219,7 +307,16 @@ export default function LogsPage() {
             boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
           }}
         >
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Row 1: Search and Filters */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'center',
+              marginBottom: '16px',
+              flexWrap: 'wrap',
+            }}
+          >
             {/* Search */}
             <div style={{ flex: 1, minWidth: '300px', position: 'relative' }}>
               <Search
@@ -251,7 +348,174 @@ export default function LogsPage() {
               />
             </div>
 
-            {/* Filter Buttons */}
+            {/* App Filter */}
+            <select
+              value={appFilter}
+              onChange={(e) => setAppFilter(e.target.value)}
+              style={{
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                fontSize: '14px',
+                outline: 'none',
+                cursor: 'pointer',
+                minWidth: '180px',
+              }}
+            >
+              <option value="all">All Apps</option>
+              {uniqueAppNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+
+            {/* Environment Filter */}
+            <select
+              value={envFilter}
+              onChange={(e) => setEnvFilter(e.target.value)}
+              style={{
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                fontSize: '14px',
+                outline: 'none',
+                cursor: 'pointer',
+                minWidth: '180px',
+              }}
+            >
+              <option value="all">All Environments</option>
+              {uniqueEnvironments.map((env) => (
+                <option key={env} value={env}>
+                  {env ? env.charAt(0).toUpperCase() + env.slice(1) : 'Unknown'}
+                </option>
+              ))}
+            </select>
+
+            {/* Date From */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                placeholder="From Date"
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '150px',
+                  colorScheme: 'dark',
+                }}
+              />
+              <input
+                type="time"
+                value={timeFrom}
+                onChange={(e) => setTimeFrom(e.target.value)}
+                placeholder="From Time"
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '120px',
+                  colorScheme: 'dark',
+                }}
+              />
+            </div>
+
+            {/* Date To */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                placeholder="To Date"
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '150px',
+                  colorScheme: 'dark',
+                }}
+              />
+              <input
+                type="time"
+                value={timeTo}
+                onChange={(e) => setTimeTo(e.target.value)}
+                placeholder="To Time"
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '120px',
+                  colorScheme: 'dark',
+                }}
+              />
+            </div>
+
+            {/* Clear Date Filter Button */}
+            {(dateFrom || dateTo || timeFrom || timeTo) && (
+              <button
+                onClick={() => {
+                  setDateFrom('')
+                  setDateTo('')
+                  setTimeFrom('')
+                  setTimeTo('')
+                }}
+                title="Clear date & time filter"
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#ef4444',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  minWidth: '44px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Row 2: Sort and Status Filters */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Filter Buttons - Left Side */}
             <div style={{ display: 'flex', gap: '8px' }}>
               {['All', 'Success', 'Errors', 'Warnings'].map((f) => (
                 <button
@@ -291,34 +555,82 @@ export default function LogsPage() {
               ))}
             </div>
 
-            {/* Export */}
-            <button
-              style={{
-                padding: '10px 20px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#9ca3af',
-                cursor: 'pointer',
-                fontWeight: '500',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-                e.currentTarget.style.color = 'white'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                e.currentTarget.style.color = '#9ca3af'
-              }}
-            >
-              <Download style={{ width: '18px', height: '18px' }} />
-              Export
-            </button>
+            {/* Sort Controls - Right Side */}
+            <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto', alignItems: 'center' }}>
+              {/* Sort By */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '160px',
+                }}
+              >
+                <option value="timestamp">Sort by Time</option>
+                <option value="app">Sort by App</option>
+                <option value="status">Sort by Status</option>
+                <option value="duration">Sort by Duration</option>
+              </select>
+
+              {/* Sort Order Button */}
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: sortOrder === 'desc' ? '#10b981' : '#9ca3af',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  minWidth: '80px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)')}
+              >
+                {sortOrder === 'asc' ? 'ASC' : 'DESC'}
+              </button>
+
+              {/* Export Button */}
+              <button
+                title="Export logs"
+                style={{
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#9ca3af',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)'
+                  e.currentTarget.style.color = '#10b981'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)'
+                  e.currentTarget.style.color = '#9ca3af'
+                }}
+              >
+                <Download style={{ width: '16px', height: '16px' }} />
+                Export
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -342,7 +654,7 @@ export default function LogsPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '180px 80px 1fr 100px 100px 140px 140px 60px',
+              gridTemplateColumns: '180px 80px 1fr 120px 120px 100px 100px 140px 140px 60px',
               padding: '20px 24px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
               fontSize: '13px',
@@ -355,6 +667,8 @@ export default function LogsPage() {
             <div>Timestamp</div>
             <div>Method</div>
             <div>Endpoint</div>
+            <div>App</div>
+            <div>Environment</div>
             <div>Status</div>
             <div>Duration</div>
             <div>IP Address</div>
@@ -364,7 +678,7 @@ export default function LogsPage() {
 
           {/* Table Body */}
           <div>
-            {filteredLogs.map((log, index) => {
+            {sortedLogs.map((log, index) => {
               const statusColor = getStatusColor(log.status)
               const methodColor = getMethodColor(log.method)
               const isExpanded = expandedLog === log.id
@@ -378,7 +692,7 @@ export default function LogsPage() {
                     onClick={() => setExpandedLog(isExpanded ? null : log.id)}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '180px 80px 1fr 100px 100px 140px 140px 60px',
+                      gridTemplateColumns: '180px 80px 1fr 120px 120px 100px 100px 140px 140px 60px',
                       padding: '20px 24px',
                       borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                       alignItems: 'center',
@@ -409,6 +723,37 @@ export default function LogsPage() {
                     </div>
                     <div style={{ fontSize: '14px', color: 'white', fontFamily: 'monospace' }}>
                       {log.endpoint}
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          background: 'rgba(167, 139, 250, 0.1)',
+                          border: '1px solid rgba(167, 139, 250, 0.3)',
+                          color: '#a78bfa',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        {log.appName || 'N/A'}
+                      </span>
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          background: 'rgba(59, 130, 246, 0.1)',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                          color: '#3b82f6',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          textTransform: 'capitalize',
+                        }}
+                      >
+                        {log.environment || 'N/A'}
+                      </span>
                     </div>
                     <div>
                       <span

@@ -3,6 +3,12 @@
 export interface APILogEntry {
   id: string
   timestamp: string
+  // optional app identifier for grouping/sorting
+  app?: string
+  // human-readable app name (e.g., "Web Dashboard", "Mobile App")
+  appName?: string
+  // environment (e.g., "production", "staging", "development")
+  environment?: string
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
   endpoint: string
   status: number
@@ -34,6 +40,9 @@ export const getLogsData = async (
   const allLogs: APILogEntry[] = [
     {
       id: '1',
+      app: 'app_prod_001',
+      appName: 'Web Dashboard',
+      environment: 'production',
       timestamp: '2025-10-24 14:32:15',
       method: 'POST',
       endpoint: '/api/forecast/generate',
@@ -62,6 +71,9 @@ export const getLogsData = async (
     },
     {
       id: '2',
+      app: 'app_dev_001',
+      appName: 'Mobile App',
+      environment: 'development',
       timestamp: '2025-10-24 14:31:42',
       method: 'GET',
       endpoint: '/api/persona/match',
@@ -83,6 +95,9 @@ export const getLogsData = async (
     },
     {
       id: '3',
+      app: 'app_prod_001',
+      appName: 'Web Dashboard',
+      environment: 'production',
       timestamp: '2025-10-24 14:30:18',
       method: 'POST',
       endpoint: '/api/fscores/calculate',
@@ -105,6 +120,9 @@ export const getLogsData = async (
     },
     {
       id: '4',
+      app: 'app_staging_001',
+      appName: 'Analytics Service',
+      environment: 'staging',
       timestamp: '2025-10-24 14:29:05',
       method: 'GET',
       endpoint: '/api/anomaly/detect',
@@ -124,6 +142,9 @@ export const getLogsData = async (
     },
     {
       id: '5',
+      app: 'app_prod_001',
+      appName: 'Web Dashboard',
+      environment: 'production',
       timestamp: '2025-10-24 14:28:33',
       method: 'PUT',
       endpoint: '/api/user/preferences',
@@ -146,6 +167,9 @@ export const getLogsData = async (
     },
     {
       id: '6',
+      app: 'app_dev_001',
+      appName: 'Mobile App',
+      environment: 'development',
       timestamp: '2025-10-24 14:27:11',
       method: 'DELETE',
       endpoint: '/api/webhook/delete',
