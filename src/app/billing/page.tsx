@@ -682,6 +682,8 @@ export default function BillingPage() {
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 padding: '20px',
                 marginBottom: '20px',
+                position: 'relative',
+                zIndex: 100,
               }}
             >
               <div
@@ -1065,6 +1067,8 @@ export default function BillingPage() {
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 padding: '20px',
                 marginBottom: '20px',
+                position: 'relative',
+                zIndex: 100,
               }}
             >
               <div

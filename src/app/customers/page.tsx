@@ -384,6 +384,8 @@ export default function CustomersPage() {
             border: '1px solid rgba(255, 255, 255, 0.1)',
             padding: '24px',
             marginBottom: '24px',
+            position: 'relative',
+            zIndex: 100,
           }}
         >
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>

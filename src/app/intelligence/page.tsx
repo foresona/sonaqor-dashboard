@@ -237,6 +237,8 @@ function IntelligenceContent() {
               alignItems: 'center',
               justifyContent: 'space-between',
               marginBottom: '8px',
+              position: 'relative',
+              zIndex: 100,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

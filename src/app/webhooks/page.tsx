@@ -877,6 +877,8 @@ export default function WebhooksPage() {
               justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: '20px',
+              position: 'relative',
+              zIndex: 100,
             }}
           >
             <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>

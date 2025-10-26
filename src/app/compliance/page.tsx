@@ -231,7 +231,14 @@ export default function CompliancePage() {
           <div>
             {/* Filters */}
             <div
-              style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'center' }}
+              style={{
+                display: 'flex',
+                gap: '16px',
+                marginBottom: '24px',
+                alignItems: 'center',
+                position: 'relative',
+                zIndex: 100,
+              }}
             >
               <CustomSelect
                 value={severityFilter}
