@@ -33,6 +33,8 @@ function ApiKeysContent() {
   const [copied, setCopied] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
+  const [newKeyApp, setNewKeyApp] = useState('')
+  const [newKeyEnvironment, setNewKeyEnvironment] = useState<'Production' | 'Staging' | 'Development'>('Production')
 
   // Filter states
   const [apps, setApps] = useState<any[]>([])
@@ -343,6 +345,69 @@ function ApiKeysContent() {
           </div>
         </div>
 
+        {/* Usage Overview */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          style={{
+            marginBottom: '32px',
+            background:
+              'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '32px',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+          }}
+        >
+          <h2
+            style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}
+          >
+            Usage Overview
+          </h2>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '24px',
+            }}
+          >
+            {[
+              { label: 'Requests Today', value: '12,453', change: '+23%', positive: true },
+              { label: 'Avg Response Time', value: '245ms', change: '-12%', positive: true },
+              { label: 'Success Rate', value: '99.8%', change: '+0.2%', positive: true },
+              { label: 'Rate Limit', value: '85%', change: '+5%', positive: false },
+            ].map((stat, i) => (
+              <div key={i}>
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
+                  {stat.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '4px',
+                  }}
+                >
+                  {stat.value}
+                </div>
+                <div
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    color: stat.positive ? '#10b981' : '#ef4444',
+                  }}
+                >
+                  {stat.change} from yesterday
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
         {/* API Keys Grid */}
         <div
           style={{
@@ -623,68 +688,193 @@ function ApiKeysContent() {
           )}
         </div>
 
-        {/* Usage Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          style={{
-            marginTop: '32px',
-            background:
-              'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            borderRadius: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '32px',
-            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-          }}
-        >
-          <h2
-            style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}
-          >
-            Usage Overview
-          </h2>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '24px',
-            }}
-          >
-            {[
-              { label: 'Requests Today', value: '12,453', change: '+23%', positive: true },
-              { label: 'Avg Response Time', value: '245ms', change: '-12%', positive: true },
-              { label: 'Success Rate', value: '99.8%', change: '+0.2%', positive: true },
-              { label: 'Rate Limit', value: '85%', change: '+5%', positive: false },
-            ].map((stat, i) => (
-              <div key={i}>
-                <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
-                  {stat.label}
-                </div>
-                <div
+        {/* Create API Key Modal */}
+        <AnimatePresence>
+          {showCreateModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.8)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: '20px',
+              }}
+              onClick={() => setShowCreateModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '32px',
+                  maxWidth: '500px',
+                  width: '100%',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                }}
+              >
+                <h2
                   style={{
-                    fontSize: '28px',
+                    fontSize: '24px',
                     fontWeight: 'bold',
                     color: 'white',
-                    marginBottom: '4px',
+                    marginBottom: '24px',
                   }}
                 >
-                  {stat.value}
+                  Create New API Key
+                </h2>
+
+                {/* Key Name */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      color: '#9ca3af',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Key Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newKeyName}
+                    onChange={(e) => setNewKeyName(e.target.value)}
+                    placeholder="e.g., Production API Key"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  />
                 </div>
-                <div
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    color: stat.positive ? '#10b981' : '#ef4444',
-                  }}
-                >
-                  {stat.change} from yesterday
+
+                {/* App Selection */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      color: '#9ca3af',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Application
+                  </label>
+                  <CustomSelect
+                    value={newKeyApp}
+                    onChange={(value) => setNewKeyApp(value)}
+                    options={[
+                      { value: '', label: 'Select an application' },
+                      ...apps.map((app) => ({ value: app.id, label: app.name })),
+                    ]}
+                    placeholder="Select an application"
+                    accentColor="#10b981"
+                    minWidth="100%"
+                  />
                 </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+
+                {/* Environment Selection */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      color: '#9ca3af',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Environment
+                  </label>
+                  <CustomSelect
+                    value={newKeyEnvironment}
+                    onChange={(value) => setNewKeyEnvironment(value as 'Production' | 'Staging' | 'Development')}
+                    options={[
+                      { value: 'Production', label: 'Production' },
+                      { value: 'Staging', label: 'Staging' },
+                      { value: 'Development', label: 'Development' },
+                    ]}
+                    accentColor="#10b981"
+                    minWidth="100%"
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => {
+                      setShowCreateModal(false)
+                      setNewKeyName('')
+                      setNewKeyApp('')
+                      setNewKeyEnvironment('Production')
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (newKeyName.trim() && newKeyApp) {
+                        // TODO: Implement API key creation
+                        console.log('Creating API key:', {
+                          name: newKeyName,
+                          app: newKeyApp,
+                          environment: newKeyEnvironment,
+                        })
+                        setShowCreateModal(false)
+                        setNewKeyName('')
+                        setNewKeyApp('')
+                        setNewKeyEnvironment('Production')
+                      }
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      border: 'none',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: newKeyName.trim() && newKeyApp ? 'pointer' : 'not-allowed',
+                      opacity: newKeyName.trim() && newKeyApp ? 1 : 0.5,
+                    }}
+                    disabled={!newKeyName.trim() || !newKeyApp}
+                  >
+                    Create Key
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   )
