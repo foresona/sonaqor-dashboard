@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   Activity,
@@ -20,6 +21,7 @@ import DashboardLayout from '@/components/DashboardLayout'
 import { getLogsData, type LogsData, type APILogEntry } from '@/data/logs'
 
 export default function LogsPage() {
+  const searchParams = useSearchParams()
   const [data, setData] = useState<LogsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -34,6 +36,22 @@ export default function LogsPage() {
   const [dateTo, setDateTo] = useState<string>('')
   const [timeFrom, setTimeFrom] = useState<string>('')
   const [timeTo, setTimeTo] = useState<string>('')
+  const [showAppDropdown, setShowAppDropdown] = useState(false)
+  const [showEnvDropdown, setShowEnvDropdown] = useState(false)
+  const [showSortDropdown, setShowSortDropdown] = useState(false)
+
+  // Set filters from URL params on mount
+  useEffect(() => {
+    const appParam = searchParams.get('app')
+    const envParam = searchParams.get('env')
+    
+    if (appParam) {
+      setAppFilter(appParam)
+    }
+    if (envParam) {
+      setEnvFilter(envParam)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetchData()
@@ -140,14 +158,14 @@ export default function LogsPage() {
   // Get unique app names for the filter dropdown
   const uniqueAppNames = useMemo(() => {
     if (!data) return []
-    const names = new Set(data.logs.map((log) => log.appName).filter(Boolean))
+    const names = new Set(data.logs.map((log) => log.appName).filter((name): name is string => Boolean(name)))
     return Array.from(names).sort()
   }, [data])
 
   // Get unique environments for the filter dropdown
   const uniqueEnvironments = useMemo(() => {
     if (!data) return []
-    const envs = new Set(data.logs.map((log) => log.environment).filter(Boolean))
+    const envs = new Set(data.logs.map((log) => log.environment).filter((env): env is string => Boolean(env)))
     return Array.from(envs).sort()
   }, [data])
 
@@ -305,6 +323,8 @@ export default function LogsPage() {
             padding: '24px',
             marginBottom: '24px',
             boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            position: 'relative',
+            zIndex: 10,
           }}
         >
           {/* Row 1: Search and Filters */}
@@ -315,6 +335,8 @@ export default function LogsPage() {
               alignItems: 'center',
               marginBottom: '16px',
               flexWrap: 'wrap',
+              position: 'relative',
+              zIndex: 10,
             }}
           >
             {/* Search */}
@@ -349,52 +371,258 @@ export default function LogsPage() {
             </div>
 
             {/* App Filter */}
-            <select
-              value={appFilter}
-              onChange={(e) => setAppFilter(e.target.value)}
-              style={{
-                padding: '12px 16px',
-                borderRadius: '12px',
-                background: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                cursor: 'pointer',
-                minWidth: '180px',
-              }}
-            >
-              <option value="all">All Apps</option>
-              {uniqueAppNames.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
+            <div style={{ position: 'relative', minWidth: '180px' }}>
+              <button
+                onClick={() => setShowAppDropdown(!showAppDropdown)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)'
+                  e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)'
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                <span>{appFilter === 'all' ? 'All Apps' : appFilter}</span>
+                <ChevronDown
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    transform: showAppDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                  }}
+                />
+              </button>
+
+              {showAppDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    left: 0,
+                    right: 0,
+                    background: 'rgba(0, 0, 0, 0.95)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    zIndex: 9999,
+                    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setAppFilter('all')
+                      setShowAppDropdown(false)
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: appFilter === 'all' ? 'rgba(167, 139, 250, 0.2)' : 'transparent',
+                      border: 'none',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                      color: appFilter === 'all' ? '#a78bfa' : 'white',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (appFilter !== 'all') {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (appFilter !== 'all') {
+                        e.currentTarget.style.background = 'transparent'
+                      }
+                    }}
+                  >
+                    All Apps
+                  </button>
+                  {uniqueAppNames.map((name) => (
+                    <button
+                      key={name}
+                      onClick={() => {
+                        setAppFilter(name)
+                        setShowAppDropdown(false)
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        background: appFilter === name ? 'rgba(167, 139, 250, 0.2)' : 'transparent',
+                        border: 'none',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                        color: appFilter === name ? '#a78bfa' : 'white',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (appFilter !== name) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (appFilter !== name) {
+                          e.currentTarget.style.background = 'transparent'
+                        }
+                      }}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </div>
 
             {/* Environment Filter */}
-            <select
-              value={envFilter}
-              onChange={(e) => setEnvFilter(e.target.value)}
-              style={{
-                padding: '12px 16px',
-                borderRadius: '12px',
-                background: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                cursor: 'pointer',
-                minWidth: '180px',
-              }}
-            >
-              <option value="all">All Environments</option>
-              {uniqueEnvironments.map((env) => (
-                <option key={env} value={env}>
-                  {env ? env.charAt(0).toUpperCase() + env.slice(1) : 'Unknown'}
-                </option>
-              ))}
-            </select>
+            <div style={{ position: 'relative', minWidth: '180px' }}>
+              <button
+                onClick={() => setShowEnvDropdown(!showEnvDropdown)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)'
+                  e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)'
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                <span>
+                  {envFilter === 'all'
+                    ? 'All Environments'
+                    : envFilter.charAt(0).toUpperCase() + envFilter.slice(1)}
+                </span>
+                <ChevronDown
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    transform: showEnvDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                  }}
+                />
+              </button>
+
+              {showEnvDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    left: 0,
+                    right: 0,
+                    background: 'rgba(0, 0, 0, 0.95)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    zIndex: 9999,
+                    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setEnvFilter('all')
+                      setShowEnvDropdown(false)
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: envFilter === 'all' ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                      border: 'none',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                      color: envFilter === 'all' ? '#3b82f6' : 'white',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (envFilter !== 'all') {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (envFilter !== 'all') {
+                        e.currentTarget.style.background = 'transparent'
+                      }
+                    }}
+                  >
+                    All Environments
+                  </button>
+                  {uniqueEnvironments.map((env) => (
+                    <button
+                      key={env}
+                      onClick={() => {
+                        setEnvFilter(env)
+                        setShowEnvDropdown(false)
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        background: envFilter === env ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                        border: 'none',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                        color: envFilter === env ? '#3b82f6' : 'white',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (envFilter !== env) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (envFilter !== env) {
+                          e.currentTarget.style.background = 'transparent'
+                        }
+                      }}
+                    >
+                      {env.charAt(0).toUpperCase() + env.slice(1)}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </div>
 
             {/* Date From */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -514,7 +742,7 @@ export default function LogsPage() {
           </div>
 
           {/* Row 2: Sort and Status Filters */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 9 }}>
             {/* Filter Buttons - Left Side */}
             <div style={{ display: 'flex', gap: '8px' }}>
               {['All', 'Success', 'Errors', 'Warnings'].map((f) => (
@@ -558,26 +786,109 @@ export default function LogsPage() {
             {/* Sort Controls - Right Side */}
             <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto', alignItems: 'center' }}>
               {/* Sort By */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  fontSize: '14px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  minWidth: '160px',
-                }}
-              >
-                <option value="timestamp">Sort by Time</option>
-                <option value="app">Sort by App</option>
-                <option value="status">Sort by Status</option>
-                <option value="duration">Sort by Duration</option>
-              </select>
+              <div style={{ position: 'relative', minWidth: '160px' }}>
+                <button
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'white',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)'
+                    e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)'
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                  }}
+                >
+                  <span>
+                    {sortBy === 'timestamp' && 'Sort by Time'}
+                    {sortBy === 'app' && 'Sort by App'}
+                    {sortBy === 'status' && 'Sort by Status'}
+                    {sortBy === 'duration' && 'Sort by Duration'}
+                  </span>
+                  <ChevronDown
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      transform: showSortDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease',
+                    }}
+                  />
+                </button>
+
+                {showSortDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      left: 0,
+                      right: 0,
+                      background: 'rgba(0, 0, 0, 0.95)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      zIndex: 9999,
+                      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+                    }}
+                  >
+                    {[
+                      { value: 'timestamp', label: 'Sort by Time' },
+                      { value: 'app', label: 'Sort by App' },
+                      { value: 'status', label: 'Sort by Status' },
+                      { value: 'duration', label: 'Sort by Duration' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSortBy(option.value as any)
+                          setShowSortDropdown(false)
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          background:
+                            sortBy === option.value ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                          border: 'none',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                          color: sortBy === option.value ? '#10b981' : 'white',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (sortBy !== option.value) {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (sortBy !== option.value) {
+                            e.currentTarget.style.background = 'transparent'
+                          }
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
 
               {/* Sort Order Button */}
               <button
@@ -648,6 +959,8 @@ export default function LogsPage() {
             border: '1px solid rgba(255, 255, 255, 0.1)',
             overflow: 'hidden',
             boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            position: 'relative',
+            zIndex: 1,
           }}
         >
           {/* Table Header */}

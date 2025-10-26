@@ -41,7 +41,7 @@ export const getLogsData = async (
     {
       id: '1',
       app: 'app_prod_001',
-      appName: 'Web Dashboard',
+      appName: 'Main Web App',
       environment: 'production',
       timestamp: '2025-10-24 14:32:15',
       method: 'POST',
@@ -72,7 +72,7 @@ export const getLogsData = async (
     {
       id: '2',
       app: 'app_dev_001',
-      appName: 'Mobile App',
+      appName: 'Mobile App Backend',
       environment: 'development',
       timestamp: '2025-10-24 14:31:42',
       method: 'GET',
@@ -96,7 +96,7 @@ export const getLogsData = async (
     {
       id: '3',
       app: 'app_prod_001',
-      appName: 'Web Dashboard',
+      appName: 'Main Web App',
       environment: 'production',
       timestamp: '2025-10-24 14:30:18',
       method: 'POST',
@@ -143,7 +143,7 @@ export const getLogsData = async (
     {
       id: '5',
       app: 'app_prod_001',
-      appName: 'Web Dashboard',
+      appName: 'Main Web App',
       environment: 'production',
       timestamp: '2025-10-24 14:28:33',
       method: 'PUT',
@@ -168,7 +168,7 @@ export const getLogsData = async (
     {
       id: '6',
       app: 'app_dev_001',
-      appName: 'Mobile App',
+      appName: 'Mobile App Backend',
       environment: 'development',
       timestamp: '2025-10-24 14:27:11',
       method: 'DELETE',

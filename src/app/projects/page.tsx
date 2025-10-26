@@ -24,6 +24,8 @@ import {
   Filter,
   MoreVertical,
   Eye,
+  FileText,
+  ChevronDown,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -57,6 +59,8 @@ export default function ProjectsPage() {
   // Search & filter
   const [searchQuery, setSearchQuery] = useState('')
   const [filterEnv, setFilterEnv] = useState<string>('All')
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false)
+  const [showEnvFilterDropdown, setShowEnvFilterDropdown] = useState(false)
 
   // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -363,47 +367,198 @@ export default function ProjectsPage() {
           </p>
         </div>
 
-        {/* Projects Tabs */}
-        <div
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '8px',
-            display: 'flex',
-            gap: '8px',
-            marginBottom: '32px',
-          }}
-        >
-          {data.projects.map((project) => (
-            <button
-              key={project.id}
-              onClick={() => setSelectedProject(project.id)}
+        {/* Project Selector */}
+        <div style={{ marginBottom: '32px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '12px',
+            }}
+          >
+            <div
               style={{
-                flex: 1,
-                padding: '16px 20px',
-                background:
-                  selectedProject === project.id ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                border:
-                  selectedProject === project.id
-                    ? '1px solid rgba(16, 185, 129, 0.3)'
-                    : '1px solid transparent',
-                borderRadius: '12px',
-                color: selectedProject === project.id ? '#10b981' : '#9ca3af',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
               }}
             >
-              <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '4px' }}>
-                {project.name}
+              <FolderKanban style={{ width: '20px', height: '20px', color: '#10b981' }} />
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>
+                Select Project
+              </h3>
+              <div
+                style={{
+                  padding: '4px 12px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#10b981',
+                }}
+              >
+                {data.projects.length} {data.projects.length === 1 ? 'project' : 'projects'}
               </div>
-              <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                {data.apps.filter((a) => a.projectId === project.id).length} apps
+            </div>
+          </div>
+          <div
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '20px',
+              position: 'relative',
+            }}
+          >
+            {/* Custom Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowProjectDropdown(!showProjectDropdown)}
+                style={{
+                  width: '100%',
+                  padding: '16px 20px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)'
+                  e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)'
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                <span>
+                  {currentProject
+                    ? `${currentProject.name} (${data.apps.filter((a) => a.projectId === currentProject.id).length} apps)`
+                    : 'Choose a project...'}
+                </span>
+                <ChevronDown
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    color: '#9ca3af',
+                    transform: showProjectDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                  }}
+                />
+              </button>
+
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {showProjectDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      left: 0,
+                      right: 0,
+                      background: 'rgba(0, 0, 0, 0.95)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      zIndex: 1000,
+                      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+                    }}
+                  >
+                    {data.projects.map((project) => (
+                      <button
+                        key={project.id}
+                        onClick={() => {
+                          setSelectedProject(project.id)
+                          setShowProjectDropdown(false)
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '16px 20px',
+                          background:
+                            selectedProject === project.id
+                              ? 'rgba(16, 185, 129, 0.2)'
+                              : 'transparent',
+                          border: 'none',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                          color: selectedProject === project.id ? '#10b981' : 'white',
+                          fontSize: '15px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '4px',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (selectedProject !== project.id) {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (selectedProject !== project.id) {
+                            e.currentTarget.style.background = 'transparent'
+                          }
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <FolderKanban style={{ width: '16px', height: '16px' }} />
+                          <span style={{ fontWeight: '600' }}>{project.name}</span>
+                          <span
+                            style={{
+                              marginLeft: 'auto',
+                              fontSize: '12px',
+                              color: '#9ca3af',
+                            }}
+                          >
+                            {data.apps.filter((a) => a.projectId === project.id).length} apps
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', paddingLeft: '24px' }}>
+                          {project.description}
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {currentProject && (
+              <div
+                style={{
+                  marginTop: '16px',
+                  padding: '16px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  borderRadius: '12px',
+                }}
+              >
+                <div style={{ fontSize: '14px', color: '#10b981', marginBottom: '4px' }}>
+                  {currentProject.description}
+                </div>
+                <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                  Created {currentProject.createdAt} • Status: {currentProject.status}
+                </div>
               </div>
-            </button>
-          ))}
+            )}
+          </div>
         </div>
 
         {currentProject && (
@@ -559,25 +714,108 @@ export default function ProjectsPage() {
                     />
                   </div>
 
-                  {/* Environment Filter */}
-                  <select
-                    value={filterEnv}
-                    onChange={(e) => setFilterEnv(e.target.value)}
-                    style={{
-                      padding: '8px 12px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <option value="All">All Environments</option>
-                    <option value="Production">Production</option>
-                    <option value="Staging">Staging</option>
-                    <option value="Development">Development</option>
-                  </select>
+                  {/* Environment Filter - Custom Dropdown */}
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      onClick={() => setShowEnvFilterDropdown(!showEnvFilterDropdown)}
+                      style={{
+                        padding: '8px 12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        minWidth: '180px',
+                        justifyContent: 'space-between',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
+                        e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                      }}
+                    >
+                      <span>
+                        {filterEnv === 'All' ? 'All Environments' : filterEnv}
+                      </span>
+                      <ChevronDown
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          color: '#9ca3af',
+                          transform: showEnvFilterDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s ease',
+                        }}
+                      />
+                    </button>
+
+                    <AnimatePresence>
+                      {showEnvFilterDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 4px)',
+                            left: 0,
+                            right: 0,
+                            background: 'rgba(0, 0, 0, 0.95)',
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            zIndex: 9999,
+                            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+                          }}
+                        >
+                          {['All', 'Production', 'Staging', 'Development'].map((env) => (
+                            <button
+                              key={env}
+                              onClick={() => {
+                                setFilterEnv(env)
+                                setShowEnvFilterDropdown(false)
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '10px 12px',
+                                background:
+                                  filterEnv === env ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                                border: 'none',
+                                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                                color: filterEnv === env ? '#10b981' : 'white',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                transition: 'all 0.2s ease',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (filterEnv !== env) {
+                                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (filterEnv !== env) {
+                                  e.currentTarget.style.background = 'transparent'
+                                }
+                              }}
+                            >
+                              {env === 'All' ? 'All Environments' : env}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 <button
@@ -811,6 +1049,27 @@ export default function ProjectsPage() {
                       >
                         <BarChart3 style={{ width: '14px', height: '14px' }} />
                         View Analytics
+                      </button>
+                      <button
+                        onClick={() => router.push(`/logs?app=${encodeURIComponent(app.name)}&env=${app.environment.toLowerCase()}`)}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          background: 'rgba(168, 85, 247, 0.1)',
+                          border: '1px solid rgba(168, 85, 247, 0.3)',
+                          borderRadius: '8px',
+                          color: '#a855f7',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <FileText style={{ width: '14px', height: '14px' }} />
+                        View Logs
                       </button>
                       <button
                         onClick={() => handleViewApiKeys(app)}
