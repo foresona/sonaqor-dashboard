@@ -17,6 +17,7 @@ import {
   Layers,
 } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
+import CustomSelect from '@/components/CustomSelect'
 import { getAPIKeysData, type APIKeysData, type APIKey } from '@/data/apiKeys'
 import { getProjectsData } from '@/data/projects'
 
@@ -35,11 +36,12 @@ function ApiKeysContent() {
   // Filter states
   const [apps, setApps] = useState<any[]>([])
   const [selectedAppFilter, setSelectedAppFilter] = useState<string>('all')
+  const [selectedEnvFilter, setSelectedEnvFilter] = useState<string>('all')
 
   // Sorting and grouping states
   const [sortBy, setSortBy] = useState<'name' | 'created' | 'lastUsed' | 'status'>('created')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [groupBy, setGroupBy] = useState<'none' | 'app' | 'status'>('app')
+  const [groupBy, setGroupBy] = useState<'none' | 'app' | 'status'>('none')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,6 +88,11 @@ function ApiKeysContent() {
       selectedAppFilter === 'all'
         ? data.keys
         : data.keys.filter((key) => key.app === selectedAppFilter)
+
+    // Filter by environment
+    if (selectedEnvFilter !== 'all') {
+      filtered = filtered.filter((key) => key.environment === selectedEnvFilter)
+    }
 
     // Sort
     const sorted = [...filtered].sort((a, b) => {
@@ -140,7 +147,13 @@ function ApiKeysContent() {
     }
 
     return [{ title: null, keys: sorted }]
-  }, [data, selectedAppFilter, sortBy, sortOrder, groupBy])
+  }, [data, selectedAppFilter, selectedEnvFilter, sortBy, sortOrder, groupBy])
+
+  // Get unique environments
+  const uniqueEnvironments = useMemo(() => {
+    if (!data) return []
+    return Array.from(new Set(data.keys.map((key) => key.environment)))
+  }, [data])
 
   if (loading || !data) {
     return (
@@ -233,50 +246,45 @@ function ApiKeysContent() {
             }}
           >
             {/* App Filter */}
-            <select
+            <CustomSelect
               value={selectedAppFilter}
-              onChange={(e) => handleAppFilterChange(e.target.value)}
-              style={{
-                padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                cursor: 'pointer',
-                minWidth: '180px',
-              }}
-            >
-              <option value="all">All Apps</option>
-              {apps.map((app) => (
-                <option key={app.id} value={app.id}>
-                  {app.name} ({app.environment})
-                </option>
-              ))}
-            </select>
+              onChange={(value) => handleAppFilterChange(value)}
+              options={[
+                { value: 'all', label: 'All Apps' },
+                ...apps.map((app) => ({
+                  value: app.id,
+                  label: `${app.name} (${app.environment})`,
+                })),
+              ]}
+              accentColor="#10b981"
+              minWidth="180px"
+            />
+
+            {/* Environment Filter */}
+            <CustomSelect
+              value={selectedEnvFilter}
+              onChange={(value) => setSelectedEnvFilter(value)}
+              options={[
+                { value: 'all', label: 'All Environments' },
+                ...uniqueEnvironments.map((env) => ({ value: env, label: env })),
+              ]}
+              accentColor="#10b981"
+              minWidth="180px"
+            />
 
             {/* Sort By */}
-            <select
+            <CustomSelect
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              style={{
-                padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                cursor: 'pointer',
-                minWidth: '180px',
-              }}
-            >
-              <option value="created">Created Date</option>
-              <option value="name">Name</option>
-              <option value="lastUsed">Last Used</option>
-              <option value="status">Status</option>
-            </select>
+              onChange={(value) => setSortBy(value as any)}
+              options={[
+                { value: 'created', label: 'Created Date' },
+                { value: 'name', label: 'Name' },
+                { value: 'lastUsed', label: 'Last Used' },
+                { value: 'status', label: 'Status' },
+              ]}
+              accentColor="#10b981"
+              minWidth="180px"
+            />
 
             {/* Sort Order */}
             <button
@@ -299,34 +307,17 @@ function ApiKeysContent() {
               <ArrowUpDown style={{ width: '18px', height: '18px' }} />
             </button>
 
-            {/* Group By */}
-            <select
-              value={groupBy}
-              onChange={(e) => setGroupBy(e.target.value as any)}
-              style={{
-                padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                cursor: 'pointer',
-                minWidth: '160px',
-              }}
-            >
-              <option value="none">No Grouping</option>
-              <option value="app">Group by App</option>
-              <option value="status">Group by Status</option>
-            </select>
-
             {/* Clear Filter Button */}
-            {selectedAppFilter !== 'all' && (
+            {(selectedAppFilter !== 'all' || selectedEnvFilter !== 'all') && (
               <motion.button
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                onClick={handleClearFilter}
+                onClick={() => {
+                  setSelectedAppFilter('all')
+                  setSelectedEnvFilter('all')
+                  handleClearFilter()
+                }}
                 style={{
                   padding: '12px 16px',
                   background: 'rgba(239, 68, 68, 0.1)',
@@ -345,261 +336,286 @@ function ApiKeysContent() {
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)')}
               >
                 <X style={{ width: '16px', height: '16px' }} />
-                Clear Filter
+                Clear Filters
               </motion.button>
             )}
           </div>
         </div>
 
-        {/* API Keys List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {processedKeys.map((group, groupIndex) => (
-            <div key={groupIndex}>
-              {/* Group Header */}
-              {group.title && (
+        {/* API Keys Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))',
+            gap: '20px',
+          }}
+        >
+          {processedKeys.length > 0 &&
+            processedKeys[0].keys.map((apiKey, index) => {
+              const envColor =
+                apiKey.environment === 'Production'
+                  ? {
+                      bg: 'rgba(16, 185, 129, 0.1)',
+                      border: 'rgba(16, 185, 129, 0.3)',
+                      text: '#10b981',
+                    }
+                  : apiKey.environment === 'Staging'
+                  ? {
+                      bg: 'rgba(245, 158, 11, 0.1)',
+                      border: 'rgba(245, 158, 11, 0.3)',
+                      text: '#f59e0b',
+                    }
+                  : {
+                      bg: 'rgba(139, 92, 246, 0.1)',
+                      border: 'rgba(139, 92, 246, 0.3)',
+                      text: '#8b5cf6',
+                    }
+
+              return (
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  key={apiKey.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.05 + index * 0.03 }}
                   style={{
-                    marginBottom: '16px',
-                    padding: '12px 20px',
+                    background:
+                      'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
                     borderRadius: '12px',
-                    background: 'rgba(167, 139, 250, 0.1)',
-                    border: '1px solid rgba(167, 139, 250, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    padding: '20px',
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                    transition: 'transform 0.2s, border-color 0.2s',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
                   }}
                 >
-                  <Layers style={{ width: '20px', height: '20px', color: '#a78bfa' }} />
-                  <h3
+                  {/* Header */}
+                  <div
                     style={{
-                      fontSize: '18px',
-                      fontWeight: '600',
-                      color: '#a78bfa',
-                      textTransform: 'capitalize',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '16px',
                     }}
                   >
-                    {groupBy === 'app'
-                      ? apps.find((a) => a.id === group.title)?.name || group.title
-                      : group.title}
-                  </h3>
-                  <span style={{ fontSize: '14px', color: '#9ca3af' }}>
-                    ({group.keys.length} {group.keys.length === 1 ? 'key' : 'keys'})
-                  </span>
-                </motion.div>
-              )}
-
-              {/* Keys in Group */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {group.keys.map((apiKey, index) => (
-                  <motion.div
-                    key={apiKey.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    style={{
-                      background:
-                        'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                      backdropFilter: 'blur(16px)',
-                      WebkitBackdropFilter: 'blur(16px)',
-                      borderRadius: '16px',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      padding: '24px',
-                      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-                    }}
-                  >
-                    <div
+                    <div style={{ flex: 1 }}>
+                      <h3
+                        style={{
+                          fontSize: '18px',
+                          fontWeight: '600',
+                          color: 'white',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        {apiKey.name}
+                      </h3>
+                      {/* App and Environment Tags */}
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            color: '#3b82f6',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                          }}
+                        >
+                          {apiKey.appName || 'Unknown App'}
+                        </span>
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            background: envColor.bg,
+                            border: `1px solid ${envColor.border}`,
+                            color: envColor.text,
+                            fontSize: '11px',
+                            fontWeight: '600',
+                          }}
+                        >
+                          {apiKey.environment}
+                        </span>
+                      </div>
+                    </div>
+                    <span
                       style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        background:
+                          apiKey.status === 'Active'
+                            ? 'rgba(16, 185, 129, 0.1)'
+                            : 'rgba(239, 68, 68, 0.1)',
+                        border: `1px solid ${
+                          apiKey.status === 'Active'
+                            ? 'rgba(16, 185, 129, 0.3)'
+                            : 'rgba(239, 68, 68, 0.3)'
+                        }`,
+                        color: apiKey.status === 'Active' ? '#10b981' : '#ef4444',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {apiKey.status}
+                    </span>
+                  </div>
+
+                  {/* API Key */}
+                  <div
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      marginBottom: '12px',
+                      fontFamily: 'monospace',
+                      fontSize: '12px',
+                      color: '#3b82f6',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      position: 'relative',
+                    }}
+                  >
+                    {showKey[apiKey.id] ? apiKey.key : maskKey(apiKey.key)}
+                  </div>
+
+                  {/* Stats */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '12px',
+                      marginBottom: '16px',
+                      paddingTop: '12px',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>
+                        Requests Today
+                      </div>
+                      <div style={{ fontSize: '18px', color: '#10b981', fontWeight: 'bold' }}>
+                        {apiKey.requestsToday.toLocaleString()}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>
+                        Last Used
+                      </div>
+                      <div style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
+                        {apiKey.lastUsed}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowKey({ ...showKey, [apiKey.id]: !showKey[apiKey.id] })
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(59, 130, 246, 0.1)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        color: '#3b82f6',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
                         display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        marginBottom: '20px',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div
-                          style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '12px',
-                            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Key style={{ width: '24px', height: '24px', color: 'white' }} />
-                        </div>
-                        <div>
-                          <h3
-                            style={{
-                              fontSize: '18px',
-                              fontWeight: '600',
-                              color: 'white',
-                              marginBottom: '4px',
-                            }}
-                          >
-                            {apiKey.name}
-                          </h3>
-                          <p style={{ fontSize: '14px', color: '#9ca3af' }}>
-                            Created {apiKey.createdAt} • Last used {apiKey.lastUsed}
-                          </p>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          onClick={() =>
-                            setShowKey({ ...showKey, [apiKey.id]: !showKey[apiKey.id] })
-                          }
-                          style={{
-                            padding: '10px',
-                            borderRadius: '10px',
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            color: '#9ca3af',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-                            e.currentTarget.style.color = 'white'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                            e.currentTarget.style.color = '#9ca3af'
-                          }}
-                        >
-                          {showKey[apiKey.id] ? (
-                            <EyeOff style={{ width: '18px', height: '18px' }} />
-                          ) : (
-                            <Eye style={{ width: '18px', height: '18px' }} />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => copyToClipboard(apiKey.key, apiKey.id)}
-                          style={{
-                            padding: '10px',
-                            borderRadius: '10px',
-                            background:
-                              copied === apiKey.id
-                                ? 'rgba(16, 185, 129, 0.2)'
-                                : 'rgba(255, 255, 255, 0.05)',
-                            border: `1px solid ${
-                              copied === apiKey.id
-                                ? 'rgba(16, 185, 129, 0.3)'
-                                : 'rgba(255, 255, 255, 0.1)'
-                            }`,
-                            color: copied === apiKey.id ? '#10b981' : '#9ca3af',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                          }}
-                          onMouseEnter={(e) => {
-                            if (copied !== apiKey.id) {
-                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-                              e.currentTarget.style.color = 'white'
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (copied !== apiKey.id) {
-                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                              e.currentTarget.style.color = '#9ca3af'
-                            }
-                          }}
-                        >
-                          {copied === apiKey.id ? (
-                            <Check style={{ width: '18px', height: '18px' }} />
-                          ) : (
-                            <Copy style={{ width: '18px', height: '18px' }} />
-                          )}
-                        </button>
-                        <button
-                          style={{
-                            padding: '10px',
-                            borderRadius: '10px',
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            color: '#ef4444',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)')
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)')
-                          }
-                        >
-                          <Trash2 style={{ width: '18px', height: '18px' }} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div
+                      {showKey[apiKey.id] ? (
+                        <>
+                          <EyeOff style={{ width: '14px', height: '14px' }} />
+                          Hide
+                        </>
+                      ) : (
+                        <>
+                          <Eye style={{ width: '14px', height: '14px' }} />
+                          Show
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        copyToClipboard(apiKey.key, apiKey.id)
+                      }}
                       style={{
-                        padding: '16px',
-                        borderRadius: '12px',
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        fontFamily: 'monospace',
-                        fontSize: '14px',
-                        color: '#10b981',
-                        marginBottom: '16px',
+                        flex: 1,
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background:
+                          copied === apiKey.id
+                            ? 'rgba(16, 185, 129, 0.2)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        border: `1px solid ${
+                          copied === apiKey.id
+                            ? 'rgba(16, 185, 129, 0.3)'
+                            : 'rgba(255, 255, 255, 0.1)'
+                        }`,
+                        color: copied === apiKey.id ? '#10b981' : 'white',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
                       }}
                     >
-                      {showKey[apiKey.id] ? apiKey.key : maskKey(apiKey.key)}
-                    </div>
-
-                    <div
+                      {copied === apiKey.id ? (
+                        <>
+                          <Check style={{ width: '14px', height: '14px' }} />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy style={{ width: '14px', height: '14px' }} />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // Handle delete
+                      }}
                       style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                        gap: '16px',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        color: '#ef4444',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
                       }}
                     >
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
-                          Requests Today
-                        </div>
-                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
-                          {apiKey.requestsToday.toLocaleString()}
-                        </div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
-                          Status
-                        </div>
-                        <div
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '4px 12px',
-                            borderRadius: '20px',
-                            background: 'rgba(16, 185, 129, 0.2)',
-                            border: '1px solid rgba(16, 185, 129, 0.3)',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            color: '#10b981',
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: '6px',
-                              height: '6px',
-                              borderRadius: '50%',
-                              background: '#10b981',
-                            }}
-                          />
-                          Active
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          ))}
+                      <Trash2 style={{ width: '14px', height: '14px' }} />
+                    </button>
+                  </div>
+                </motion.div>
+              )
+            })}
         </div>
 
         {/* Usage Stats */}

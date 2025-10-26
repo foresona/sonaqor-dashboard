@@ -10,6 +10,8 @@ export interface APIKey {
   permissions: string[]
   requestsToday: number
   app?: string
+  appName?: string
+  environment: 'Production' | 'Staging' | 'Development'
 }
 
 export interface APIKeyUsageStats {
@@ -40,6 +42,8 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         permissions: ['forecast.generate', 'persona.match', 'fscores.calculate'],
         requestsToday: 1247,
         app: 'app_prod_001',
+        appName: 'Main Web App',
+        environment: 'Production',
       },
       {
         id: '2',
@@ -51,6 +55,8 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         permissions: ['forecast.generate', 'persona.match'],
         requestsToday: 342,
         app: 'app_dev_001',
+        appName: 'Main Web App',
+        environment: 'Development',
       },
       {
         id: '3',
@@ -62,6 +68,8 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         permissions: ['forecast.generate', 'fscores.calculate', 'anomaly.detect'],
         requestsToday: 89,
         app: 'app_staging_001',
+        appName: 'Mobile App',
+        environment: 'Staging',
       },
       {
         id: '4',
@@ -73,6 +81,8 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         permissions: ['forecast.generate'],
         requestsToday: 0,
         app: 'app_dev_001',
+        appName: 'Analytics Dashboard',
+        environment: 'Development',
       },
       {
         id: '5',
@@ -84,6 +94,8 @@ export const getAPIKeysData = async (): Promise<APIKeysData> => {
         permissions: ['persona.match', 'fscores.calculate'],
         requestsToday: 523,
         app: 'app_prod_001',
+        appName: 'Mobile App',
+        environment: 'Production',
       },
     ],
     stats: {

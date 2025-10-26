@@ -1332,19 +1332,23 @@ function LogsPageContent() {
 
 export default function LogsPage() {
   return (
-    <Suspense fallback={
-      <DashboardLayout>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '400px',
-          color: '#9ca3af'
-        }}>
-          Loading logs...
-        </div>
-      </DashboardLayout>
-    }>
+    <Suspense
+      fallback={
+        <DashboardLayout>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '400px',
+              color: '#9ca3af',
+            }}
+          >
+            Loading logs...
+          </div>
+        </DashboardLayout>
+      }
+    >
       <LogsPageContent />
     </Suspense>
   )

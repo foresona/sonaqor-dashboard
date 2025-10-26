@@ -1517,7 +1517,7 @@ export default function WebhooksPage() {
                         </div>
 
                         {/* Action Buttons */}
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
@@ -1585,6 +1585,45 @@ export default function WebhooksPage() {
                             <Trash2 style={{ width: '14px', height: '14px' }} />
                           </button>
                         </div>
+
+                        {/* View Logs Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // Switch to logs tab and filter by this webhook
+                            setActiveTab('logs')
+                            setAppFilter(webhook.app)
+                            // Scroll to top smoothly
+                            window.scrollTo({ top: 0, behavior: 'smooth' })
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            color: '#10b981',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'
+                            e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.5)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'
+                            e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'
+                          }}
+                        >
+                          <FileText style={{ width: '14px', height: '14px' }} />
+                          View Logs
+                        </button>
                       </motion.div>
                     )
                   })}
