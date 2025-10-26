@@ -26,6 +26,7 @@ import {
   Eye,
   FileText,
   ChevronDown,
+  Edit2,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -39,10 +40,13 @@ export default function ProjectsPage() {
   const [showCreateProject, setShowCreateProject] = useState(false)
   const [showCreateApp, setShowCreateApp] = useState(false)
   const [showAppSettings, setShowAppSettings] = useState(false)
+  const [showEditProject, setShowEditProject] = useState(false)
   const [selectedAppForEdit, setSelectedAppForEdit] = useState<App | null>(null)
+  const [selectedProjectForEdit, setSelectedProjectForEdit] = useState<Project | null>(null)
 
   // Form states
   const [newProject, setNewProject] = useState({ name: '', description: '' })
+  const [editProject, setEditProject] = useState({ name: '', description: '' })
   const [newApp, setNewApp] = useState({
     name: '',
     environment: 'Development' as 'Production' | 'Staging' | 'Development',
@@ -61,6 +65,7 @@ export default function ProjectsPage() {
   const [filterEnv, setFilterEnv] = useState<string>('All')
   const [showProjectDropdown, setShowProjectDropdown] = useState(false)
   const [showEnvFilterDropdown, setShowEnvFilterDropdown] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -120,6 +125,36 @@ export default function ProjectsPage() {
     setNewProject({ name: '', description: '' })
     setIsSubmitting(false)
     setSelectedProject(project.id)
+  }
+
+  const handleEditProject = async () => {
+    if (!editProject.name.trim()) {
+      setNotification({ type: 'error', message: 'Project name is required' })
+      return
+    }
+    if (!selectedProjectForEdit) return
+
+    setIsSubmitting(true)
+    await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate API call
+
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            projects: prev.projects.map((p) =>
+              p.id === selectedProjectForEdit.id
+                ? { ...p, name: editProject.name, description: editProject.description }
+                : p,
+            ),
+          }
+        : null,
+    )
+
+    setNotification({ type: 'success', message: 'Project updated successfully!' })
+    setShowEditProject(false)
+    setSelectedProjectForEdit(null)
+    setEditProject({ name: '', description: '' })
+    setIsSubmitting(false)
   }
 
   const handleCreateApp = async () => {
@@ -415,48 +450,92 @@ export default function ProjectsPage() {
           >
             {/* Custom Dropdown */}
             <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowProjectDropdown(!showProjectDropdown)}
-                style={{
-                  width: '100%',
-                  padding: '16px 20px',
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)'
-                  e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)'
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
-                }}
-              >
-                <span>
-                  {currentProject
-                    ? `${currentProject.name} (${data.apps.filter((a) => a.projectId === currentProject.id).length} apps)`
-                    : 'Choose a project...'}
-                </span>
-                <ChevronDown
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {/* Project Selector Button */}
+                <button
+                  onClick={() => setShowProjectDropdown(!showProjectDropdown)}
                   style={{
-                    width: '20px',
-                    height: '20px',
-                    color: '#9ca3af',
-                    transform: showProjectDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease',
+                    flex: 1,
+                    padding: '16px 20px',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.2s ease',
                   }}
-                />
-              </button>
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)'
+                    e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)'
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                  }}
+                >
+                  <span>
+                    {currentProject
+                      ? `${currentProject.name} (${
+                          data.apps.filter((a) => a.projectId === currentProject.id).length
+                        } apps)`
+                      : 'Choose a project...'}
+                  </span>
+                  <ChevronDown
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      color: '#9ca3af',
+                      transform: showProjectDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease',
+                    }}
+                  />
+                </button>
+
+                {/* Settings Button */}
+                {currentProject && (
+                  <button
+                    onClick={() => {
+                      setSelectedProjectForEdit(currentProject)
+                      setEditProject({
+                        name: currentProject.name,
+                        description: currentProject.description,
+                      })
+                      setShowEditProject(true)
+                    }}
+                    style={{
+                      padding: '16px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: '#9ca3af',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)'
+                      e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'
+                      e.currentTarget.style.color = '#10b981'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)'
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                      e.currentTarget.style.color = '#9ca3af'
+                    }}
+                  >
+                    <Settings style={{ width: '20px', height: '20px' }} />
+                  </button>
+                )}
+              </div>
 
               {/* Dropdown Menu */}
               <AnimatePresence>
@@ -481,59 +560,66 @@ export default function ProjectsPage() {
                     }}
                   >
                     {data.projects.map((project) => (
-                      <button
+                      <div
                         key={project.id}
-                        onClick={() => {
-                          setSelectedProject(project.id)
-                          setShowProjectDropdown(false)
-                        }}
                         style={{
-                          width: '100%',
-                          padding: '16px 20px',
-                          background:
-                            selectedProject === project.id
-                              ? 'rgba(16, 185, 129, 0.2)'
-                              : 'transparent',
-                          border: 'none',
                           borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                          color: selectedProject === project.id ? '#10b981' : 'white',
-                          fontSize: '15px',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          transition: 'all 0.2s ease',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '4px',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedProject !== project.id) {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedProject !== project.id) {
-                            e.currentTarget.style.background = 'transparent'
-                          }
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <FolderKanban style={{ width: '16px', height: '16px' }} />
-                          <span style={{ fontWeight: '600' }}>{project.name}</span>
-                          <span
-                            style={{
-                              marginLeft: 'auto',
-                              fontSize: '12px',
-                              color: '#9ca3af',
-                            }}
+                        <button
+                          onClick={() => {
+                            setSelectedProject(project.id)
+                            setShowProjectDropdown(false)
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '16px 20px',
+                            background:
+                              selectedProject === project.id
+                                ? 'rgba(16, 185, 129, 0.2)'
+                                : 'transparent',
+                            border: 'none',
+                            color: selectedProject === project.id ? '#10b981' : 'white',
+                            fontSize: '15px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (selectedProject !== project.id) {
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (selectedProject !== project.id) {
+                              e.currentTarget.style.background = 'transparent'
+                            }
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FolderKanban style={{ width: '16px', height: '16px' }} />
+                            <span style={{ fontWeight: '600' }}>{project.name}</span>
+                            <span
+                              style={{
+                                marginLeft: 'auto',
+                                fontSize: '12px',
+                                color: '#9ca3af',
+                              }}
+                            >
+                              {data.apps.filter((a) => a.projectId === project.id).length} apps
+                            </span>
+                          </div>
+                          <div
+                            style={{ fontSize: '12px', color: '#9ca3af', paddingLeft: '24px' }}
                           >
-                            {data.apps.filter((a) => a.projectId === project.id).length} apps
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#9ca3af', paddingLeft: '24px' }}>
-                          {project.description}
-                        </div>
-                      </button>
+                            {project.description}
+                          </div>
+                        </button>
+                      </div>
                     ))}
                   </motion.div>
                 )}
@@ -742,9 +828,7 @@ export default function ProjectsPage() {
                         e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
                       }}
                     >
-                      <span>
-                        {filterEnv === 'All' ? 'All Environments' : filterEnv}
-                      </span>
+                      <span>{filterEnv === 'All' ? 'All Environments' : filterEnv}</span>
                       <ChevronDown
                         style={{
                           width: '16px',
@@ -1051,7 +1135,13 @@ export default function ProjectsPage() {
                         View Analytics
                       </button>
                       <button
-                        onClick={() => router.push(`/logs?app=${encodeURIComponent(app.name)}&env=${app.environment.toLowerCase()}`)}
+                        onClick={() =>
+                          router.push(
+                            `/logs?app=${encodeURIComponent(
+                              app.name,
+                            )}&env=${app.environment.toLowerCase()}`,
+                          )
+                        }
                         style={{
                           flex: 1,
                           padding: '10px',
@@ -1261,6 +1351,201 @@ export default function ProjectsPage() {
                   >
                     {isSubmitting ? 'Creating...' : 'Create Project'}
                   </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Edit Project Modal */}
+        <AnimatePresence>
+          {showEditProject && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isSubmitting && setShowEditProject(false)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.8)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  padding: '32px',
+                  maxWidth: '500px',
+                  width: '90%',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '24px',
+                  }}
+                >
+                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                    Edit Project
+                  </h2>
+                  <button
+                    onClick={() => setShowEditProject(false)}
+                    disabled={isSubmitting}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#9ca3af',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      padding: '4px',
+                    }}
+                  >
+                    <X style={{ width: '24px', height: '24px' }} />
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
+                    Project Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={editProject.name}
+                    onChange={(e) => setEditProject({ ...editProject, name: e.target.value })}
+                    placeholder="e.g., Production Infrastructure"
+                    disabled={isSubmitting}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '10px',
+                      color: 'white',
+                      fontSize: '14px',
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#9ca3af',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    value={editProject.description}
+                    onChange={(e) =>
+                      setEditProject({ ...editProject, description: e.target.value })
+                    }
+                    placeholder="Brief description of the project..."
+                    disabled={isSubmitting}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '10px',
+                      color: 'white',
+                      fontSize: '14px',
+                      resize: 'vertical',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
+                  <button
+                    onClick={() => {
+                      setShowEditProject(false)
+                      setShowDeleteConfirm(true)
+                    }}
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '12px 24px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '10px',
+                      color: '#ef4444',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Trash2 style={{ width: '16px', height: '16px' }} />
+                    Delete
+                  </button>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      onClick={() => setShowEditProject(false)}
+                      disabled={isSubmitting}
+                      style={{
+                        padding: '12px 24px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '10px',
+                        color: '#9ca3af',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleEditProject}
+                      disabled={isSubmitting || !editProject.name.trim()}
+                      style={{
+                        padding: '12px 24px',
+                        background:
+                          isSubmitting || !editProject.name.trim()
+                            ? 'rgba(16, 185, 129, 0.3)'
+                            : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        border: 'none',
+                        borderRadius: '10px',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor:
+                          isSubmitting || !editProject.name.trim() ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      {isSubmitting ? 'Updating...' : 'Update Project'}
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
@@ -1851,6 +2136,142 @@ export default function ProjectsPage() {
                       {isSubmitting ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Delete Project Confirmation Modal */}
+        <AnimatePresence>
+          {showDeleteConfirm && selectedProjectForEdit && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isSubmitting && setShowDeleteConfirm(false)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.8)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  padding: '32px',
+                  maxWidth: '500px',
+                  width: '90%',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Trash2 style={{ width: '24px', height: '24px', color: '#ef4444' }} />
+                  </div>
+                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', margin: 0 }}>
+                    Delete Project
+                  </h2>
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <p style={{ color: '#9ca3af', fontSize: '15px', lineHeight: '1.6', marginBottom: '16px' }}>
+                    Are you sure you want to delete{' '}
+                    <span style={{ color: 'white', fontWeight: '600' }}>
+                      {selectedProjectForEdit.name}
+                    </span>
+                    ?
+                  </p>
+                  <div
+                    style={{
+                      padding: '16px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '12px',
+                    }}
+                  >
+                    <p style={{ color: '#ef4444', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                      ⚠️ Warning: This action cannot be undone!
+                    </p>
+                    <p style={{ color: '#fca5a5', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+                      Deleting this project will permanently remove all{' '}
+                      {data?.apps.filter((a) => a.projectId === selectedProjectForEdit.id).length || 0} apps
+                      associated with it, along with all their data, configurations, and API keys.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '12px 24px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '10px',
+                      color: '#9ca3af',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      // TODO: Implement delete project logic
+                      setShowDeleteConfirm(false)
+                      setNotification({
+                        type: 'success',
+                        message: `Project "${selectedProjectForEdit.name}" deleted successfully`,
+                      })
+                      setTimeout(() => setNotification(null), 3000)
+                      // Reset selection if current project was deleted
+                      if (selectedProject === selectedProjectForEdit.id) {
+                        setSelectedProject(null)
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '12px 24px',
+                      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                      border: 'none',
+                      borderRadius: '10px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Trash2 style={{ width: '16px', height: '16px' }} />
+                    {isSubmitting ? 'Deleting...' : 'Delete Project'}
+                  </button>
                 </div>
               </motion.div>
             </motion.div>

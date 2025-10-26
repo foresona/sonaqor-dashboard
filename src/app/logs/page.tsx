@@ -44,7 +44,7 @@ export default function LogsPage() {
   useEffect(() => {
     const appParam = searchParams.get('app')
     const envParam = searchParams.get('env')
-    
+
     if (appParam) {
       setAppFilter(appParam)
     }
@@ -122,7 +122,7 @@ export default function LogsPage() {
         (filter === 'error' && log.status >= 400)
       const matchesApp = appFilter === 'all' || log.appName === appFilter
       const matchesEnv = envFilter === 'all' || log.environment === envFilter
-      
+
       // Date range filter
       let matchesDateRange = true
       if (dateFrom || dateTo) {
@@ -150,7 +150,7 @@ export default function LogsPage() {
           matchesDateRange = matchesDateRange && logDate <= toDateTime
         }
       }
-      
+
       return matchesSearch && matchesFilter && matchesApp && matchesEnv && matchesDateRange
     })
   }, [data, searchQuery, filter, appFilter, envFilter, dateFrom, dateTo])
@@ -158,14 +158,18 @@ export default function LogsPage() {
   // Get unique app names for the filter dropdown
   const uniqueAppNames = useMemo(() => {
     if (!data) return []
-    const names = new Set(data.logs.map((log) => log.appName).filter((name): name is string => Boolean(name)))
+    const names = new Set(
+      data.logs.map((log) => log.appName).filter((name): name is string => Boolean(name)),
+    )
     return Array.from(names).sort()
   }, [data])
 
   // Get unique environments for the filter dropdown
   const uniqueEnvironments = useMemo(() => {
     if (!data) return []
-    const envs = new Set(data.logs.map((log) => log.environment).filter((env): env is string => Boolean(env)))
+    const envs = new Set(
+      data.logs.map((log) => log.environment).filter((env): env is string => Boolean(env)),
+    )
     return Array.from(envs).sort()
   }, [data])
 
@@ -742,7 +746,16 @@ export default function LogsPage() {
           </div>
 
           {/* Row 2: Sort and Status Filters */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 9 }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              position: 'relative',
+              zIndex: 9,
+            }}
+          >
             {/* Filter Buttons - Left Side */}
             <div style={{ display: 'flex', gap: '8px' }}>
               {['All', 'Success', 'Errors', 'Warnings'].map((f) => (
@@ -1005,7 +1018,8 @@ export default function LogsPage() {
                     onClick={() => setExpandedLog(isExpanded ? null : log.id)}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '180px 80px 1fr 120px 120px 100px 100px 140px 140px 60px',
+                      gridTemplateColumns:
+                        '180px 80px 1fr 120px 120px 100px 100px 140px 140px 60px',
                       padding: '20px 24px',
                       borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                       alignItems: 'center',

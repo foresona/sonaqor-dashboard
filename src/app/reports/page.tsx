@@ -1202,7 +1202,9 @@ export default function ReportsPage() {
                     </label>
                     <CustomSelect
                       value={scheduleParams.frequency}
-                      onChange={(value) => setScheduleParams({ ...scheduleParams, frequency: value })}
+                      onChange={(value) =>
+                        setScheduleParams({ ...scheduleParams, frequency: value })
+                      }
                       options={[
                         { value: 'Daily', label: 'Daily' },
                         { value: 'Weekly', label: 'Weekly' },
