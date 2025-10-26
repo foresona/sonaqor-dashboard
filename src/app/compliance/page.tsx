@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
+import CustomSelect from '@/components/CustomSelect'
 import { getComplianceData, type ComplianceData, type Anomaly } from '@/data/compliance'
 import {
   Shield,
@@ -232,26 +233,18 @@ export default function CompliancePage() {
             <div
               style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'center' }}
             >
-              <select
+              <CustomSelect
                 value={severityFilter}
-                onChange={(e) => setSeverityFilter(e.target.value)}
-                style={{
-                  padding: '12px 16px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontSize: '14px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="All">All Severities</option>
-                <option value="Critical">Critical</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </select>
+                onChange={setSeverityFilter}
+                options={[
+                  { value: 'All', label: 'All Severities' },
+                  { value: 'Critical', label: 'Critical' },
+                  { value: 'High', label: 'High' },
+                  { value: 'Medium', label: 'Medium' },
+                  { value: 'Low', label: 'Low' },
+                ]}
+                accentColor="#ef4444"
+              />
 
               <button
                 style={{

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
+import CustomSelect from '@/components/CustomSelect'
 import {
   getCustomersData,
   getCustomerDetail,
@@ -418,47 +419,31 @@ export default function CustomersPage() {
             </div>
 
             {/* Risk Filter */}
-            <select
+            <CustomSelect
               value={riskFilter}
-              onChange={(e) => setRiskFilter(e.target.value)}
-              style={{
-                padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="All">All Risk Levels</option>
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Critical">Critical</option>
-            </select>
+              onChange={setRiskFilter}
+              options={[
+                { value: 'All', label: 'All Risk Levels' },
+                { value: 'Low', label: 'Low' },
+                { value: 'Medium', label: 'Medium' },
+                { value: 'High', label: 'High' },
+                { value: 'Critical', label: 'Critical' },
+              ]}
+              accentColor="#f59e0b"
+            />
 
             {/* Status Filter */}
-            <select
+            <CustomSelect
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              style={{
-                padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="All">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Flagged">Flagged</option>
-            </select>
+              onChange={setStatusFilter}
+              options={[
+                { value: 'All', label: 'All Statuses' },
+                { value: 'Active', label: 'Active' },
+                { value: 'Inactive', label: 'Inactive' },
+                { value: 'Flagged', label: 'Flagged' },
+              ]}
+              accentColor="#10b981"
+            />
 
             {/* Export Button */}
             <button

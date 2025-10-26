@@ -22,6 +22,7 @@ import {
   Activity,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import CustomSelect from '@/components/CustomSelect'
 
 export default function ReportsPage() {
   const [data, setData] = useState<ReportsData | null>(null)
@@ -941,26 +942,17 @@ export default function ReportsPage() {
                       )}
 
                       {param.type === 'select' && param.options && (
-                        <select
-                          style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '8px',
-                            color: 'white',
-                            fontSize: '14px',
-                            outline: 'none',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <option value="">Select {param.name}</option>
-                          {param.options.map((opt: string) => (
-                            <option key={opt} value={opt}>
-                              {opt}
-                            </option>
-                          ))}
-                        </select>
+                        <CustomSelect
+                          value={reportParams[param.name] || ''}
+                          onChange={(value) =>
+                            setReportParams({ ...reportParams, [param.name]: value })
+                          }
+                          options={[
+                            { value: '', label: `Select ${param.name}` },
+                            ...param.options.map((opt: string) => ({ value: opt, label: opt })),
+                          ]}
+                          accentColor="#a78bfa"
+                        />
                       )}
 
                       {param.type === 'multiselect' && param.options && (
@@ -1208,28 +1200,17 @@ export default function ReportsPage() {
                     >
                       Frequency <span style={{ color: '#ef4444' }}>*</span>
                     </label>
-                    <select
+                    <CustomSelect
                       value={scheduleParams.frequency}
-                      onChange={(e) =>
-                        setScheduleParams({ ...scheduleParams, frequency: e.target.value })
-                      }
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
-                        color: 'white',
-                        fontSize: '14px',
-                        outline: 'none',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <option value="Daily">Daily</option>
-                      <option value="Weekly">Weekly</option>
-                      <option value="Monthly">Monthly</option>
-                      <option value="Custom">Custom</option>
-                    </select>
+                      onChange={(value) => setScheduleParams({ ...scheduleParams, frequency: value })}
+                      options={[
+                        { value: 'Daily', label: 'Daily' },
+                        { value: 'Weekly', label: 'Weekly' },
+                        { value: 'Monthly', label: 'Monthly' },
+                        { value: 'Custom', label: 'Custom' },
+                      ]}
+                      accentColor="#10b981"
+                    />
                   </div>
 
                   {/* Start Date */}

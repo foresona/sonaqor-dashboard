@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
+import CustomSelect from '@/components/CustomSelect'
 import { getIntelligenceData, type IntelligenceData } from '@/data/intelligence'
 import { getProjectsData } from '@/data/projects'
 import {
@@ -256,52 +257,31 @@ function IntelligenceContent() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {/* Project Filter */}
-              <select
+              <CustomSelect
                 value={selectedProjectFilter}
-                onChange={(e) => handleProjectFilterChange(e.target.value)}
-                style={{
-                  padding: '12px 16px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontSize: '14px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  minWidth: '180px',
-                }}
-              >
-                <option value="all">All Projects</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
+                onChange={handleProjectFilterChange}
+                options={[
+                  { value: 'all', label: 'All Projects' },
+                  ...projects.map((p) => ({ value: p.id, label: p.name })),
+                ]}
+                minWidth="180px"
+                accentColor="#a78bfa"
+              />
 
               {/* App Filter */}
-              <select
+              <CustomSelect
                 value={selectedAppFilter}
-                onChange={(e) => handleAppFilterChange(e.target.value)}
-                style={{
-                  padding: '12px 16px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontSize: '14px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  minWidth: '200px',
-                }}
-              >
-                <option value="all">All Apps</option>
-                {getFilteredApps().map((app) => (
-                  <option key={app.id} value={app.id}>
-                    {app.name} ({app.environment})
-                  </option>
-                ))}
-              </select>
+                onChange={handleAppFilterChange}
+                options={[
+                  { value: 'all', label: 'All Apps' },
+                  ...getFilteredApps().map((app) => ({
+                    value: app.id,
+                    label: `${app.name} (${app.environment})`,
+                  })),
+                ]}
+                minWidth="200px"
+                accentColor="#3b82f6"
+              />
 
               {/* Clear Filter Button */}
               {(selectedProjectFilter !== 'all' || selectedAppFilter !== 'all') && (
@@ -351,25 +331,17 @@ function IntelligenceContent() {
               </button>
 
               {/* Time Range Filter */}
-              <select
+              <CustomSelect
                 value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value as any)}
-                style={{
-                  padding: '12px 16px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontSize: '14px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="24h">Last 24 Hours</option>
-                <option value="7d">Last 7 Days</option>
-                <option value="30d">Last 30 Days</option>
-                <option value="90d">Last 90 Days</option>
-              </select>
+                onChange={(value) => setTimeRange(value as any)}
+                options={[
+                  { value: '24h', label: 'Last 24 Hours' },
+                  { value: '7d', label: 'Last 7 Days' },
+                  { value: '30d', label: 'Last 30 Days' },
+                  { value: '90d', label: 'Last 90 Days' },
+                ]}
+                accentColor="#10b981"
+              />
             </div>
           </div>
 

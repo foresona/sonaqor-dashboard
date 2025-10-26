@@ -21,6 +21,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import CustomSelect from '@/components/CustomSelect'
 
 export default function BillingPage() {
   const [data, setData] = useState<BillingData | null>(null)
@@ -46,6 +47,8 @@ export default function BillingPage() {
     'date-desc',
   )
   const [usageSearch, setUsageSearch] = useState('')
+  const [paymentType, setPaymentType] = useState('card')
+  const [upgradePaymentType, setUpgradePaymentType] = useState('card')
 
   const handleUpgradePlan = (plan: any) => {
     setSelectedPlan(plan)
@@ -722,47 +725,35 @@ export default function BillingPage() {
                 {/* Status Filter */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Filter style={{ width: '18px', height: '18px', color: '#9ca3af' }} />
-                  <select
+                  <CustomSelect
                     value={invoiceFilter}
-                    onChange={(e) => setInvoiceFilter(e.target.value as any)}
-                    style={{
-                      padding: '10px 16px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                    }}
-                  >
-                    <option value="all">All Status</option>
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
-                    <option value="overdue">Overdue</option>
-                  </select>
+                    onChange={(value) => setInvoiceFilter(value as any)}
+                    options={[
+                      { value: 'all', label: 'All Status' },
+                      { value: 'paid', label: 'Paid' },
+                      { value: 'pending', label: 'Pending' },
+                      { value: 'overdue', label: 'Overdue' },
+                    ]}
+                    accentColor="#10b981"
+                    minWidth="150px"
+                  />
                 </div>
 
                 {/* Sort */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <ArrowUpDown style={{ width: '18px', height: '18px', color: '#9ca3af' }} />
-                  <select
+                  <CustomSelect
                     value={invoiceSort}
-                    onChange={(e) => setInvoiceSort(e.target.value as any)}
-                    style={{
-                      padding: '10px 16px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                    }}
-                  >
-                    <option value="date-desc">Newest First</option>
-                    <option value="date-asc">Oldest First</option>
-                    <option value="amount-desc">Highest Amount</option>
-                    <option value="amount-asc">Lowest Amount</option>
-                  </select>
+                    onChange={(value) => setInvoiceSort(value as any)}
+                    options={[
+                      { value: 'date-desc', label: 'Newest First' },
+                      { value: 'date-asc', label: 'Oldest First' },
+                      { value: 'amount-desc', label: 'Highest Amount' },
+                      { value: 'amount-asc', label: 'Lowest Amount' },
+                    ]}
+                    accentColor="#3b82f6"
+                    minWidth="180px"
+                  />
                 </div>
               </div>
             </div>
@@ -1117,48 +1108,36 @@ export default function BillingPage() {
                 {/* Metric Filter */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Filter style={{ width: '18px', height: '18px', color: '#9ca3af' }} />
-                  <select
+                  <CustomSelect
                     value={usageMetric}
-                    onChange={(e) => setUsageMetric(e.target.value as any)}
-                    style={{
-                      padding: '10px 16px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                    }}
-                  >
-                    <option value="all">All Metrics</option>
-                    <option value="apiCalls">API Calls</option>
-                    <option value="customers">Customers</option>
-                    <option value="storage">Storage</option>
-                    <option value="bandwidth">Bandwidth</option>
-                  </select>
+                    onChange={(value) => setUsageMetric(value as any)}
+                    options={[
+                      { value: 'all', label: 'All Metrics' },
+                      { value: 'apiCalls', label: 'API Calls' },
+                      { value: 'customers', label: 'Customers' },
+                      { value: 'storage', label: 'Storage' },
+                      { value: 'bandwidth', label: 'Bandwidth' },
+                    ]}
+                    accentColor="#a78bfa"
+                    minWidth="150px"
+                  />
                 </div>
 
                 {/* Sort */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <ArrowUpDown style={{ width: '18px', height: '18px', color: '#9ca3af' }} />
-                  <select
+                  <CustomSelect
                     value={usageSort}
-                    onChange={(e) => setUsageSort(e.target.value as any)}
-                    style={{
-                      padding: '10px 16px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                    }}
-                  >
-                    <option value="date-desc">Newest First</option>
-                    <option value="date-asc">Oldest First</option>
-                    <option value="usage-desc">Highest Usage</option>
-                    <option value="usage-asc">Lowest Usage</option>
-                  </select>
+                    onChange={(value) => setUsageSort(value as any)}
+                    options={[
+                      { value: 'date-desc', label: 'Newest First' },
+                      { value: 'date-asc', label: 'Oldest First' },
+                      { value: 'usage-desc', label: 'Highest Usage' },
+                      { value: 'usage-asc', label: 'Lowest Usage' },
+                    ]}
+                    accentColor="#3b82f6"
+                    minWidth="180px"
+                  />
                 </div>
               </div>
             </div>
@@ -2542,20 +2521,15 @@ export default function BillingPage() {
                     >
                       Payment Type
                     </label>
-                    <select
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '12px',
-                        color: 'white',
-                        fontSize: '14px',
-                      }}
-                    >
-                      <option value="card">Credit/Debit Card</option>
-                      <option value="bank">Bank Account</option>
-                    </select>
+                    <CustomSelect
+                      value={paymentType}
+                      onChange={setPaymentType}
+                      options={[
+                        { value: 'card', label: 'Credit/Debit Card' },
+                        { value: 'bank', label: 'Bank Account' },
+                      ]}
+                      accentColor="#10b981"
+                    />
                   </div>
 
                   <div>
@@ -2871,20 +2845,15 @@ export default function BillingPage() {
                     >
                       Payment Type
                     </label>
-                    <select
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
-                        color: 'white',
-                        fontSize: '14px',
-                      }}
-                    >
-                      <option value="card">Credit Card</option>
-                      <option value="bank">Bank Account</option>
-                    </select>
+                    <CustomSelect
+                      value={upgradePaymentType}
+                      onChange={setUpgradePaymentType}
+                      options={[
+                        { value: 'card', label: 'Credit Card' },
+                        { value: 'bank', label: 'Bank Account' },
+                      ]}
+                      accentColor="#10b981"
+                    />
                   </div>
 
                   <div>

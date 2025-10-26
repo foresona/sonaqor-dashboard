@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
+import CustomSelect from '@/components/CustomSelect'
 
 export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
@@ -464,31 +465,22 @@ export default function SettingsPage() {
                   >
                     Timezone
                   </label>
-                  <select
+                  <CustomSelect
                     value={timezone}
-                    onChange={(e) => setTimezone(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      background: 'rgba(0, 0, 0, 0.3)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: 'white',
-                      fontSize: '15px',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <option value="UTC">UTC</option>
-                    <option value="America/New_York">Eastern Time (ET)</option>
-                    <option value="America/Chicago">Central Time (CT)</option>
-                    <option value="America/Denver">Mountain Time (MT)</option>
-                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                    <option value="Europe/London">London (GMT)</option>
-                    <option value="Europe/Paris">Paris (CET)</option>
-                    <option value="Asia/Tokyo">Tokyo (JST)</option>
-                    <option value="Africa/Lagos">Lagos (WAT)</option>
-                  </select>
+                    onChange={setTimezone}
+                    options={[
+                      { value: 'UTC', label: 'UTC' },
+                      { value: 'America/New_York', label: 'Eastern Time (ET)' },
+                      { value: 'America/Chicago', label: 'Central Time (CT)' },
+                      { value: 'America/Denver', label: 'Mountain Time (MT)' },
+                      { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+                      { value: 'Europe/London', label: 'London (GMT)' },
+                      { value: 'Europe/Paris', label: 'Paris (CET)' },
+                      { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+                      { value: 'Africa/Lagos', label: 'Lagos (WAT)' },
+                    ]}
+                    accentColor="#3b82f6"
+                  />
                   <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '6px' }}>
                     Used for timestamps in reports and logs
                   </p>
@@ -506,27 +498,18 @@ export default function SettingsPage() {
                   >
                     Data Retention Period (days)
                   </label>
-                  <select
+                  <CustomSelect
                     value={dataRetention}
-                    onChange={(e) => setDataRetention(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      background: 'rgba(0, 0, 0, 0.3)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: 'white',
-                      fontSize: '15px',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <option value="30">30 days</option>
-                    <option value="60">60 days</option>
-                    <option value="90">90 days</option>
-                    <option value="180">180 days</option>
-                    <option value="365">1 year</option>
-                  </select>
+                    onChange={setDataRetention}
+                    options={[
+                      { value: '30', label: '30 days' },
+                      { value: '60', label: '60 days' },
+                      { value: '90', label: '90 days' },
+                      { value: '180', label: '180 days' },
+                      { value: '365', label: '1 year' },
+                    ]}
+                    accentColor="#10b981"
+                  />
                   <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '6px' }}>
                     How long to keep API logs and analytics data
                   </p>

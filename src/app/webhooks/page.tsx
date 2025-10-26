@@ -24,6 +24,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
+import CustomSelect from '@/components/CustomSelect'
 
 interface WebhookConfig {
   id: string
@@ -915,25 +916,18 @@ export default function WebhooksPage() {
                 />
               </div>
 
-              <select
+              <CustomSelect
                 value={webhookStatusFilter}
-                onChange={(e) => setWebhookStatusFilter(e.target.value as any)}
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  fontSize: '14px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="error">Error</option>
-              </select>
+                onChange={(value) => setWebhookStatusFilter(value as any)}
+                options={[
+                  { value: 'all', label: 'All Status' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                  { value: 'error', label: 'Error' },
+                ]}
+                accentColor="#10b981"
+                minWidth="150px"
+              />
             </div>
           </div>
 
@@ -1683,28 +1677,21 @@ export default function WebhooksPage() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '13px', color: '#9ca3af' }}>Rows per page:</span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value))
+                  <CustomSelect
+                    value={pageSize.toString()}
+                    onChange={(value) => {
+                      setPageSize(Number(value))
                       setCurrentPage(1)
                     }}
-                    style={{
-                      padding: '6px 10px',
-                      borderRadius: '6px',
-                      background: 'rgba(0, 0, 0, 0.3)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: 'white',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      outline: 'none',
-                    }}
-                  >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+                    options={[
+                      { value: '10', label: '10' },
+                      { value: '25', label: '25' },
+                      { value: '50', label: '50' },
+                      { value: '100', label: '100' },
+                    ]}
+                    accentColor="#3b82f6"
+                    minWidth="80px"
+                  />
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
