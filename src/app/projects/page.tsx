@@ -613,9 +613,7 @@ export default function ProjectsPage() {
                               {data.apps.filter((a) => a.projectId === project.id).length} apps
                             </span>
                           </div>
-                          <div
-                            style={{ fontSize: '12px', color: '#9ca3af', paddingLeft: '24px' }}
-                          >
+                          <div style={{ fontSize: '12px', color: '#9ca3af', paddingLeft: '24px' }}>
                             {project.description}
                           </div>
                         </button>
@@ -2177,7 +2175,14 @@ export default function ProjectsPage() {
                   width: '90%',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}
+                >
                   <div
                     style={{
                       width: '48px',
@@ -2197,7 +2202,14 @@ export default function ProjectsPage() {
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <p style={{ color: '#9ca3af', fontSize: '15px', lineHeight: '1.6', marginBottom: '16px' }}>
+                  <p
+                    style={{
+                      color: '#9ca3af',
+                      fontSize: '15px',
+                      lineHeight: '1.6',
+                      marginBottom: '16px',
+                    }}
+                  >
                     Are you sure you want to delete{' '}
                     <span style={{ color: 'white', fontWeight: '600' }}>
                       {selectedProjectForEdit.name}
@@ -2212,13 +2224,22 @@ export default function ProjectsPage() {
                       borderRadius: '12px',
                     }}
                   >
-                    <p style={{ color: '#ef4444', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                    <p
+                      style={{
+                        color: '#ef4444',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        marginBottom: '8px',
+                      }}
+                    >
                       ⚠️ Warning: This action cannot be undone!
                     </p>
                     <p style={{ color: '#fca5a5', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
                       Deleting this project will permanently remove all{' '}
-                      {data?.apps.filter((a) => a.projectId === selectedProjectForEdit.id).length || 0} apps
-                      associated with it, along with all their data, configurations, and API keys.
+                      {data?.apps.filter((a) => a.projectId === selectedProjectForEdit.id).length ||
+                        0}{' '}
+                      apps associated with it, along with all their data, configurations, and API
+                      keys.
                     </p>
                   </div>
                 </div>
