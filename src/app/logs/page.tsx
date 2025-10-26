@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
@@ -20,7 +20,7 @@ import {
 import DashboardLayout from '@/components/DashboardLayout'
 import { getLogsData, type LogsData, type APILogEntry } from '@/data/logs'
 
-export default function LogsPage() {
+function LogsPageContent() {
   const searchParams = useSearchParams()
   const [data, setData] = useState<LogsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -1327,5 +1327,25 @@ export default function LogsPage() {
         </motion.div>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function LogsPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '400px',
+          color: '#9ca3af'
+        }}>
+          Loading logs...
+        </div>
+      </DashboardLayout>
+    }>
+      <LogsPageContent />
+    </Suspense>
   )
 }

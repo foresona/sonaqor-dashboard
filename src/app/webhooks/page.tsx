@@ -775,7 +775,13 @@ export default function WebhooksPage() {
     }
 
     return filtered
-  }, [webhooks, webhookStatusFilter, webhookAppFilter, webhookEnvironmentFilter, webhookSearchQuery])
+  }, [
+    webhooks,
+    webhookStatusFilter,
+    webhookAppFilter,
+    webhookEnvironmentFilter,
+    webhookSearchQuery,
+  ])
 
   // Get unique apps from webhooks
   const uniqueWebhookApps = useMemo(() => {
@@ -1238,25 +1244,42 @@ export default function WebhooksPage() {
                     No webhooks found
                   </div>
                   <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                    {webhookSearchQuery || webhookStatusFilter !== 'all' || webhookAppFilter !== 'all' || webhookEnvironmentFilter !== 'all'
+                    {webhookSearchQuery ||
+                    webhookStatusFilter !== 'all' ||
+                    webhookAppFilter !== 'all' ||
+                    webhookEnvironmentFilter !== 'all'
                       ? 'Try adjusting your filters or search query'
                       : 'Create your first webhook to get started'}
                   </div>
                 </motion.div>
               ) : (
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
-                  gap: '20px' 
-                }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
+                    gap: '20px',
+                  }}
+                >
                   {filteredWebhooks.map((webhook, index) => {
                     const statusColor = getStatusColor(webhook.status)
-                    const envColor = 
-                      webhook.environment === 'Production' 
-                        ? { bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.3)', text: '#10b981' }
+                    const envColor =
+                      webhook.environment === 'Production'
+                        ? {
+                            bg: 'rgba(16, 185, 129, 0.1)',
+                            border: 'rgba(16, 185, 129, 0.3)',
+                            text: '#10b981',
+                          }
                         : webhook.environment === 'Staging'
-                        ? { bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.3)', text: '#f59e0b' }
-                        : { bg: 'rgba(139, 92, 246, 0.1)', border: 'rgba(139, 92, 246, 0.3)', text: '#8b5cf6' }
+                        ? {
+                            bg: 'rgba(245, 158, 11, 0.1)',
+                            border: 'rgba(245, 158, 11, 0.3)',
+                            text: '#f59e0b',
+                          }
+                        : {
+                            bg: 'rgba(139, 92, 246, 0.1)',
+                            border: 'rgba(139, 92, 246, 0.3)',
+                            text: '#8b5cf6',
+                          }
 
                     return (
                       <motion.div
@@ -1295,7 +1318,14 @@ export default function WebhooksPage() {
                           }}
                         >
                           <div style={{ flex: 1 }}>
-                            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'white', marginBottom: '8px' }}>
+                            <h3
+                              style={{
+                                fontSize: '18px',
+                                fontWeight: '600',
+                                color: 'white',
+                                marginBottom: '8px',
+                              }}
+                            >
                               {webhook.name}
                             </h3>
                             {/* App and Environment Tags */}
@@ -1396,7 +1426,15 @@ export default function WebhooksPage() {
 
                         {/* Events */}
                         <div style={{ marginBottom: '12px' }}>
-                          <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '6px', textTransform: 'uppercase', fontWeight: '600' }}>
+                          <div
+                            style={{
+                              fontSize: '11px',
+                              color: '#9ca3af',
+                              marginBottom: '6px',
+                              textTransform: 'uppercase',
+                              fontWeight: '600',
+                            }}
+                          >
                             Events ({webhook.events.length})
                           </div>
                           <div
@@ -1451,7 +1489,9 @@ export default function WebhooksPage() {
                           }}
                         >
                           <div>
-                            <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>
+                            <div
+                              style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}
+                            >
                               Success Rate
                             </div>
                             <div
@@ -1465,7 +1505,9 @@ export default function WebhooksPage() {
                             </div>
                           </div>
                           <div>
-                            <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>
+                            <div
+                              style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}
+                            >
                               Total Calls
                             </div>
                             <div style={{ fontSize: '16px', color: 'white', fontWeight: '600' }}>
