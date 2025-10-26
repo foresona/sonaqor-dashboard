@@ -50,6 +50,13 @@ export default function WebhooksPage() {
   const [pageSize, setPageSize] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'failed'>('all')
+  const [appFilter, setAppFilter] = useState<'all' | string>('all')
+  const [dateRangeFilter, setDateRangeFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
+  const [timeFilter, setTimeFilter] = useState<'all' | string>('all')
+  const [customStartTime, setCustomStartTime] = useState('')
+  const [customEndTime, setCustomEndTime] = useState('')
 
   // Tab state
   const [activeTab, setActiveTab] = useState<'configuration' | 'logs' | 'events' | 'examples'>(
@@ -156,7 +163,6 @@ export default function WebhooksPage() {
   const eventCategories = useMemo(() => {
     return Array.from(new Set(availableEvents.map((event) => event.category)))
   }, [])
-
 
   // Handler functions
   const handleCreateWebhook = () => {
@@ -271,6 +277,7 @@ export default function WebhooksPage() {
       timestamp: '2025-10-24 14:32:15',
       duration: '245ms',
       webhook: 'Production Webhook',
+      app: 'Finance App',
       statusCode: 200,
       payload: {
         event: 'forecast.generated',
@@ -303,6 +310,7 @@ export default function WebhooksPage() {
       timestamp: '2025-10-24 14:30:42',
       duration: '189ms',
       webhook: 'Production Webhook',
+      app: 'Banking App',
       statusCode: 200,
       payload: {
         event: 'persona.matched',
@@ -394,6 +402,7 @@ export default function WebhooksPage() {
       timestamp: '2025-10-24 14:22:10',
       duration: '298ms',
       webhook: 'Production Webhook',
+      app: 'Finance App',
       statusCode: 200,
       payload: {
         event: 'forecast.generated',
@@ -413,6 +422,7 @@ export default function WebhooksPage() {
       timestamp: '2025-10-24 14:20:55',
       duration: '156ms',
       webhook: 'Production Webhook',
+      app: 'Payment App',
       statusCode: 200,
       payload: {
         event: 'transaction.processed',
@@ -470,6 +480,7 @@ export default function WebhooksPage() {
       timestamp: '2025-10-24 14:12:18',
       duration: '278ms',
       webhook: 'Staging Webhook',
+      app: 'Analytics App',
       statusCode: 201,
       payload: {
         event: 'fscores.calculated',
@@ -488,6 +499,7 @@ export default function WebhooksPage() {
       timestamp: '2025-10-24 14:08:45',
       duration: '325ms',
       webhook: 'Production Webhook',
+      app: 'Finance App',
       statusCode: 200,
       payload: {
         event: 'forecast.generated',
@@ -507,6 +519,7 @@ export default function WebhooksPage() {
       timestamp: '2025-10-24 14:05:22',
       duration: '142ms',
       webhook: 'Production Webhook',
+      app: 'Payment App',
       statusCode: 200,
       payload: {
         event: 'transaction.processed',
@@ -526,6 +539,7 @@ export default function WebhooksPage() {
       timestamp: '2025-10-24 14:02:10',
       duration: '6.1s',
       webhook: 'Analytics Webhook',
+      app: 'Banking App',
       statusCode: 500,
       payload: {
         event: 'persona.matched',
@@ -682,6 +696,11 @@ export default function WebhooksPage() {
     },
   ]
 
+  // Get unique apps from deliveries
+  const uniqueApps = useMemo(() => {
+    return Array.from(new Set(recentDeliveries.map((d) => d.app).filter((app): app is string => Boolean(app))))
+  }, [])
+
   // NOTE: This component is designed to handle hundreds or thousands of webhook deliveries
   // Features include:
   // - Search by event name or webhook name
@@ -720,17 +739,79 @@ export default function WebhooksPage() {
       filtered = filtered.filter((d) => d.status === statusFilter)
     }
 
+    // Apply app filter
+    if (appFilter !== 'all') {
+      filtered = filtered.filter((d) => d.app === appFilter)
+    }
+
+    // Apply date range filter
+    if (dateRangeFilter !== 'all') {
+      const now = new Date()
+      filtered = filtered.filter((d) => {
+        const deliveryDate = new Date(d.timestamp.replace(' ', 'T'))
+        
+        if (dateRangeFilter === 'today') {
+          return deliveryDate.toDateString() === now.toDateString()
+        } else if (dateRangeFilter === 'week') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          return deliveryDate >= weekAgo
+        } else if (dateRangeFilter === 'month') {
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          return deliveryDate >= monthAgo
+        } else if (dateRangeFilter === 'custom' && customStartDate && customEndDate) {
+          const start = new Date(customStartDate)
+          const end = new Date(customEndDate)
+          return deliveryDate >= start && deliveryDate <= end
+        }
+        return true
+      })
+    }
+
+    // Apply time filter
+    if (timeFilter !== 'all') {
+      filtered = filtered.filter((d) => {
+        const deliveryDate = new Date(d.timestamp.replace(' ', 'T'))
+        const hour = deliveryDate.getHours()
+        const minute = deliveryDate.getMinutes()
+        const timeInMinutes = hour * 60 + minute
+        
+        if (timeFilter === 'morning') {
+          return hour >= 0 && hour < 12
+        } else if (timeFilter === 'afternoon') {
+          return hour >= 12 && hour < 17
+        } else if (timeFilter === 'evening') {
+          return hour >= 17 && hour < 21
+        } else if (timeFilter === 'night') {
+          return hour >= 21 || hour < 0
+        } else if (timeFilter === 'custom' && customStartTime && customEndTime) {
+          const [startHour, startMin] = customStartTime.split(':').map(Number)
+          const [endHour, endMin] = customEndTime.split(':').map(Number)
+          const startInMinutes = startHour * 60 + startMin
+          const endInMinutes = endHour * 60 + endMin
+          
+          if (startInMinutes <= endInMinutes) {
+            return timeInMinutes >= startInMinutes && timeInMinutes <= endInMinutes
+          } else {
+            // Handle time range that crosses midnight
+            return timeInMinutes >= startInMinutes || timeInMinutes <= endInMinutes
+          }
+        }
+        return true
+      })
+    }
+
     // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(
         (d) =>
           d.event.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.webhook.toLowerCase().includes(searchQuery.toLowerCase()),
+          d.webhook.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (d.app && d.app.toLowerCase().includes(searchQuery.toLowerCase())),
       )
     }
 
     return filtered
-  }, [statusFilter, searchQuery])
+  }, [statusFilter, appFilter, dateRangeFilter, customStartDate, customEndDate, timeFilter, customStartTime, customEndTime, searchQuery])
 
   const totalPages = Math.ceil(filteredDeliveries.length / pageSize)
   const paginatedDeliveries = useMemo(() => {
@@ -1402,10 +1483,17 @@ export default function WebhooksPage() {
 
                 {/* Search and Filters */}
                 <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    flexWrap: 'wrap',
+                    position: 'relative',
+                    zIndex: 100,
+                  }}
                 >
                   {/* Search Bar */}
-                  <div style={{ position: 'relative', flex: '0 0 300px' }}>
+                  <div style={{ position: 'relative', flex: '0 0 250px' }}>
                     <Search
                       style={{
                         position: 'absolute',
@@ -1443,6 +1531,61 @@ export default function WebhooksPage() {
                       onBlur={(e) =>
                         (e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)')
                       }
+                    />
+                  </div>
+
+                  {/* App Filter */}
+                  <div style={{ flex: '0 0 180px' }}>
+                    <CustomSelect
+                      value={appFilter}
+                      onChange={(value) => {
+                        setAppFilter(value)
+                        setCurrentPage(1)
+                      }}
+                      options={[
+                        { value: 'all', label: 'All Apps' },
+                        ...uniqueApps.map((app) => ({ value: app!, label: app! })),
+                      ]}
+                      placeholder="Filter by App"
+                    />
+                  </div>
+
+                  {/* Date Range Filter */}
+                  <div style={{ flex: '0 0 180px' }}>
+                    <CustomSelect
+                      value={dateRangeFilter}
+                      onChange={(value) => {
+                        setDateRangeFilter(value as any)
+                        setCurrentPage(1)
+                      }}
+                      options={[
+                        { value: 'all', label: 'All Time' },
+                        { value: 'today', label: 'Today' },
+                        { value: 'week', label: 'Last 7 Days' },
+                        { value: 'month', label: 'Last 30 Days' },
+                        { value: 'custom', label: 'Custom Range' },
+                      ]}
+                      placeholder="Date Range"
+                    />
+                  </div>
+
+                  {/* Time Filter */}
+                  <div style={{ flex: '0 0 220px' }}>
+                    <CustomSelect
+                      value={timeFilter}
+                      onChange={(value) => {
+                        setTimeFilter(value)
+                        setCurrentPage(1)
+                      }}
+                      options={[
+                        { value: 'all', label: 'All Day' },
+                        { value: 'morning', label: 'Morning (12am-12pm)' },
+                        { value: 'afternoon', label: 'Afternoon (12pm-5pm)' },
+                        { value: 'evening', label: 'Evening (5pm-9pm)' },
+                        { value: 'night', label: 'Night (9pm-12am)' },
+                        { value: 'custom', label: 'Custom Time Range' },
+                      ]}
+                      placeholder="Time of Day"
                     />
                   </div>
 
@@ -1492,6 +1635,92 @@ export default function WebhooksPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Custom Date Range Inputs */}
+                {dateRangeFilter === 'custom' && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '12px',
+                      marginTop: '12px',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', color: '#9ca3af' }}>Custom Range:</div>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(0, 0, 0, 0.3)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: 'white',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
+                    <div style={{ fontSize: '13px', color: '#6b7280' }}>to</div>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(0, 0, 0, 0.3)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: 'white',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Custom Time Range Inputs */}
+                {timeFilter === 'custom' && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '12px',
+                      marginTop: '12px',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', color: '#9ca3af' }}>Custom Time:</div>
+                    <input
+                      type="time"
+                      value={customStartTime}
+                      onChange={(e) => setCustomStartTime(e.target.value)}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(0, 0, 0, 0.3)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: 'white',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
+                    <div style={{ fontSize: '13px', color: '#6b7280' }}>to</div>
+                    <input
+                      type="time"
+                      value={customEndTime}
+                      onChange={(e) => setCustomEndTime(e.target.value)}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(0, 0, 0, 0.3)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: 'white',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* Results Count */}
                 <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px' }}>
