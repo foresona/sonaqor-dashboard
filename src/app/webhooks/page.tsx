@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Webhook,
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
 import CustomSelect from '@/components/CustomSelect'
+import SkeletonCard from '@/components/SkeletonCard'
 
 interface WebhookConfig {
   id: string
@@ -43,6 +44,7 @@ interface WebhookConfig {
 }
 
 export default function WebhooksPage() {
+  const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState<string | null>(null)
   const [retrying, setRetrying] = useState<string | null>(null)
   const [showToast, setShowToast] = useState(false)
@@ -142,6 +144,14 @@ export default function WebhooksPage() {
       environment: 'Production',
     },
   ])
+
+  // Simulate initial data loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [])
 
   const availableEvents = [
     {
@@ -1119,553 +1129,1283 @@ export default function WebhooksPage() {
         </div>
 
         {/* Configuration Tab */}
-        {activeTab === 'configuration' && (
-          <>
-            {/* Webhooks List */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'configuration' && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              style={{ marginBottom: '32px' }}
+              key="configuration"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '20px',
-                  position: 'relative',
-                  zIndex: 100,
-                }}
-              >
-                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
-                  Configured Webhooks
-                </h2>
-
-                {/* Webhook Search and Filters */}
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <div style={{ position: 'relative' }}>
-                    <Search
-                      style={{
-                        position: 'absolute',
-                        left: '14px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        width: '16px',
-                        height: '16px',
-                        color: '#9ca3af',
-                        pointerEvents: 'none',
-                      }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Search webhooks..."
-                      value={webhookSearchQuery}
-                      onChange={(e) => setWebhookSearchQuery(e.target.value)}
-                      style={{
-                        padding: '10px 14px 10px 40px',
-                        borderRadius: '10px',
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: 'white',
-                        fontSize: '14px',
-                        outline: 'none',
-                        width: '220px',
-                      }}
-                    />
-                  </div>
-
-                  <CustomSelect
-                    value={webhookAppFilter}
-                    onChange={(value) => setWebhookAppFilter(value as any)}
-                    options={[
-                      { value: 'all', label: 'All Apps' },
-                      ...uniqueWebhookApps.map((app) => ({ value: app, label: app })),
-                    ]}
-                    accentColor="#10b981"
-                    minWidth="180px"
-                  />
-
-                  <CustomSelect
-                    value={webhookEnvironmentFilter}
-                    onChange={(value) => setWebhookEnvironmentFilter(value as any)}
-                    options={[
-                      { value: 'all', label: 'All Environments' },
-                      ...uniqueEnvironments.map((env) => ({ value: env, label: env })),
-                    ]}
-                    accentColor="#10b981"
-                    minWidth="180px"
-                  />
-
-                  <CustomSelect
-                    value={webhookStatusFilter}
-                    onChange={(value) => setWebhookStatusFilter(value as any)}
-                    options={[
-                      { value: 'all', label: 'All Status' },
-                      { value: 'active', label: 'Active' },
-                      { value: 'inactive', label: 'Inactive' },
-                      { value: 'error', label: 'Error' },
-                    ]}
-                    accentColor="#10b981"
-                    minWidth="150px"
-                  />
-                </div>
-              </div>
-
-              {filteredWebhooks.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    padding: '48px 24px',
-                    textAlign: 'center',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                  }}
-                >
-                  <Webhook
-                    style={{
-                      width: '48px',
-                      height: '48px',
-                      color: '#6b7280',
-                      margin: '0 auto 16px',
-                      opacity: 0.5,
-                    }}
-                  />
-                  <div
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: '500',
-                      color: '#9ca3af',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    No webhooks found
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                    {webhookSearchQuery ||
-                    webhookStatusFilter !== 'all' ||
-                    webhookAppFilter !== 'all' ||
-                    webhookEnvironmentFilter !== 'all'
-                      ? 'Try adjusting your filters or search query'
-                      : 'Create your first webhook to get started'}
-                  </div>
-                </motion.div>
-              ) : (
+              {/* Webhooks List */}
+              <div style={{ marginBottom: '32px' }}>
                 <div
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
-                    gap: '20px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '20px',
+                    position: 'relative',
+                    zIndex: 100,
                   }}
                 >
-                  {filteredWebhooks.map((webhook, index) => {
-                    const statusColor = getStatusColor(webhook.status)
-                    const envColor =
-                      webhook.environment === 'Production'
-                        ? {
-                            bg: 'rgba(16, 185, 129, 0.1)',
-                            border: 'rgba(16, 185, 129, 0.3)',
-                            text: '#10b981',
-                          }
-                        : webhook.environment === 'Staging'
-                        ? {
-                            bg: 'rgba(245, 158, 11, 0.1)',
-                            border: 'rgba(245, 158, 11, 0.3)',
-                            text: '#f59e0b',
-                          }
-                        : {
-                            bg: 'rgba(139, 92, 246, 0.1)',
-                            border: 'rgba(139, 92, 246, 0.3)',
-                            text: '#8b5cf6',
-                          }
+                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
+                    Configured Webhooks
+                  </h2>
 
-                    return (
-                      <motion.div
-                        key={webhook.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.1 + index * 0.05 }}
+                  {/* Webhook Search and Filters */}
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative' }}>
+                      <Search
                         style={{
-                          background:
-                            'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                          backdropFilter: 'blur(16px)',
-                          WebkitBackdropFilter: 'blur(16px)',
-                          borderRadius: '12px',
+                          position: 'absolute',
+                          left: '14px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: '16px',
+                          height: '16px',
+                          color: '#9ca3af',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Search webhooks..."
+                        value={webhookSearchQuery}
+                        onChange={(e) => setWebhookSearchQuery(e.target.value)}
+                        style={{
+                          padding: '10px 14px 10px 40px',
+                          borderRadius: '10px',
+                          background: 'rgba(0, 0, 0, 0.3)',
                           border: '1px solid rgba(255, 255, 255, 0.1)',
-                          padding: '20px',
-                          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-                          transition: 'transform 0.2s, border-color 0.2s',
-                          cursor: 'pointer',
+                          color: 'white',
+                          fontSize: '14px',
+                          outline: 'none',
+                          width: '220px',
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-2px)'
-                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)'
-                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
-                        }}
-                      >
-                        {/* Header with Name and Status */}
-                        <div
+                      />
+                    </div>
+
+                    <CustomSelect
+                      value={webhookAppFilter}
+                      onChange={(value) => setWebhookAppFilter(value as any)}
+                      options={[
+                        { value: 'all', label: 'All Apps' },
+                        ...uniqueWebhookApps.map((app) => ({ value: app, label: app })),
+                      ]}
+                      accentColor="#10b981"
+                      minWidth="180px"
+                    />
+
+                    <CustomSelect
+                      value={webhookEnvironmentFilter}
+                      onChange={(value) => setWebhookEnvironmentFilter(value as any)}
+                      options={[
+                        { value: 'all', label: 'All Environments' },
+                        ...uniqueEnvironments.map((env) => ({ value: env, label: env })),
+                      ]}
+                      accentColor="#10b981"
+                      minWidth="180px"
+                    />
+
+                    <CustomSelect
+                      value={webhookStatusFilter}
+                      onChange={(value) => setWebhookStatusFilter(value as any)}
+                      options={[
+                        { value: 'all', label: 'All Status' },
+                        { value: 'active', label: 'Active' },
+                        { value: 'inactive', label: 'Inactive' },
+                        { value: 'error', label: 'Error' },
+                      ]}
+                      accentColor="#10b981"
+                      minWidth="150px"
+                    />
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
+                      gap: '20px',
+                    }}
+                  >
+                    <SkeletonCard variant="webhook" count={3} />
+                  </div>
+                ) : filteredWebhooks.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      padding: '48px 24px',
+                      textAlign: 'center',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                    }}
+                  >
+                    <Webhook
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        color: '#6b7280',
+                        margin: '0 auto 16px',
+                        opacity: 0.5,
+                      }}
+                    />
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '500',
+                        color: '#9ca3af',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      No webhooks found
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                      {webhookSearchQuery ||
+                      webhookStatusFilter !== 'all' ||
+                      webhookAppFilter !== 'all' ||
+                      webhookEnvironmentFilter !== 'all'
+                        ? 'Try adjusting your filters or search query'
+                        : 'Create your first webhook to get started'}
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
+                      gap: '20px',
+                    }}
+                  >
+                    {filteredWebhooks.map((webhook, index) => {
+                      const statusColor = getStatusColor(webhook.status)
+                      const envColor =
+                        webhook.environment === 'Production'
+                          ? {
+                              bg: 'rgba(16, 185, 129, 0.1)',
+                              border: 'rgba(16, 185, 129, 0.3)',
+                              text: '#10b981',
+                            }
+                          : webhook.environment === 'Staging'
+                          ? {
+                              bg: 'rgba(245, 158, 11, 0.1)',
+                              border: 'rgba(245, 158, 11, 0.3)',
+                              text: '#f59e0b',
+                            }
+                          : {
+                              bg: 'rgba(139, 92, 246, 0.1)',
+                              border: 'rgba(139, 92, 246, 0.3)',
+                              text: '#8b5cf6',
+                            }
+
+                      return (
+                        <motion.div
+                          key={webhook.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.1 + index * 0.05 }}
                           style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            marginBottom: '16px',
-                          }}
-                        >
-                          <div style={{ flex: 1 }}>
-                            <h3
-                              style={{
-                                fontSize: '18px',
-                                fontWeight: '600',
-                                color: 'white',
-                                marginBottom: '8px',
-                              }}
-                            >
-                              {webhook.name}
-                            </h3>
-                            {/* App and Environment Tags */}
-                            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                              <span
-                                style={{
-                                  padding: '4px 10px',
-                                  borderRadius: '6px',
-                                  background: 'rgba(59, 130, 246, 0.1)',
-                                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                                  color: '#3b82f6',
-                                  fontSize: '11px',
-                                  fontWeight: '600',
-                                }}
-                              >
-                                {webhook.app}
-                              </span>
-                              <span
-                                style={{
-                                  padding: '4px 10px',
-                                  borderRadius: '6px',
-                                  background: envColor.bg,
-                                  border: `1px solid ${envColor.border}`,
-                                  color: envColor.text,
-                                  fontSize: '11px',
-                                  fontWeight: '600',
-                                }}
-                              >
-                                {webhook.environment}
-                              </span>
-                            </div>
-                          </div>
-                          <span
-                            style={{
-                              padding: '4px 10px',
-                              borderRadius: '6px',
-                              background: statusColor.bg,
-                              border: `1px solid ${statusColor.border}`,
-                              color: statusColor.text,
-                              fontSize: '11px',
-                              fontWeight: '700',
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            {webhook.status}
-                          </span>
-                        </div>
-
-                        {/* URL */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '10px 12px',
-                            borderRadius: '8px',
-                            background: 'rgba(0, 0, 0, 0.3)',
-                            marginBottom: '12px',
-                          }}
-                        >
-                          <code
-                            style={{
-                              flex: 1,
-                              fontSize: '12px',
-                              color: '#3b82f6',
-                              fontFamily: 'monospace',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {webhook.url}
-                          </code>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              copyToClipboard(webhook.url, webhook.id)
-                            }}
-                            style={{
-                              padding: '4px',
-                              borderRadius: '4px',
-                              background:
-                                copied === webhook.id
-                                  ? 'rgba(16, 185, 129, 0.2)'
-                                  : 'rgba(255, 255, 255, 0.05)',
-                              border: 'none',
-                              color: copied === webhook.id ? '#10b981' : '#9ca3af',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {copied === webhook.id ? (
-                              <Check style={{ width: '14px', height: '14px' }} />
-                            ) : (
-                              <Copy style={{ width: '14px', height: '14px' }} />
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Events */}
-                        <div style={{ marginBottom: '12px' }}>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              color: '#9ca3af',
-                              marginBottom: '6px',
-                              textTransform: 'uppercase',
-                              fontWeight: '600',
-                            }}
-                          >
-                            Events ({webhook.events.length})
-                          </div>
-                          <div
-                            style={{
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: '6px',
-                            }}
-                          >
-                            {webhook.events.slice(0, 2).map((event, i) => (
-                              <span
-                                key={i}
-                                style={{
-                                  padding: '4px 8px',
-                                  borderRadius: '6px',
-                                  background: 'rgba(59, 130, 246, 0.1)',
-                                  border: '1px solid rgba(59, 130, 246, 0.2)',
-                                  color: '#3b82f6',
-                                  fontSize: '11px',
-                                  fontFamily: 'monospace',
-                                }}
-                              >
-                                {event}
-                              </span>
-                            ))}
-                            {webhook.events.length > 2 && (
-                              <span
-                                style={{
-                                  padding: '4px 8px',
-                                  borderRadius: '6px',
-                                  background: 'rgba(255, 255, 255, 0.05)',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                  color: '#9ca3af',
-                                  fontSize: '11px',
-                                }}
-                              >
-                                +{webhook.events.length - 2} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Stats */}
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '12px',
-                            marginBottom: '16px',
-                            paddingTop: '12px',
-                            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-                          }}
-                        >
-                          <div>
-                            <div
-                              style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}
-                            >
-                              Success Rate
-                            </div>
-                            <div
-                              style={{
-                                fontSize: '16px',
-                                color: webhook.successRate > 95 ? '#10b981' : '#f59e0b',
-                                fontWeight: 'bold',
-                              }}
-                            >
-                              {webhook.successRate}%
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}
-                            >
-                              Total Calls
-                            </div>
-                            <div style={{ fontSize: '16px', color: 'white', fontWeight: '600' }}>
-                              {webhook.totalCalls.toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              openTestModal(webhook)
-                            }}
-                            style={{
-                              flex: 1,
-                              padding: '8px 12px',
-                              borderRadius: '8px',
-                              background: 'rgba(59, 130, 246, 0.1)',
-                              border: '1px solid rgba(59, 130, 246, 0.3)',
-                              color: '#3b82f6',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '6px',
-                            }}
-                          >
-                            <Send style={{ width: '14px', height: '14px' }} />
-                            Test
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              openEditModal(webhook)
-                            }}
-                            style={{
-                              flex: 1,
-                              padding: '8px 12px',
-                              borderRadius: '8px',
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
-                              color: '#9ca3af',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '6px',
-                            }}
-                          >
-                            <Edit2 style={{ width: '14px', height: '14px' }} />
-                            Edit
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              openDeleteModal(webhook)
-                            }}
-                            style={{
-                              padding: '8px 12px',
-                              borderRadius: '8px',
-                              background: 'rgba(239, 68, 68, 0.1)',
-                              border: '1px solid rgba(239, 68, 68, 0.3)',
-                              color: '#ef4444',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                            }}
-                          >
-                            <Trash2 style={{ width: '14px', height: '14px' }} />
-                          </button>
-                        </div>
-
-                        {/* View Logs Button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            // Switch to logs tab and filter by this webhook
-                            setActiveTab('logs')
-                            setAppFilter(webhook.app)
-                            // Scroll to top smoothly
-                            window.scrollTo({ top: 0, behavior: 'smooth' })
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            borderRadius: '8px',
-                            background: 'rgba(16, 185, 129, 0.1)',
-                            border: '1px solid rgba(16, 185, 129, 0.3)',
-                            color: '#10b981',
+                            background:
+                              'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                            backdropFilter: 'blur(16px)',
+                            WebkitBackdropFilter: 'blur(16px)',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            padding: '20px',
+                            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                            transition: 'transform 0.2s, border-color 0.2s',
                             cursor: 'pointer',
-                            fontSize: '12px',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)'
+                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)'
+                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                          }}
+                        >
+                          {/* Header with Name and Status */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              marginBottom: '16px',
+                            }}
+                          >
+                            <div style={{ flex: 1 }}>
+                              <h3
+                                style={{
+                                  fontSize: '18px',
+                                  fontWeight: '600',
+                                  color: 'white',
+                                  marginBottom: '8px',
+                                }}
+                              >
+                                {webhook.name}
+                              </h3>
+                              {/* App and Environment Tags */}
+                              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                                <span
+                                  style={{
+                                    padding: '4px 10px',
+                                    borderRadius: '6px',
+                                    background: 'rgba(59, 130, 246, 0.1)',
+                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                    color: '#3b82f6',
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                  }}
+                                >
+                                  {webhook.app}
+                                </span>
+                                <span
+                                  style={{
+                                    padding: '4px 10px',
+                                    borderRadius: '6px',
+                                    background: envColor.bg,
+                                    border: `1px solid ${envColor.border}`,
+                                    color: envColor.text,
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                  }}
+                                >
+                                  {webhook.environment}
+                                </span>
+                              </div>
+                            </div>
+                            <span
+                              style={{
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                background: statusColor.bg,
+                                border: `1px solid ${statusColor.border}`,
+                                color: statusColor.text,
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              {webhook.status}
+                            </span>
+                          </div>
+
+                          {/* URL */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '10px 12px',
+                              borderRadius: '8px',
+                              background: 'rgba(0, 0, 0, 0.3)',
+                              marginBottom: '12px',
+                            }}
+                          >
+                            <code
+                              style={{
+                                flex: 1,
+                                fontSize: '12px',
+                                color: '#3b82f6',
+                                fontFamily: 'monospace',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {webhook.url}
+                            </code>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                copyToClipboard(webhook.url, webhook.id)
+                              }}
+                              style={{
+                                padding: '4px',
+                                borderRadius: '4px',
+                                background:
+                                  copied === webhook.id
+                                    ? 'rgba(16, 185, 129, 0.2)'
+                                    : 'rgba(255, 255, 255, 0.05)',
+                                border: 'none',
+                                color: copied === webhook.id ? '#10b981' : '#9ca3af',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {copied === webhook.id ? (
+                                <Check style={{ width: '14px', height: '14px' }} />
+                              ) : (
+                                <Copy style={{ width: '14px', height: '14px' }} />
+                              )}
+                            </button>
+                          </div>
+
+                          {/* Events */}
+                          <div style={{ marginBottom: '12px' }}>
+                            <div
+                              style={{
+                                fontSize: '11px',
+                                color: '#9ca3af',
+                                marginBottom: '6px',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                              }}
+                            >
+                              Events ({webhook.events.length})
+                            </div>
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '6px',
+                              }}
+                            >
+                              {webhook.events.slice(0, 2).map((event, i) => (
+                                <span
+                                  key={i}
+                                  style={{
+                                    padding: '4px 8px',
+                                    borderRadius: '6px',
+                                    background: 'rgba(59, 130, 246, 0.1)',
+                                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                                    color: '#3b82f6',
+                                    fontSize: '11px',
+                                    fontFamily: 'monospace',
+                                  }}
+                                >
+                                  {event}
+                                </span>
+                              ))}
+                              {webhook.events.length > 2 && (
+                                <span
+                                  style={{
+                                    padding: '4px 8px',
+                                    borderRadius: '6px',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    color: '#9ca3af',
+                                    fontSize: '11px',
+                                  }}
+                                >
+                                  +{webhook.events.length - 2} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Stats */}
+                          <div
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(2, 1fr)',
+                              gap: '12px',
+                              marginBottom: '16px',
+                              paddingTop: '12px',
+                              borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                            }}
+                          >
+                            <div>
+                              <div
+                                style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}
+                              >
+                                Success Rate
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: '16px',
+                                  color: webhook.successRate > 95 ? '#10b981' : '#f59e0b',
+                                  fontWeight: 'bold',
+                                }}
+                              >
+                                {webhook.successRate}%
+                              </div>
+                            </div>
+                            <div>
+                              <div
+                                style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}
+                              >
+                                Total Calls
+                              </div>
+                              <div style={{ fontSize: '16px', color: 'white', fontWeight: '600' }}>
+                                {webhook.totalCalls.toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                openTestModal(webhook)
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                background: 'rgba(59, 130, 246, 0.1)',
+                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                color: '#3b82f6',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                              }}
+                            >
+                              <Send style={{ width: '14px', height: '14px' }} />
+                              Test
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                openEditModal(webhook)
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                color: '#9ca3af',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                              }}
+                            >
+                              <Edit2 style={{ width: '14px', height: '14px' }} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                openDeleteModal(webhook)
+                              }}
+                              style={{
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                              }}
+                            >
+                              <Trash2 style={{ width: '14px', height: '14px' }} />
+                            </button>
+                          </div>
+
+                          {/* View Logs Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              // Switch to logs tab and filter by this webhook
+                              setActiveTab('logs')
+                              setAppFilter(webhook.app)
+                              // Scroll to top smoothly
+                              window.scrollTo({ top: 0, behavior: 'smooth' })
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '8px 12px',
+                              borderRadius: '8px',
+                              background: 'rgba(16, 185, 129, 0.1)',
+                              border: '1px solid rgba(16, 185, 129, 0.3)',
+                              color: '#10b981',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'
+                              e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.5)'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'
+                              e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'
+                            }}
+                          >
+                            <FileText style={{ width: '14px', height: '14px' }} />
+                            View Logs
+                          </button>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Logs & Usage Tab */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'logs' && (
+            <motion.div
+              key="logs"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              {/* Recent Deliveries */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '32px',
+                  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minHeight: 0,
+                }}
+              >
+                {/* Header Section - Fixed */}
+                <div style={{ flexShrink: 0, marginBottom: '20px' }}>
+                  <h2
+                    style={{
+                      fontSize: '20px',
+                      fontWeight: 'bold',
+                      color: 'white',
+                      marginBottom: '16px',
+                    }}
+                  >
+                    Recent Deliveries
+                  </h2>
+
+                  {/* Search and Filters */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      flexWrap: 'wrap',
+                      position: 'relative',
+                      zIndex: 100,
+                    }}
+                  >
+                    {/* Search Bar */}
+                    <div style={{ position: 'relative', flex: '0 0 250px' }}>
+                      <Search
+                        style={{
+                          position: 'absolute',
+                          left: '14px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: '16px',
+                          height: '16px',
+                          color: '#9ca3af',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Search by event or webhook..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value)
+                          setCurrentPage(1)
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '11px 14px 11px 40px',
+                          borderRadius: '10px',
+                          background: 'rgba(0, 0, 0, 0.3)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: 'white',
+                          fontSize: '14px',
+                          outline: 'none',
+                          transition: 'border-color 0.2s ease',
+                        }}
+                        onFocus={(e) =>
+                          (e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)')
+                        }
+                        onBlur={(e) =>
+                          (e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)')
+                        }
+                      />
+                    </div>
+
+                    {/* App Filter */}
+                    <div style={{ flex: '0 0 180px' }}>
+                      <CustomSelect
+                        value={appFilter}
+                        onChange={(value) => {
+                          setAppFilter(value)
+                          setCurrentPage(1)
+                        }}
+                        options={[
+                          { value: 'all', label: 'All Apps' },
+                          ...uniqueApps.map((app) => ({ value: app!, label: app! })),
+                        ]}
+                        placeholder="Filter by App"
+                      />
+                    </div>
+
+                    {/* Date Range Filter */}
+                    <div style={{ flex: '0 0 180px' }}>
+                      <CustomSelect
+                        value={dateRangeFilter}
+                        onChange={(value) => {
+                          setDateRangeFilter(value as any)
+                          setCurrentPage(1)
+                        }}
+                        options={[
+                          { value: 'all', label: 'All Time' },
+                          { value: 'today', label: 'Today' },
+                          { value: 'week', label: 'Last 7 Days' },
+                          { value: 'month', label: 'Last 30 Days' },
+                          { value: 'custom', label: 'Custom Range' },
+                        ]}
+                        placeholder="Date Range"
+                      />
+                    </div>
+
+                    {/* Time Filter */}
+                    <div style={{ flex: '0 0 220px' }}>
+                      <CustomSelect
+                        value={timeFilter}
+                        onChange={(value) => {
+                          setTimeFilter(value)
+                          setCurrentPage(1)
+                        }}
+                        options={[
+                          { value: 'all', label: 'All Day' },
+                          { value: 'morning', label: 'Morning (12am-12pm)' },
+                          { value: 'afternoon', label: 'Afternoon (12pm-5pm)' },
+                          { value: 'evening', label: 'Evening (5pm-9pm)' },
+                          { value: 'night', label: 'Night (9pm-12am)' },
+                          { value: 'custom', label: 'Custom Time Range' },
+                        ]}
+                        placeholder="Time of Day"
+                      />
+                    </div>
+
+                    {/* Status Filter Buttons */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {[
+                        { key: 'all', label: 'All' },
+                        { key: 'success', label: 'Success' },
+                        { key: 'failed', label: 'Failed' },
+                      ].map((filter) => (
+                        <button
+                          key={filter.key}
+                          onClick={() => {
+                            setStatusFilter(filter.key as any)
+                            setCurrentPage(1)
+                          }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            background:
+                              statusFilter === filter.key
+                                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
+                                : 'rgba(255, 255, 255, 0.05)',
+                            border:
+                              statusFilter === filter.key
+                                ? '1px solid rgba(16, 185, 129, 0.4)'
+                                : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: statusFilter === filter.key ? '#10b981' : '#9ca3af',
+                            fontSize: '13px',
                             fontWeight: '600',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '6px',
+                            cursor: 'pointer',
                             transition: 'all 0.2s ease',
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'
-                            e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.5)'
+                            if (statusFilter !== filter.key) {
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
+                            }
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'
-                            e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'
+                            if (statusFilter !== filter.key) {
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                            }
                           }}
                         >
-                          <FileText style={{ width: '14px', height: '14px' }} />
-                          View Logs
+                          {filter.label}
                         </button>
-                      </motion.div>
-                    )
-                  })}
-                </div>
-              )}
-            </motion.div>
-          </>
-        )}
+                      ))}
+                    </div>
+                  </div>
 
-        {/* Logs & Usage Tab */}
-        {activeTab === 'logs' && (
-          <>
-            {/* Recent Deliveries */}
+                  {/* Custom Date Range Inputs */}
+                  {dateRangeFilter === 'custom' && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '12px',
+                        marginTop: '12px',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div style={{ fontSize: '13px', color: '#9ca3af' }}>Custom Range:</div>
+                      <input
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => setCustomStartDate(e.target.value)}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          background: 'rgba(0, 0, 0, 0.3)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: 'white',
+                          fontSize: '13px',
+                          outline: 'none',
+                        }}
+                      />
+                      <div style={{ fontSize: '13px', color: '#6b7280' }}>to</div>
+                      <input
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => setCustomEndDate(e.target.value)}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          background: 'rgba(0, 0, 0, 0.3)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: 'white',
+                          fontSize: '13px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Custom Time Range Inputs */}
+                  {timeFilter === 'custom' && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '12px',
+                        marginTop: '12px',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div style={{ fontSize: '13px', color: '#9ca3af' }}>Custom Time:</div>
+                      <input
+                        type="time"
+                        value={customStartTime}
+                        onChange={(e) => setCustomStartTime(e.target.value)}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          background: 'rgba(0, 0, 0, 0.3)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: 'white',
+                          fontSize: '13px',
+                          outline: 'none',
+                        }}
+                      />
+                      <div style={{ fontSize: '13px', color: '#6b7280' }}>to</div>
+                      <input
+                        type="time"
+                        value={customEndTime}
+                        onChange={(e) => setCustomEndTime(e.target.value)}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          background: 'rgba(0, 0, 0, 0.3)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: 'white',
+                          fontSize: '13px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Results Count */}
+                  <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px' }}>
+                    Showing {paginatedDeliveries.length} of {filteredDeliveries.length} deliveries
+                  </div>
+                </div>
+
+                {/* Deliveries List - Scrollable */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    flex: '1 1 auto',
+                    minHeight: 0,
+                    overflowY: 'auto',
+                    paddingRight: '4px',
+                  }}
+                >
+                  {paginatedDeliveries.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      style={{
+                        padding: '48px 24px',
+                        textAlign: 'center',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                      }}
+                    >
+                      <AlertCircle
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          color: '#6b7280',
+                          margin: '0 auto 16px',
+                          opacity: 0.5,
+                        }}
+                      />
+                      <div
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: '500',
+                          color: '#9ca3af',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        No deliveries found
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                        {searchQuery || statusFilter !== 'all'
+                          ? 'Try adjusting your filters or search query'
+                          : 'Webhook deliveries will appear here'}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    paginatedDeliveries.map((delivery, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.03 }}
+                        style={{
+                          borderRadius: '12px',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          overflow: 'hidden',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
+                        }}
+                      >
+                        {/* Clickable Header */}
+                        <div
+                          onClick={() => setExpandedDelivery(expandedDelivery === i ? null : i)}
+                          style={{
+                            padding: '16px 18px',
+                            cursor: 'pointer',
+                            transition: 'background 0.15s ease',
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)')
+                          }
+                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              marginBottom: '10px',
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                flex: 1,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: '14px',
+                                  color: 'white',
+                                  fontWeight: '600',
+                                  fontFamily: 'monospace',
+                                }}
+                              >
+                                {delivery.event}
+                              </span>
+                              <span
+                                style={{
+                                  padding: '4px 10px',
+                                  borderRadius: '6px',
+                                  background:
+                                    delivery.status === 'success'
+                                      ? 'rgba(16, 185, 129, 0.15)'
+                                      : 'rgba(239, 68, 68, 0.15)',
+                                  border:
+                                    delivery.status === 'success'
+                                      ? '1px solid rgba(16, 185, 129, 0.3)'
+                                      : '1px solid rgba(239, 68, 68, 0.3)',
+                                  color: delivery.status === 'success' ? '#10b981' : '#ef4444',
+                                  fontSize: '11px',
+                                  fontWeight: '700',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.5px',
+                                }}
+                              >
+                                {delivery.statusCode}
+                              </span>
+                            </div>
+                            {expandedDelivery === i ? (
+                              <ChevronUp
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  color: '#9ca3af',
+                                  flexShrink: 0,
+                                }}
+                              />
+                            ) : (
+                              <ChevronDown
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  color: '#9ca3af',
+                                  flexShrink: 0,
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: '13px',
+                              color: '#9ca3af',
+                              marginBottom: '6px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            {delivery.webhook}
+                          </div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              gap: '12px',
+                              fontSize: '12px',
+                              color: '#6b7280',
+                            }}
+                          >
+                            <span>{delivery.timestamp}</span>
+                            <span style={{ opacity: 0.5 }}>•</span>
+                            <span>{delivery.duration}</span>
+                          </div>
+                        </div>{' '}
+                        {/* Expanded Payload View */}
+                        {expandedDelivery === i && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            style={{
+                              borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                              padding: '16px',
+                              background: 'rgba(0, 0, 0, 0.2)',
+                            }}
+                          >
+                            <div style={{ marginBottom: '16px' }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  marginBottom: '8px',
+                                }}
+                              >
+                                <span
+                                  style={{ fontSize: '13px', fontWeight: '600', color: '#9ca3af' }}
+                                >
+                                  Request Payload
+                                </span>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      retryWebhook(`delivery-${i}`)
+                                    }}
+                                    disabled={retrying === `delivery-${i}`}
+                                    style={{
+                                      padding: '4px 8px',
+                                      borderRadius: '6px',
+                                      background:
+                                        retrying === `delivery-${i}`
+                                          ? 'rgba(59, 130, 246, 0.2)'
+                                          : delivery.status === 'failed'
+                                          ? 'rgba(239, 68, 68, 0.15)'
+                                          : 'rgba(255, 255, 255, 0.05)',
+                                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                                      color:
+                                        retrying === `delivery-${i}`
+                                          ? '#3b82f6'
+                                          : delivery.status === 'failed'
+                                          ? '#ef4444'
+                                          : '#9ca3af',
+                                      cursor:
+                                        retrying === `delivery-${i}` ? 'not-allowed' : 'pointer',
+                                      fontSize: '11px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      opacity: retrying === `delivery-${i}` ? 0.7 : 1,
+                                      transition: 'all 0.2s ease',
+                                    }}
+                                  >
+                                    <RotateCcw
+                                      style={{
+                                        width: '12px',
+                                        height: '12px',
+                                        animation:
+                                          retrying === `delivery-${i}`
+                                            ? 'spin 1s linear infinite'
+                                            : 'none',
+                                      }}
+                                    />
+                                    {retrying === `delivery-${i}` ? 'Retrying...' : 'Retry'}
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      copyToClipboard(
+                                        JSON.stringify(delivery.payload, null, 2),
+                                        `delivery-${i}`,
+                                      )
+                                    }}
+                                    style={{
+                                      padding: '4px 8px',
+                                      borderRadius: '6px',
+                                      background:
+                                        copied === `delivery-${i}`
+                                          ? 'rgba(16, 185, 129, 0.2)'
+                                          : 'rgba(255, 255, 255, 0.05)',
+                                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                                      color: copied === `delivery-${i}` ? '#10b981' : '#9ca3af',
+                                      cursor: 'pointer',
+                                      fontSize: '11px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                    }}
+                                  >
+                                    {copied === `delivery-${i}` ? (
+                                      <>
+                                        <Check style={{ width: '12px', height: '12px' }} />
+                                        Copied
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Copy style={{ width: '12px', height: '12px' }} />
+                                        Copy
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                              <pre
+                                style={{
+                                  padding: '12px',
+                                  borderRadius: '8px',
+                                  background: 'rgba(0, 0, 0, 0.4)',
+                                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                                  overflowX: 'auto',
+                                  fontSize: '11px',
+                                  lineHeight: '1.5',
+                                  color: '#e5e7eb',
+                                  fontFamily: 'monospace',
+                                  maxHeight: '300px',
+                                  overflowY: 'auto',
+                                }}
+                              >
+                                {JSON.stringify(delivery.payload, null, 2)}
+                              </pre>
+                            </div>
+
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: '13px',
+                                  fontWeight: '600',
+                                  color: '#9ca3af',
+                                  marginBottom: '8px',
+                                }}
+                              >
+                                Response
+                              </div>
+                              <pre
+                                style={{
+                                  padding: '12px',
+                                  borderRadius: '8px',
+                                  background: 'rgba(0, 0, 0, 0.4)',
+                                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                                  overflowX: 'auto',
+                                  fontSize: '11px',
+                                  lineHeight: '1.5',
+                                  color: '#e5e7eb',
+                                  fontFamily: 'monospace',
+                                }}
+                              >
+                                {JSON.stringify(delivery.response, null, 2)}
+                              </pre>
+                            </div>
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+
+                {/* Pagination Controls - Fixed at bottom */}
+                {totalPages > 1 && (
+                  <div
+                    style={{
+                      flexShrink: 0,
+                      marginTop: '20px',
+                      paddingTop: '20px',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '13px', color: '#9ca3af' }}>Rows per page:</span>
+                      <CustomSelect
+                        value={pageSize.toString()}
+                        onChange={(value) => {
+                          setPageSize(Number(value))
+                          setCurrentPage(1)
+                        }}
+                        options={[
+                          { value: '10', label: '10' },
+                          { value: '25', label: '25' },
+                          { value: '50', label: '50' },
+                          { value: '100', label: '100' },
+                        ]}
+                        accentColor="#3b82f6"
+                        minWidth="80px"
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '13px', color: '#9ca3af' }}>
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: '6px',
+                            background:
+                              currentPage === 1
+                                ? 'rgba(255, 255, 255, 0.02)'
+                                : 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: currentPage === 1 ? '#4b5563' : '#9ca3af',
+                            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <ChevronLeft style={{ width: '16px', height: '16px' }} />
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: '6px',
+                            background:
+                              currentPage === totalPages
+                                ? 'rgba(255, 255, 255, 0.02)'
+                                : 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: currentPage === totalPages ? '#4b5563' : '#9ca3af',
+                            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <ChevronRight style={{ width: '16px', height: '16px' }} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Events Tab */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'events' && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              style={{
-                background:
-                  'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                borderRadius: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                padding: '32px',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: 0,
-              }}
+              key="events"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
             >
-              {/* Header Section - Fixed */}
-              <div style={{ flexShrink: 0, marginBottom: '20px' }}>
+              {/* Available Events */}
+              <div
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '32px',
+                  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minHeight: 0,
+                }}
+              >
                 <h2
                   style={{
                     fontSize: '20px',
                     fontWeight: 'bold',
                     color: 'white',
                     marginBottom: '16px',
+                    flexShrink: 0,
                   }}
                 >
-                  Recent Deliveries
+                  Available Events
                 </h2>
 
                 {/* Search and Filters */}
@@ -1675,12 +2415,14 @@ export default function WebhooksPage() {
                     alignItems: 'center',
                     gap: '12px',
                     flexWrap: 'wrap',
+                    marginBottom: '20px',
+                    flexShrink: 0,
                     position: 'relative',
                     zIndex: 100,
                   }}
                 >
                   {/* Search Bar */}
-                  <div style={{ position: 'relative', flex: '0 0 250px' }}>
+                  <div style={{ position: 'relative', flex: '0 0 300px' }}>
                     <Search
                       style={{
                         position: 'absolute',
@@ -1695,12 +2437,9 @@ export default function WebhooksPage() {
                     />
                     <input
                       type="text"
-                      placeholder="Search by event or webhook..."
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value)
-                        setCurrentPage(1)
-                      }}
+                      placeholder="Search events..."
+                      value={eventSearchQuery}
+                      onChange={(e) => setEventSearchQuery(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '11px 14px 11px 40px',
@@ -1721,1325 +2460,636 @@ export default function WebhooksPage() {
                     />
                   </div>
 
-                  {/* App Filter */}
-                  <div style={{ flex: '0 0 180px' }}>
+                  {/* Category Filter */}
+                  <div style={{ flex: '0 0 200px' }}>
                     <CustomSelect
-                      value={appFilter}
-                      onChange={(value) => {
-                        setAppFilter(value)
-                        setCurrentPage(1)
-                      }}
+                      value={eventCategoryFilter}
+                      onChange={setEventCategoryFilter}
                       options={[
-                        { value: 'all', label: 'All Apps' },
-                        ...uniqueApps.map((app) => ({ value: app!, label: app! })),
+                        { value: 'all', label: 'All Categories' },
+                        ...eventCategories.map((cat) => ({ value: cat, label: cat })),
                       ]}
-                      placeholder="Filter by App"
+                      placeholder="Category"
                     />
                   </div>
 
-                  {/* Date Range Filter */}
-                  <div style={{ flex: '0 0 180px' }}>
-                    <CustomSelect
-                      value={dateRangeFilter}
-                      onChange={(value) => {
-                        setDateRangeFilter(value as any)
-                        setCurrentPage(1)
-                      }}
-                      options={[
-                        { value: 'all', label: 'All Time' },
-                        { value: 'today', label: 'Today' },
-                        { value: 'week', label: 'Last 7 Days' },
-                        { value: 'month', label: 'Last 30 Days' },
-                        { value: 'custom', label: 'Custom Range' },
-                      ]}
-                      placeholder="Date Range"
-                    />
-                  </div>
-
-                  {/* Time Filter */}
-                  <div style={{ flex: '0 0 220px' }}>
-                    <CustomSelect
-                      value={timeFilter}
-                      onChange={(value) => {
-                        setTimeFilter(value)
-                        setCurrentPage(1)
-                      }}
-                      options={[
-                        { value: 'all', label: 'All Day' },
-                        { value: 'morning', label: 'Morning (12am-12pm)' },
-                        { value: 'afternoon', label: 'Afternoon (12pm-5pm)' },
-                        { value: 'evening', label: 'Evening (5pm-9pm)' },
-                        { value: 'night', label: 'Night (9pm-12am)' },
-                        { value: 'custom', label: 'Custom Time Range' },
-                      ]}
-                      placeholder="Time of Day"
-                    />
-                  </div>
-
-                  {/* Status Filter Buttons */}
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {[
-                      { key: 'all', label: 'All' },
-                      { key: 'success', label: 'Success' },
-                      { key: 'failed', label: 'Failed' },
-                    ].map((filter) => (
-                      <button
-                        key={filter.key}
-                        onClick={() => {
-                          setStatusFilter(filter.key as any)
-                          setCurrentPage(1)
-                        }}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          background:
-                            statusFilter === filter.key
-                              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
-                              : 'rgba(255, 255, 255, 0.05)',
-                          border:
-                            statusFilter === filter.key
-                              ? '1px solid rgba(16, 185, 129, 0.4)'
-                              : '1px solid rgba(255, 255, 255, 0.1)',
-                          color: statusFilter === filter.key ? '#10b981' : '#9ca3af',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (statusFilter !== filter.key) {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (statusFilter !== filter.key) {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                          }
-                        }}
-                      >
-                        {filter.label}
-                      </button>
-                    ))}
+                  {/* Results Count */}
+                  <div style={{ fontSize: '13px', color: '#6b7280', marginLeft: 'auto' }}>
+                    {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
                   </div>
                 </div>
 
-                {/* Custom Date Range Inputs */}
-                {dateRangeFilter === 'custom' && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: '12px',
-                      marginTop: '12px',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div style={{ fontSize: '13px', color: '#9ca3af' }}>Custom Range:</div>
-                    <input
-                      type="date"
-                      value={customStartDate}
-                      onChange={(e) => setCustomStartDate(e.target.value)}
-                      style={{
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: 'white',
-                        fontSize: '13px',
-                        outline: 'none',
-                      }}
-                    />
-                    <div style={{ fontSize: '13px', color: '#6b7280' }}>to</div>
-                    <input
-                      type="date"
-                      value={customEndDate}
-                      onChange={(e) => setCustomEndDate(e.target.value)}
-                      style={{
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: 'white',
-                        fontSize: '13px',
-                        outline: 'none',
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* Custom Time Range Inputs */}
-                {timeFilter === 'custom' && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: '12px',
-                      marginTop: '12px',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div style={{ fontSize: '13px', color: '#9ca3af' }}>Custom Time:</div>
-                    <input
-                      type="time"
-                      value={customStartTime}
-                      onChange={(e) => setCustomStartTime(e.target.value)}
-                      style={{
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: 'white',
-                        fontSize: '13px',
-                        outline: 'none',
-                      }}
-                    />
-                    <div style={{ fontSize: '13px', color: '#6b7280' }}>to</div>
-                    <input
-                      type="time"
-                      value={customEndTime}
-                      onChange={(e) => setCustomEndTime(e.target.value)}
-                      style={{
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: 'white',
-                        fontSize: '13px',
-                        outline: 'none',
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* Results Count */}
-                <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px' }}>
-                  Showing {paginatedDeliveries.length} of {filteredDeliveries.length} deliveries
-                </div>
-              </div>
-
-              {/* Deliveries List - Scrollable */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                  flex: '1 1 auto',
-                  minHeight: 0,
-                  overflowY: 'auto',
-                  paddingRight: '4px',
-                }}
-              >
-                {paginatedDeliveries.length === 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{
-                      padding: '48px 24px',
-                      textAlign: 'center',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
-                  >
-                    <AlertCircle
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        color: '#6b7280',
-                        margin: '0 auto 16px',
-                        opacity: 0.5,
-                      }}
-                    />
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '16px',
+                    flex: '1 1 auto',
+                    minHeight: 0,
+                    overflowY: 'auto',
+                    paddingRight: '4px',
+                  }}
+                >
+                  {filteredEvents.length === 0 ? (
                     <div
                       style={{
-                        fontSize: '15px',
-                        fontWeight: '500',
-                        color: '#9ca3af',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      No deliveries found
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                      {searchQuery || statusFilter !== 'all'
-                        ? 'Try adjusting your filters or search query'
-                        : 'Webhook deliveries will appear here'}
-                    </div>
-                  </motion.div>
-                ) : (
-                  paginatedDeliveries.map((delivery, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.03 }}
-                      style={{
+                        padding: '48px 24px',
+                        textAlign: 'center',
+                        background: 'rgba(255, 255, 255, 0.02)',
                         borderRadius: '12px',
-                        background: 'rgba(255, 255, 255, 0.03)',
                         border: '1px solid rgba(255, 255, 255, 0.08)',
-                        overflow: 'hidden',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
                       }}
                     >
-                      {/* Clickable Header */}
-                      <div
-                        onClick={() => setExpandedDelivery(expandedDelivery === i ? null : i)}
+                      <AlertCircle
                         style={{
-                          padding: '16px 18px',
-                          cursor: 'pointer',
-                          transition: 'background 0.15s ease',
+                          width: '48px',
+                          height: '48px',
+                          color: '#6b7280',
+                          margin: '0 auto 16px',
+                          opacity: 0.5,
                         }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)')
-                        }
-                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      />
+                      <div
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: '500',
+                          color: '#9ca3af',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        No events found
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                        Try adjusting your filters or search query
+                      </div>
+                    </div>
+                  ) : (
+                    filteredEvents.map((event, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          padding: '16px',
+                          borderRadius: '10px',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                        }}
                       >
                         <div
                           style={{
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'flex-start',
-                            marginBottom: '10px',
-                          }}
-                        >
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}
-                          >
-                            <span
-                              style={{
-                                fontSize: '14px',
-                                color: 'white',
-                                fontWeight: '600',
-                                fontFamily: 'monospace',
-                              }}
-                            >
-                              {delivery.event}
-                            </span>
-                            <span
-                              style={{
-                                padding: '4px 10px',
-                                borderRadius: '6px',
-                                background:
-                                  delivery.status === 'success'
-                                    ? 'rgba(16, 185, 129, 0.15)'
-                                    : 'rgba(239, 68, 68, 0.15)',
-                                border:
-                                  delivery.status === 'success'
-                                    ? '1px solid rgba(16, 185, 129, 0.3)'
-                                    : '1px solid rgba(239, 68, 68, 0.3)',
-                                color: delivery.status === 'success' ? '#10b981' : '#ef4444',
-                                fontSize: '11px',
-                                fontWeight: '700',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                              }}
-                            >
-                              {delivery.statusCode}
-                            </span>
-                          </div>
-                          {expandedDelivery === i ? (
-                            <ChevronUp
-                              style={{
-                                width: '18px',
-                                height: '18px',
-                                color: '#9ca3af',
-                                flexShrink: 0,
-                              }}
-                            />
-                          ) : (
-                            <ChevronDown
-                              style={{
-                                width: '18px',
-                                height: '18px',
-                                color: '#9ca3af',
-                                flexShrink: 0,
-                              }}
-                            />
-                          )}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: '13px',
-                            color: '#9ca3af',
                             marginBottom: '6px',
-                            fontWeight: '500',
                           }}
                         >
-                          {delivery.webhook}
+                          <h3
+                            style={{
+                              fontSize: '14px',
+                              fontWeight: '600',
+                              color: '#10b981',
+                              fontFamily: 'monospace',
+                            }}
+                          >
+                            {event.name}
+                          </h3>
+                          <span
+                            style={{
+                              padding: '4px 10px',
+                              borderRadius: '6px',
+                              background: 'rgba(59, 130, 246, 0.15)',
+                              border: '1px solid rgba(59, 130, 246, 0.3)',
+                              color: '#3b82f6',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                            }}
+                          >
+                            {event.category}
+                          </span>
                         </div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            gap: '12px',
-                            fontSize: '12px',
-                            color: '#6b7280',
-                          }}
-                        >
-                          <span>{delivery.timestamp}</span>
-                          <span style={{ opacity: 0.5 }}>•</span>
-                          <span>{delivery.duration}</span>
-                        </div>
-                      </div>{' '}
-                      {/* Expanded Payload View */}
-                      {expandedDelivery === i && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          style={{
-                            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-                            padding: '16px',
-                            background: 'rgba(0, 0, 0, 0.2)',
-                          }}
-                        >
-                          <div style={{ marginBottom: '16px' }}>
-                            <div
-                              style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '8px',
-                              }}
-                            >
-                              <span
-                                style={{ fontSize: '13px', fontWeight: '600', color: '#9ca3af' }}
-                              >
-                                Request Payload
-                              </span>
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    retryWebhook(`delivery-${i}`)
-                                  }}
-                                  disabled={retrying === `delivery-${i}`}
-                                  style={{
-                                    padding: '4px 8px',
-                                    borderRadius: '6px',
-                                    background:
-                                      retrying === `delivery-${i}`
-                                        ? 'rgba(59, 130, 246, 0.2)'
-                                        : delivery.status === 'failed'
-                                        ? 'rgba(239, 68, 68, 0.15)'
-                                        : 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    color:
-                                      retrying === `delivery-${i}`
-                                        ? '#3b82f6'
-                                        : delivery.status === 'failed'
-                                        ? '#ef4444'
-                                        : '#9ca3af',
-                                    cursor:
-                                      retrying === `delivery-${i}` ? 'not-allowed' : 'pointer',
-                                    fontSize: '11px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    opacity: retrying === `delivery-${i}` ? 0.7 : 1,
-                                    transition: 'all 0.2s ease',
-                                  }}
-                                >
-                                  <RotateCcw
-                                    style={{
-                                      width: '12px',
-                                      height: '12px',
-                                      animation:
-                                        retrying === `delivery-${i}`
-                                          ? 'spin 1s linear infinite'
-                                          : 'none',
-                                    }}
-                                  />
-                                  {retrying === `delivery-${i}` ? 'Retrying...' : 'Retry'}
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    copyToClipboard(
-                                      JSON.stringify(delivery.payload, null, 2),
-                                      `delivery-${i}`,
-                                    )
-                                  }}
-                                  style={{
-                                    padding: '4px 8px',
-                                    borderRadius: '6px',
-                                    background:
-                                      copied === `delivery-${i}`
-                                        ? 'rgba(16, 185, 129, 0.2)'
-                                        : 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    color: copied === `delivery-${i}` ? '#10b981' : '#9ca3af',
-                                    cursor: 'pointer',
-                                    fontSize: '11px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                  }}
-                                >
-                                  {copied === `delivery-${i}` ? (
-                                    <>
-                                      <Check style={{ width: '12px', height: '12px' }} />
-                                      Copied
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Copy style={{ width: '12px', height: '12px' }} />
-                                      Copy
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                            <pre
-                              style={{
-                                padding: '12px',
-                                borderRadius: '8px',
-                                background: 'rgba(0, 0, 0, 0.4)',
-                                border: '1px solid rgba(255, 255, 255, 0.05)',
-                                overflowX: 'auto',
-                                fontSize: '11px',
-                                lineHeight: '1.5',
-                                color: '#e5e7eb',
-                                fontFamily: 'monospace',
-                                maxHeight: '300px',
-                                overflowY: 'auto',
-                              }}
-                            >
-                              {JSON.stringify(delivery.payload, null, 2)}
-                            </pre>
-                          </div>
-
-                          <div>
-                            <div
-                              style={{
-                                fontSize: '13px',
-                                fontWeight: '600',
-                                color: '#9ca3af',
-                                marginBottom: '8px',
-                              }}
-                            >
-                              Response
-                            </div>
-                            <pre
-                              style={{
-                                padding: '12px',
-                                borderRadius: '8px',
-                                background: 'rgba(0, 0, 0, 0.4)',
-                                border: '1px solid rgba(255, 255, 255, 0.05)',
-                                overflowX: 'auto',
-                                fontSize: '11px',
-                                lineHeight: '1.5',
-                                color: '#e5e7eb',
-                                fontFamily: 'monospace',
-                              }}
-                            >
-                              {JSON.stringify(delivery.response, null, 2)}
-                            </pre>
-                          </div>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  ))
-                )}
+                        <p style={{ fontSize: '13px', color: '#9ca3af', lineHeight: '1.5' }}>
+                          {event.desc}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-              {/* Pagination Controls - Fixed at bottom */}
-              {totalPages > 1 && (
-                <div
+        {/* Examples Tab */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'examples' && (
+            <motion.div
+              key="examples"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              {/* Webhook Payload Examples */}
+              <div
+                style={{
+                  marginTop: '32px',
+                  background:
+                    'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '32px',
+                  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                }}
+              >
+                <h2
                   style={{
-                    flexShrink: 0,
-                    marginTop: '20px',
-                    paddingTop: '20px',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    marginBottom: '24px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '13px', color: '#9ca3af' }}>Rows per page:</span>
-                    <CustomSelect
-                      value={pageSize.toString()}
-                      onChange={(value) => {
-                        setPageSize(Number(value))
-                        setCurrentPage(1)
-                      }}
-                      options={[
-                        { value: '10', label: '10' },
-                        { value: '25', label: '25' },
-                        { value: '50', label: '50' },
-                        { value: '100', label: '100' },
-                      ]}
-                      accentColor="#3b82f6"
-                      minWidth="80px"
-                    />
-                  </div>
+                  Webhook Payload Examples
+                </h2>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '13px', color: '#9ca3af' }}>
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                        style={{
-                          padding: '6px 10px',
-                          borderRadius: '6px',
-                          background:
-                            currentPage === 1
-                              ? 'rgba(255, 255, 255, 0.02)'
-                              : 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          color: currentPage === 1 ? '#4b5563' : '#9ca3af',
-                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <ChevronLeft style={{ width: '16px', height: '16px' }} />
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                        style={{
-                          padding: '6px 10px',
-                          borderRadius: '6px',
-                          background:
-                            currentPage === totalPages
-                              ? 'rgba(255, 255, 255, 0.02)'
-                              : 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          color: currentPage === totalPages ? '#4b5563' : '#9ca3af',
-                          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <ChevronRight style={{ width: '16px', height: '16px' }} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </>
-        )}
-
-        {/* Events Tab */}
-        {activeTab === 'events' && (
-          <>
-            {/* Available Events */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              style={{
-                background:
-                  'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                borderRadius: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                padding: '32px',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: 0,
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  marginBottom: '16px',
-                  flexShrink: 0,
-                }}
-              >
-                Available Events
-              </h2>
-
-              {/* Search and Filters */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  flexWrap: 'wrap',
-                  marginBottom: '20px',
-                  flexShrink: 0,
-                  position: 'relative',
-                  zIndex: 100,
-                }}
-              >
-                {/* Search Bar */}
-                <div style={{ position: 'relative', flex: '0 0 300px' }}>
-                  <Search
-                    style={{
-                      position: 'absolute',
-                      left: '14px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: '16px',
-                      height: '16px',
-                      color: '#9ca3af',
-                      pointerEvents: 'none',
-                    }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search events..."
-                    value={eventSearchQuery}
-                    onChange={(e) => setEventSearchQuery(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '11px 14px 11px 40px',
-                      borderRadius: '10px',
-                      background: 'rgba(0, 0, 0, 0.3)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: 'white',
-                      fontSize: '14px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s ease',
-                    }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)')}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)')}
-                  />
-                </div>
-
-                {/* Category Filter */}
-                <div style={{ flex: '0 0 200px' }}>
-                  <CustomSelect
-                    value={eventCategoryFilter}
-                    onChange={setEventCategoryFilter}
-                    options={[
-                      { value: 'all', label: 'All Categories' },
-                      ...eventCategories.map((cat) => ({ value: cat, label: cat })),
-                    ]}
-                    placeholder="Category"
-                  />
-                </div>
-
-                {/* Results Count */}
-                <div style={{ fontSize: '13px', color: '#6b7280', marginLeft: 'auto' }}>
-                  {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px',
-                  flex: '1 1 auto',
-                  minHeight: 0,
-                  overflowY: 'auto',
-                  paddingRight: '4px',
-                }}
-              >
-                {filteredEvents.length === 0 ? (
-                  <div
-                    style={{
-                      padding: '48px 24px',
-                      textAlign: 'center',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
-                  >
-                    <AlertCircle
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        color: '#6b7280',
-                        margin: '0 auto 16px',
-                        opacity: 0.5,
-                      }}
-                    />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  {/* Forecast Generated Payload */}
+                  <div>
                     <div
                       style={{
-                        fontSize: '15px',
-                        fontWeight: '500',
-                        color: '#9ca3af',
-                        marginBottom: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '12px',
                       }}
                     >
-                      No events found
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                      Try adjusting your filters or search query
-                    </div>
-                  </div>
-                ) : (
-                  filteredEvents.map((event, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        padding: '16px',
-                        borderRadius: '10px',
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                      }}
-                    >
-                      <div
+                      <h3
                         style={{
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          color: 'white',
                           display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'flex-start',
-                          marginBottom: '6px',
+                          alignItems: 'center',
+                          gap: '8px',
                         }}
                       >
-                        <h3
-                          style={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            color: '#10b981',
-                            fontFamily: 'monospace',
-                          }}
-                        >
-                          {event.name}
-                        </h3>
                         <span
                           style={{
                             padding: '4px 10px',
                             borderRadius: '6px',
-                            background: 'rgba(59, 130, 246, 0.15)',
+                            background: 'rgba(59, 130, 246, 0.2)',
                             border: '1px solid rgba(59, 130, 246, 0.3)',
                             color: '#3b82f6',
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
+                            fontSize: '13px',
+                            fontFamily: 'monospace',
                           }}
                         >
-                          {event.category}
+                          forecast.generated
+                        </span>
+                      </h3>
+                      <button
+                        onClick={() =>
+                          copyToClipboard(
+                            JSON.stringify(
+                              {
+                                event: 'forecast.generated',
+                                timestamp: '2025-10-24T14:32:15.234Z',
+                                data: {
+                                  user_id: 'usr_1234567890',
+                                  forecast_id: 'fct_abc123def456',
+                                  persona_type: 'impulsive_spender',
+                                  confidence_score: 0.87,
+                                  predicted_behavior: {
+                                    spending_pattern: 'high_frequency',
+                                    risk_level: 'medium',
+                                    next_purchase_window: '3-5 days',
+                                  },
+                                  f_scores: {
+                                    financial_stability: 0.72,
+                                    spending_consistency: 0.65,
+                                    debt_management: 0.81,
+                                  },
+                                },
+                              },
+                              null,
+                              2,
+                            ),
+                            'forecast',
+                          )
+                        }
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          background:
+                            copied === 'forecast'
+                              ? 'rgba(16, 185, 129, 0.2)'
+                              : 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: copied === 'forecast' ? '#10b981' : '#9ca3af',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        {copied === 'forecast' ? (
+                          <>
+                            <Check style={{ width: '14px', height: '14px' }} />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy style={{ width: '14px', height: '14px' }} />
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <pre
+                      style={{
+                        padding: '20px',
+                        borderRadius: '12px',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        overflowX: 'auto',
+                        fontSize: '13px',
+                        lineHeight: '1.6',
+                        color: '#e5e7eb',
+                        fontFamily: 'monospace',
+                      }}
+                    >
+                      {JSON.stringify(
+                        {
+                          event: 'forecast.generated',
+                          timestamp: '2025-10-24T14:32:15.234Z',
+                          data: {
+                            user_id: 'usr_1234567890',
+                            forecast_id: 'fct_abc123def456',
+                            persona_type: 'impulsive_spender',
+                            confidence_score: 0.87,
+                            predicted_behavior: {
+                              spending_pattern: 'high_frequency',
+                              risk_level: 'medium',
+                              next_purchase_window: '3-5 days',
+                            },
+                            f_scores: {
+                              financial_stability: 0.72,
+                              spending_consistency: 0.65,
+                              debt_management: 0.81,
+                            },
+                          },
+                        },
+                        null,
+                        2,
+                      )}
+                    </pre>
+                  </div>
+
+                  {/* Persona Matched Payload */}
+                  <div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      <h3
+                        style={{
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            color: '#3b82f6',
+                            fontSize: '13px',
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          persona.matched
+                        </span>
+                      </h3>
+                      <button
+                        onClick={() =>
+                          copyToClipboard(
+                            JSON.stringify(
+                              {
+                                event: 'persona.matched',
+                                timestamp: '2025-10-24T14:30:42.123Z',
+                                data: {
+                                  user_id: 'usr_9876543210',
+                                  match_id: 'mtch_xyz789ghi012',
+                                  persona: 'conservative_saver',
+                                  match_score: 0.92,
+                                  characteristics: {
+                                    saving_rate: 'high',
+                                    investment_preference: 'low_risk',
+                                    spending_discipline: 'high',
+                                  },
+                                  recommendations: [
+                                    'Fixed deposit accounts',
+                                    'Government bonds',
+                                    'Savings goals tracker',
+                                  ],
+                                },
+                              },
+                              null,
+                              2,
+                            ),
+                            'persona',
+                          )
+                        }
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          background:
+                            copied === 'persona'
+                              ? 'rgba(16, 185, 129, 0.2)'
+                              : 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: copied === 'persona' ? '#10b981' : '#9ca3af',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        {copied === 'persona' ? (
+                          <>
+                            <Check style={{ width: '14px', height: '14px' }} />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy style={{ width: '14px', height: '14px' }} />
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <pre
+                      style={{
+                        padding: '20px',
+                        borderRadius: '12px',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        overflowX: 'auto',
+                        fontSize: '13px',
+                        lineHeight: '1.6',
+                        color: '#e5e7eb',
+                        fontFamily: 'monospace',
+                      }}
+                    >
+                      {JSON.stringify(
+                        {
+                          event: 'persona.matched',
+                          timestamp: '2025-10-24T14:30:42.123Z',
+                          data: {
+                            user_id: 'usr_9876543210',
+                            match_id: 'mtch_xyz789ghi012',
+                            persona: 'conservative_saver',
+                            match_score: 0.92,
+                            characteristics: {
+                              saving_rate: 'high',
+                              investment_preference: 'low_risk',
+                              spending_discipline: 'high',
+                            },
+                            recommendations: [
+                              'Fixed deposit accounts',
+                              'Government bonds',
+                              'Savings goals tracker',
+                            ],
+                          },
+                        },
+                        null,
+                        2,
+                      )}
+                    </pre>
+                  </div>
+
+                  {/* Anomaly Detected Payload */}
+                  <div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      <h3
+                        style={{
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            background: 'rgba(239, 68, 68, 0.2)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            color: '#ef4444',
+                            fontSize: '13px',
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          anomaly.detected
+                        </span>
+                      </h3>
+                      <button
+                        onClick={() =>
+                          copyToClipboard(
+                            JSON.stringify(
+                              {
+                                event: 'anomaly.detected',
+                                timestamp: '2025-10-24T14:28:18.987Z',
+                                data: {
+                                  user_id: 'usr_5555666777',
+                                  anomaly_id: 'anom_unusual_001',
+                                  type: 'unusual_spending_pattern',
+                                  severity: 'high',
+                                  details: {
+                                    transaction_amount: 25000,
+                                    average_transaction: 1500,
+                                    deviation_percentage: 1567,
+                                    location: 'Lagos, Nigeria',
+                                    merchant_category: 'Electronics',
+                                  },
+                                  risk_indicators: [
+                                    'Amount 15x higher than average',
+                                    'First-time merchant',
+                                    'Unusual time of transaction',
+                                  ],
+                                },
+                              },
+                              null,
+                              2,
+                            ),
+                            'anomaly',
+                          )
+                        }
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          background:
+                            copied === 'anomaly'
+                              ? 'rgba(16, 185, 129, 0.2)'
+                              : 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: copied === 'anomaly' ? '#10b981' : '#9ca3af',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        {copied === 'anomaly' ? (
+                          <>
+                            <Check style={{ width: '14px', height: '14px' }} />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy style={{ width: '14px', height: '14px' }} />
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <pre
+                      style={{
+                        padding: '20px',
+                        borderRadius: '12px',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        overflowX: 'auto',
+                        fontSize: '13px',
+                        lineHeight: '1.6',
+                        color: '#e5e7eb',
+                        fontFamily: 'monospace',
+                      }}
+                    >
+                      {JSON.stringify(
+                        {
+                          event: 'anomaly.detected',
+                          timestamp: '2025-10-24T14:28:18.987Z',
+                          data: {
+                            user_id: 'usr_5555666777',
+                            anomaly_id: 'anom_unusual_001',
+                            type: 'unusual_spending_pattern',
+                            severity: 'high',
+                            details: {
+                              transaction_amount: 25000,
+                              average_transaction: 1500,
+                              deviation_percentage: 1567,
+                              location: 'Lagos, Nigeria',
+                              merchant_category: 'Electronics',
+                            },
+                            risk_indicators: [
+                              'Amount 15x higher than average',
+                              'First-time merchant',
+                              'Unusual time of transaction',
+                            ],
+                          },
+                        },
+                        null,
+                        2,
+                      )}
+                    </pre>
+                  </div>
+
+                  {/* Webhook Headers Info */}
+                  <div
+                    style={{
+                      marginTop: '16px',
+                      padding: '20px',
+                      borderRadius: '12px',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      border: '1px solid rgba(59, 130, 246, 0.2)',
+                    }}
+                  >
+                    <h4
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '600',
+                        color: '#3b82f6',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      Webhook Headers
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
+                        <code
+                          style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}
+                        >
+                          Content-Type:
+                        </code>
+                        <span style={{ color: 'white', fontFamily: 'monospace' }}>
+                          application/json
                         </span>
                       </div>
-                      <p style={{ fontSize: '13px', color: '#9ca3af', lineHeight: '1.5' }}>
-                        {event.desc}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-
-        {/* Examples Tab */}
-        {activeTab === 'examples' && (
-          <>
-            {/* Webhook Payload Examples */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              style={{
-                marginTop: '32px',
-                background:
-                  'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                borderRadius: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                padding: '32px',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  marginBottom: '24px',
-                }}
-              >
-                Webhook Payload Examples
-              </h2>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                {/* Forecast Generated Payload */}
-                <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: '12px',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: '6px',
-                          background: 'rgba(59, 130, 246, 0.2)',
-                          border: '1px solid rgba(59, 130, 246, 0.3)',
-                          color: '#3b82f6',
-                          fontSize: '13px',
-                          fontFamily: 'monospace',
-                        }}
-                      >
-                        forecast.generated
-                      </span>
-                    </h3>
-                    <button
-                      onClick={() =>
-                        copyToClipboard(
-                          JSON.stringify(
-                            {
-                              event: 'forecast.generated',
-                              timestamp: '2025-10-24T14:32:15.234Z',
-                              data: {
-                                user_id: 'usr_1234567890',
-                                forecast_id: 'fct_abc123def456',
-                                persona_type: 'impulsive_spender',
-                                confidence_score: 0.87,
-                                predicted_behavior: {
-                                  spending_pattern: 'high_frequency',
-                                  risk_level: 'medium',
-                                  next_purchase_window: '3-5 days',
-                                },
-                                f_scores: {
-                                  financial_stability: 0.72,
-                                  spending_consistency: 0.65,
-                                  debt_management: 0.81,
-                                },
-                              },
-                            },
-                            null,
-                            2,
-                          ),
-                          'forecast',
-                        )
-                      }
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        background:
-                          copied === 'forecast'
-                            ? 'rgba(16, 185, 129, 0.2)'
-                            : 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: copied === 'forecast' ? '#10b981' : '#9ca3af',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      {copied === 'forecast' ? (
-                        <>
-                          <Check style={{ width: '14px', height: '14px' }} />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy style={{ width: '14px', height: '14px' }} />
-                          Copy
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <pre
-                    style={{
-                      padding: '20px',
-                      borderRadius: '12px',
-                      background: 'rgba(0, 0, 0, 0.4)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                      overflowX: 'auto',
-                      fontSize: '13px',
-                      lineHeight: '1.6',
-                      color: '#e5e7eb',
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {JSON.stringify(
-                      {
-                        event: 'forecast.generated',
-                        timestamp: '2025-10-24T14:32:15.234Z',
-                        data: {
-                          user_id: 'usr_1234567890',
-                          forecast_id: 'fct_abc123def456',
-                          persona_type: 'impulsive_spender',
-                          confidence_score: 0.87,
-                          predicted_behavior: {
-                            spending_pattern: 'high_frequency',
-                            risk_level: 'medium',
-                            next_purchase_window: '3-5 days',
-                          },
-                          f_scores: {
-                            financial_stability: 0.72,
-                            spending_consistency: 0.65,
-                            debt_management: 0.81,
-                          },
-                        },
-                      },
-                      null,
-                      2,
-                    )}
-                  </pre>
-                </div>
-
-                {/* Persona Matched Payload */}
-                <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: '12px',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: '6px',
-                          background: 'rgba(59, 130, 246, 0.2)',
-                          border: '1px solid rgba(59, 130, 246, 0.3)',
-                          color: '#3b82f6',
-                          fontSize: '13px',
-                          fontFamily: 'monospace',
-                        }}
-                      >
-                        persona.matched
-                      </span>
-                    </h3>
-                    <button
-                      onClick={() =>
-                        copyToClipboard(
-                          JSON.stringify(
-                            {
-                              event: 'persona.matched',
-                              timestamp: '2025-10-24T14:30:42.123Z',
-                              data: {
-                                user_id: 'usr_9876543210',
-                                match_id: 'mtch_xyz789ghi012',
-                                persona: 'conservative_saver',
-                                match_score: 0.92,
-                                characteristics: {
-                                  saving_rate: 'high',
-                                  investment_preference: 'low_risk',
-                                  spending_discipline: 'high',
-                                },
-                                recommendations: [
-                                  'Fixed deposit accounts',
-                                  'Government bonds',
-                                  'Savings goals tracker',
-                                ],
-                              },
-                            },
-                            null,
-                            2,
-                          ),
-                          'persona',
-                        )
-                      }
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        background:
-                          copied === 'persona'
-                            ? 'rgba(16, 185, 129, 0.2)'
-                            : 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: copied === 'persona' ? '#10b981' : '#9ca3af',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      {copied === 'persona' ? (
-                        <>
-                          <Check style={{ width: '14px', height: '14px' }} />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy style={{ width: '14px', height: '14px' }} />
-                          Copy
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <pre
-                    style={{
-                      padding: '20px',
-                      borderRadius: '12px',
-                      background: 'rgba(0, 0, 0, 0.4)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                      overflowX: 'auto',
-                      fontSize: '13px',
-                      lineHeight: '1.6',
-                      color: '#e5e7eb',
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {JSON.stringify(
-                      {
-                        event: 'persona.matched',
-                        timestamp: '2025-10-24T14:30:42.123Z',
-                        data: {
-                          user_id: 'usr_9876543210',
-                          match_id: 'mtch_xyz789ghi012',
-                          persona: 'conservative_saver',
-                          match_score: 0.92,
-                          characteristics: {
-                            saving_rate: 'high',
-                            investment_preference: 'low_risk',
-                            spending_discipline: 'high',
-                          },
-                          recommendations: [
-                            'Fixed deposit accounts',
-                            'Government bonds',
-                            'Savings goals tracker',
-                          ],
-                        },
-                      },
-                      null,
-                      2,
-                    )}
-                  </pre>
-                </div>
-
-                {/* Anomaly Detected Payload */}
-                <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: '12px',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: '6px',
-                          background: 'rgba(239, 68, 68, 0.2)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          color: '#ef4444',
-                          fontSize: '13px',
-                          fontFamily: 'monospace',
-                        }}
-                      >
-                        anomaly.detected
-                      </span>
-                    </h3>
-                    <button
-                      onClick={() =>
-                        copyToClipboard(
-                          JSON.stringify(
-                            {
-                              event: 'anomaly.detected',
-                              timestamp: '2025-10-24T14:28:18.987Z',
-                              data: {
-                                user_id: 'usr_5555666777',
-                                anomaly_id: 'anom_unusual_001',
-                                type: 'unusual_spending_pattern',
-                                severity: 'high',
-                                details: {
-                                  transaction_amount: 25000,
-                                  average_transaction: 1500,
-                                  deviation_percentage: 1567,
-                                  location: 'Lagos, Nigeria',
-                                  merchant_category: 'Electronics',
-                                },
-                                risk_indicators: [
-                                  'Amount 15x higher than average',
-                                  'First-time merchant',
-                                  'Unusual time of transaction',
-                                ],
-                              },
-                            },
-                            null,
-                            2,
-                          ),
-                          'anomaly',
-                        )
-                      }
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        background:
-                          copied === 'anomaly'
-                            ? 'rgba(16, 185, 129, 0.2)'
-                            : 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: copied === 'anomaly' ? '#10b981' : '#9ca3af',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      {copied === 'anomaly' ? (
-                        <>
-                          <Check style={{ width: '14px', height: '14px' }} />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy style={{ width: '14px', height: '14px' }} />
-                          Copy
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <pre
-                    style={{
-                      padding: '20px',
-                      borderRadius: '12px',
-                      background: 'rgba(0, 0, 0, 0.4)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                      overflowX: 'auto',
-                      fontSize: '13px',
-                      lineHeight: '1.6',
-                      color: '#e5e7eb',
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {JSON.stringify(
-                      {
-                        event: 'anomaly.detected',
-                        timestamp: '2025-10-24T14:28:18.987Z',
-                        data: {
-                          user_id: 'usr_5555666777',
-                          anomaly_id: 'anom_unusual_001',
-                          type: 'unusual_spending_pattern',
-                          severity: 'high',
-                          details: {
-                            transaction_amount: 25000,
-                            average_transaction: 1500,
-                            deviation_percentage: 1567,
-                            location: 'Lagos, Nigeria',
-                            merchant_category: 'Electronics',
-                          },
-                          risk_indicators: [
-                            'Amount 15x higher than average',
-                            'First-time merchant',
-                            'Unusual time of transaction',
-                          ],
-                        },
-                      },
-                      null,
-                      2,
-                    )}
-                  </pre>
-                </div>
-
-                {/* Webhook Headers Info */}
-                <div
-                  style={{
-                    marginTop: '16px',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                  }}
-                >
-                  <h4
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: '600',
-                      color: '#3b82f6',
-                      marginBottom: '12px',
-                    }}
-                  >
-                    Webhook Headers
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
-                      <code
-                        style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}
-                      >
-                        Content-Type:
-                      </code>
-                      <span style={{ color: 'white', fontFamily: 'monospace' }}>
-                        application/json
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
-                      <code
-                        style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}
-                      >
-                        X-Sonaqor-Event:
-                      </code>
-                      <span style={{ color: 'white', fontFamily: 'monospace' }}>
-                        forecast.generated | persona.matched | anomaly.detected
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
-                      <code
-                        style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}
-                      >
-                        X-Sonaqor-Signature:
-                      </code>
-                      <span style={{ color: 'white', fontFamily: 'monospace' }}>
-                        sha256=&lt;HMAC signature&gt;
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
-                      <code
-                        style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}
-                      >
-                        X-Sonaqor-Delivery:
-                      </code>
-                      <span style={{ color: 'white', fontFamily: 'monospace' }}>
-                        &lt;unique delivery ID&gt;
-                      </span>
+                      <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
+                        <code
+                          style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}
+                        >
+                          X-Sonaqor-Event:
+                        </code>
+                        <span style={{ color: 'white', fontFamily: 'monospace' }}>
+                          forecast.generated | persona.matched | anomaly.detected
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
+                        <code
+                          style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}
+                        >
+                          X-Sonaqor-Signature:
+                        </code>
+                        <span style={{ color: 'white', fontFamily: 'monospace' }}>
+                          sha256=&lt;HMAC signature&gt;
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
+                        <code
+                          style={{ color: '#9ca3af', fontFamily: 'monospace', minWidth: '180px' }}
+                        >
+                          X-Sonaqor-Delivery:
+                        </code>
+                        <span style={{ color: 'white', fontFamily: 'monospace' }}>
+                          &lt;unique delivery ID&gt;
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </motion.div>
-          </>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* Create Webhook Modal */}
         <AnimatePresence>

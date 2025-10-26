@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import DashboardLayout from '@/components/DashboardLayout'
 import CustomSelect from '@/components/CustomSelect'
+import SkeletonCard from '@/components/SkeletonCard'
 import { getAPIKeysData, type APIKeysData, type APIKey } from '@/data/apiKeys'
 import { getProjectsData } from '@/data/projects'
 
@@ -350,7 +351,10 @@ function ApiKeysContent() {
             gap: '20px',
           }}
         >
-          {processedKeys.length > 0 &&
+          {loading ? (
+            <SkeletonCard variant="apiKey" count={3} />
+          ) : (
+            processedKeys.length > 0 &&
             processedKeys[0].keys.map((apiKey, index) => {
               const envColor =
                 apiKey.environment === 'Production'
@@ -615,7 +619,8 @@ function ApiKeysContent() {
                   </div>
                 </motion.div>
               )
-            })}
+            })
+          )}
         </div>
 
         {/* Usage Stats */}

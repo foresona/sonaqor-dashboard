@@ -8,19 +8,31 @@ interface ProtectedRouteProps {
   children: React.ReactNode
 }
 
+const spinKeyframes = `
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`
+
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { isAuthenticated, checkAuth, isLoading } = useAuthStore()
-  const [isChecking, setIsChecking] = useState(true)
+  const [isChecking, setIsChecking] = useState(false) // Start as false to avoid flash
 
   useEffect(() => {
     const verifyAuth = async () => {
+      // Only show checking if we're not already authenticated (from cache)
+      if (!isAuthenticated) {
+        setIsChecking(true)
+      }
       await checkAuth()
       setIsChecking(false)
     }
     verifyAuth()
-  }, [checkAuth])
+  }, [checkAuth, isAuthenticated])
 
   useEffect(() => {
     // Don't redirect if still checking or on login page
@@ -31,40 +43,35 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   }, [isAuthenticated, isChecking, router, pathname])
 
-  // Show loading state while checking authentication
-  if (isChecking || isLoading) {
+  // Show minimal loading only on first check, then show layout with content loading
+  if (isChecking) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              width: '60px',
-              height: '60px',
-              margin: '0 auto 20px',
-              border: '4px solid rgba(16, 185, 129, 0.2)',
-              borderTopColor: '#10b981',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-            }}
-          />
-          <p style={{ fontSize: '16px', color: '#94a3b8' }}>Loading...</p>
-          <style jsx>{`
-            @keyframes spin {
-              to {
-                transform: rotate(360deg);
-              }
-            }
-          `}</style>
+      <>
+        <style>{spinKeyframes}</style>
+        <div
+          style={{
+            minHeight: '100vh',
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                margin: '0 auto 16px',
+                border: '3px solid rgba(16, 185, 129, 0.2)',
+                borderTopColor: '#10b981',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+              }}
+            />
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
