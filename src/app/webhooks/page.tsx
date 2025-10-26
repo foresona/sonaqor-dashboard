@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  FileText,
   Filter,
   X,
   Send,
@@ -41,11 +42,17 @@ interface WebhookConfig {
 
 export default function WebhooksPage() {
   const [copied, setCopied] = useState<string | null>(null)
+  const [retrying, setRetrying] = useState<string | null>(null)
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
   const [expandedDelivery, setExpandedDelivery] = useState<number | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'failed'>('all')
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'configuration' | 'logs' | 'examples'>('configuration')
 
   // Webhook filtering
   const [webhookSearchQuery, setWebhookSearchQuery] = useState('')
@@ -706,6 +713,17 @@ export default function WebhooksPage() {
     setTimeout(() => setCopied(null), 2000)
   }
 
+  const retryWebhook = async (deliveryId: string) => {
+    setRetrying(deliveryId)
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setRetrying(null)
+    // Show success toast
+    setToastMessage('Webhook retry triggered successfully!')
+    setShowToast(true)
+    setTimeout(() => setShowToast(false), 3000)
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -729,6 +747,16 @@ export default function WebhooksPage() {
 
   return (
     <DashboardLayout>
+      <style jsx>{`
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
       <div style={{ padding: '40px', maxWidth: '1600px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
@@ -864,17 +892,59 @@ export default function WebhooksPage() {
           ))}
         </div>
 
-        {/* Webhooks List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          style={{ marginBottom: '32px' }}
+        {/* Tabs */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            marginBottom: '24px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
         >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
+          {[
+            { id: 'configuration', label: 'Configuration', icon: Webhook },
+            { id: 'logs', label: 'Logs & Usage', icon: Clock },
+            { id: 'examples', label: 'Examples', icon: FileText },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as 'configuration' | 'logs' | 'examples')}
+              style={{
+                padding: '12px 20px',
+                background: activeTab === tab.id ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                border: 'none',
+                borderBottom:
+                  activeTab === tab.id ? '2px solid #10b981' : '2px solid transparent',
+                color: activeTab === tab.id ? '#10b981' : '#9ca3af',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+              }}
+            >
+              <tab.icon style={{ width: '18px', height: '18px' }} />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Configuration Tab */}
+        {activeTab === 'configuration' && (
+          <>
+            {/* Webhooks List */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              style={{ marginBottom: '32px' }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: '20px',
               position: 'relative',
@@ -1249,7 +1319,12 @@ export default function WebhooksPage() {
             </div>
           )}
         </motion.div>
+        </>
+      )}
 
+      {/* Logs & Usage Tab */}
+      {activeTab === 'logs' && (
+        <>
         {/* Two Column Layout */}
         <div
           style={{
@@ -1574,42 +1649,88 @@ export default function WebhooksPage() {
                             <span style={{ fontSize: '13px', fontWeight: '600', color: '#9ca3af' }}>
                               Request Payload
                             </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                copyToClipboard(
-                                  JSON.stringify(delivery.payload, null, 2),
-                                  `delivery-${i}`,
-                                )
-                              }}
-                              style={{
-                                padding: '4px 8px',
-                                borderRadius: '6px',
-                                background:
-                                  copied === `delivery-${i}`
-                                    ? 'rgba(16, 185, 129, 0.2)'
-                                    : 'rgba(255, 255, 255, 0.05)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                color: copied === `delivery-${i}` ? '#10b981' : '#9ca3af',
-                                cursor: 'pointer',
-                                fontSize: '11px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                              }}
-                            >
-                              {copied === `delivery-${i}` ? (
-                                <>
-                                  <Check style={{ width: '12px', height: '12px' }} />
-                                  Copied
-                                </>
-                              ) : (
-                                <>
-                                  <Copy style={{ width: '12px', height: '12px' }} />
-                                  Copy
-                                </>
-                              )}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  retryWebhook(`delivery-${i}`)
+                                }}
+                                disabled={retrying === `delivery-${i}`}
+                                style={{
+                                  padding: '4px 8px',
+                                  borderRadius: '6px',
+                                  background:
+                                    retrying === `delivery-${i}`
+                                      ? 'rgba(59, 130, 246, 0.2)'
+                                      : delivery.status === 'failed'
+                                        ? 'rgba(239, 68, 68, 0.15)'
+                                        : 'rgba(255, 255, 255, 0.05)',
+                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                  color:
+                                    retrying === `delivery-${i}`
+                                      ? '#3b82f6'
+                                      : delivery.status === 'failed'
+                                        ? '#ef4444'
+                                        : '#9ca3af',
+                                  cursor:
+                                    retrying === `delivery-${i}` ? 'not-allowed' : 'pointer',
+                                  fontSize: '11px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  opacity: retrying === `delivery-${i}` ? 0.7 : 1,
+                                  transition: 'all 0.2s ease',
+                                }}
+                              >
+                                <RotateCcw
+                                  style={{
+                                    width: '12px',
+                                    height: '12px',
+                                    animation:
+                                      retrying === `delivery-${i}`
+                                        ? 'spin 1s linear infinite'
+                                        : 'none',
+                                  }}
+                                />
+                                {retrying === `delivery-${i}` ? 'Retrying...' : 'Retry'}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  copyToClipboard(
+                                    JSON.stringify(delivery.payload, null, 2),
+                                    `delivery-${i}`,
+                                  )
+                                }}
+                                style={{
+                                  padding: '4px 8px',
+                                  borderRadius: '6px',
+                                  background:
+                                    copied === `delivery-${i}`
+                                      ? 'rgba(16, 185, 129, 0.2)'
+                                      : 'rgba(255, 255, 255, 0.05)',
+                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                  color: copied === `delivery-${i}` ? '#10b981' : '#9ca3af',
+                                  cursor: 'pointer',
+                                  fontSize: '11px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                              >
+                                {copied === `delivery-${i}` ? (
+                                  <>
+                                    <Check style={{ width: '12px', height: '12px' }} />
+                                    Copied
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy style={{ width: '12px', height: '12px' }} />
+                                    Copy
+                                  </>
+                                )}
+                              </button>
+                            </div>
                           </div>
                           <pre
                             style={{
@@ -1815,7 +1936,12 @@ export default function WebhooksPage() {
             </div>
           </motion.div>
         </div>
+        </>
+      )}
 
+      {/* Examples Tab */}
+      {activeTab === 'examples' && (
+        <>
         {/* Webhook Payload Examples */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -2301,7 +2427,8 @@ export default function WebhooksPage() {
             </div>
           </div>
         </motion.div>
-      </div>
+        </>
+      )}
 
       {/* Create Webhook Modal */}
       <AnimatePresence>
@@ -3283,6 +3410,40 @@ export default function WebhooksPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            style={{
+              position: 'fixed',
+              bottom: '32px',
+              right: '32px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              borderRadius: '12px',
+              padding: '16px 24px',
+              boxShadow: '0 8px 32px rgba(16, 185, 129, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              zIndex: 10000,
+              maxWidth: '400px',
+            }}
+          >
+            <CheckCircle style={{ width: '20px', height: '20px', color: 'white' }} />
+            <span style={{ color: 'white', fontSize: '14px', fontWeight: '500' }}>
+              {toastMessage}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      </div>
     </DashboardLayout>
   )
 }
