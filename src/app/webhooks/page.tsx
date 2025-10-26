@@ -52,7 +52,7 @@ export default function WebhooksPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'failed'>('all')
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'configuration' | 'logs' | 'examples'>('configuration')
+  const [activeTab, setActiveTab] = useState<'configuration' | 'logs' | 'events' | 'examples'>('configuration')
 
   // Webhook filtering
   const [webhookSearchQuery, setWebhookSearchQuery] = useState('')
@@ -904,11 +904,12 @@ export default function WebhooksPage() {
           {[
             { id: 'configuration', label: 'Configuration', icon: Webhook },
             { id: 'logs', label: 'Logs & Usage', icon: Clock },
+            { id: 'events', label: 'Events', icon: Zap },
             { id: 'examples', label: 'Examples', icon: FileText },
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'configuration' | 'logs' | 'examples')}
+              onClick={() => setActiveTab(tab.id as 'configuration' | 'logs' | 'events' | 'examples')}
               style={{
                 padding: '12px 20px',
                 background: activeTab === tab.id ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
@@ -1325,118 +1326,40 @@ export default function WebhooksPage() {
       {/* Logs & Usage Tab */}
       {activeTab === 'logs' && (
         <>
-        {/* Two Column Layout */}
-        <div
+        {/* Recent Deliveries */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
-            gap: '24px',
+            background:
+              'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '32px',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
           }}
         >
-          {/* Available Events */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              padding: '32px',
-              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: 0,
-            }}
-          >
+          {/* Header Section - Fixed */}
+          <div style={{ flexShrink: 0, marginBottom: '20px' }}>
             <h2
               style={{
                 fontSize: '20px',
                 fontWeight: 'bold',
                 color: 'white',
-                marginBottom: '24px',
-                flexShrink: 0,
+                marginBottom: '16px',
               }}
             >
-              Available Events
+              Recent Deliveries
             </h2>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-                flex: '1 1 auto',
-                minHeight: 0,
-                overflowY: 'auto',
-                paddingRight: '4px',
-              }}
-            >
-              {availableEvents.map((event, i) => (
-                <div
-                  key={i}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#10b981',
-                      marginBottom: '6px',
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {event.name}
-                  </h3>
-                  <p style={{ fontSize: '13px', color: '#9ca3af', lineHeight: '1.5' }}>
-                    {event.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
 
-          {/* Recent Deliveries */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              padding: '32px',
-              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: 0,
-            }}
-          >
-            {/* Header Section - Fixed */}
-            <div style={{ flexShrink: 0, marginBottom: '20px' }}>
-              <h2
-                style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  marginBottom: '16px',
-                }}
-              >
-                Recent Deliveries
-              </h2>
-
-              {/* Search and Filters */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            {/* Search and Filters */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                 {/* Search Bar */}
                 <div style={{ position: 'relative', flex: '0 0 300px' }}>
                   <Search
@@ -1937,7 +1860,81 @@ export default function WebhooksPage() {
               </div>
             )}
           </motion.div>
-        </div>
+        </>
+      )}
+
+      {/* Events Tab */}
+      {activeTab === 'events' && (
+        <>
+        {/* Available Events */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '32px',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+          }}
+        >
+          <h2
+            style={{
+              fontSize: '20px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '24px',
+              flexShrink: 0,
+            }}
+          >
+            Available Events
+          </h2>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              flex: '1 1 auto',
+              minHeight: 0,
+              overflowY: 'auto',
+              paddingRight: '4px',
+            }}
+          >
+            {availableEvents.map((event, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: '16px',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#10b981',
+                    marginBottom: '6px',
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  {event.name}
+                </h3>
+                <p style={{ fontSize: '13px', color: '#9ca3af', lineHeight: '1.5' }}>
+                  {event.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
         </>
       )}
 
